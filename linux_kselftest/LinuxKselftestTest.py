@@ -143,8 +143,8 @@ class LinuxKselftestTest(base_test_with_webdb.BaseTestWithWebDbClass):
         self.PreTestSetup()
 
         cpu_abi = self._dut.cpu_abi
-        relevant_testcases = map(
-            lambda x: x if x.IsRelevant(cpu_abi, n_bit) else None,
+        relevant_testcases = filter(
+            lambda x: x.IsRelevant(cpu_abi, n_bit),
             self._testcases)
 
         self.runGeneratedTests(

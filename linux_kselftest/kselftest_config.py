@@ -44,7 +44,6 @@ KSFT_CASES_PRESUBMIT = map(lambda x: test_case.LinuxKselftestTestcase(*(x)), [
 KSFT_CASES_STABLE = map(lambda x: test_case.LinuxKselftestTestcase(*(x)), [
     ("net/psock_tpacket", ["arm", "x86"], [32, 64]),
     ("ptrace/peeksiginfo", ["arm", "x86"], [64]),
-    ("seccomp/seccomp_bpf", ["arm", "x86"], [32, 64]),
     ("timers/posix_timers", ["arm", "x86"], [32, 64]),
     ("timers/nanosleep", ["arm", "x86"], [32, 64]),
     ("timers/nsleep-lat", ["arm", "x86"], [32, 64]),
@@ -60,6 +59,7 @@ KSFT_CASES_STABLE = map(lambda x: test_case.LinuxKselftestTestcase(*(x)), [
 KSFT_CASES_STAGING = map(lambda x: test_case.LinuxKselftestTestcase(*(x)), [
 # TODO(trong): enable pstore test.
 #    ("pstore/pstore_tests", ["arm", "x86"], [32, 64]),
+    ("seccomp/seccomp_bpf", ["arm", "x86"], [32, 64]),
     ("x86/single_step_syscall", ["x86"], [32, 64]),
     ("x86/sysret_ss_attrs", ["x86"], [32]),
     ("x86/syscall_nt", ["x86"], [32, 64]),

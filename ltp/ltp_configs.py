@@ -165,6 +165,16 @@ STAGING_TESTS = [
     'syscalls.openat03',
     # Fail on local device but pass on lab devices
     'fs.proc01',
+    # Failing for missing libcap
+    'containers.userns01_64bit',
+    'securebits.check_keepcaps03_64bit',
+    'securebits.check_keepcaps02_64bit',
+    'containers.userns05_64bit',
+    'containers.userns07_64bit',
+    'containers.userns06_64bit',
+    'containers.userns03_64bit',
+    'securebits.check_keepcaps01_64bit',
+    'containers.userns02_64bit',
 ]
 
 # Tests disabled

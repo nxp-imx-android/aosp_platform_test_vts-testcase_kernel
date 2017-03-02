@@ -97,21 +97,24 @@ class TestCasesParser(object):
                 testcase.is_filtered = True
                 testcase.note = "filtered"
 
-            # For skipping tests that are not designed for Android
+            # For skipping tests that are not designed or ready for Android
             if test_display_name in self._disabled_tests:
                 logging.info("[Parser] Skipping test case %s. Reason: "
                              "disabled" % testcase.fullname)
                 continue
 
-            # For failing tests that are being inspected
+            # For separating staging tests from stable tests
             if test_display_name in self._staging_tests:
                 if not run_staging:
-                    logging.info("[Parser] Skipping test case %s. Reason: "
-                                 "staging" % testcase.fullname)
+                    # Skip staging tests in stable run
                     continue
                 else:
                     testcase.is_staging = True
                     testcase.note = "staging"
+            else:
+                if run_staging:
+                    # Skip stable tests in staging run
+                    continue
 
             logging.info("[Parser] Adding test case %s." % testcase.fullname)
             yield testcase

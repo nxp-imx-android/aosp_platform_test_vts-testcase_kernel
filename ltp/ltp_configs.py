@@ -18,7 +18,7 @@ import os
 
 from vts.testcases.kernel.ltp import ltp_enums
 
-VTS_LTP_OUTPUT = 'ltp'
+VTS_LTP_OUTPUT = 'DATA/nativetest/ltp'
 LTP_RUNTEST_DIR = os.path.join(VTS_LTP_OUTPUT, 'runtest')
 LTP_DISABLED_BUILD_TESTS_CONFIG_PATH = os.path.join(VTS_LTP_OUTPUT, 'disabled_tests.txt')
 

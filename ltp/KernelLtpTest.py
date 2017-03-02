@@ -141,7 +141,7 @@ class KernelLtpTest(base_test_with_webdb.BaseTestWithWebDbClass):
                 result.append("%s_%s" % (item, const.SUFFIX_64BIT))
         return result
 
-    def PreTestSetup(self, n_bit):
+    def PreTestSetup(self, test_bit):
         """Setups that needs to be done before any tests."""
         replacements = {'#\\!/bin/sh': '#\\!/system/bin/sh',
                         '#\\! /bin/sh': '#\\!/system/bin/sh',
@@ -149,7 +149,7 @@ class KernelLtpTest(base_test_with_webdb.BaseTestWithWebDbClass):
                         '#\\! /bin/bash': '#\\!/system/bin/sh',
                         'bs=1M': 'bs=1m',
                         '/var/run': ltp_configs.TMP}
-        src_host = os.path.join(self.data_file_path, str(n_bit), 'ltp')
+        src_host = os.path.join(self.data_file_path, 'DATA', test_bit, 'ltp')
         sed_command = self._shell_env.CreateSedCommand(src_host, replacements)
         logging.info('Executing sed commands on host: %s', sed_command)
         results = cmd_utils.ExecuteShellCommand(sed_command)
@@ -162,13 +162,13 @@ class KernelLtpTest(base_test_with_webdb.BaseTestWithWebDbClass):
 
         self._report_thread_lock = threading.Lock()
 
-    def PushFiles(self, n_bit):
+    def PushFiles(self, test_bit):
         """Push the related files to target.
 
         Args:
-            n_bit: int, bitness
+            test_bit: nativetest or nativetest64
         """
-        src = os.path.join(self.data_file_path, str(n_bit), 'ltp', '.')
+        src = os.path.join(self.data_file_path, 'DATA', test_bit, 'ltp', '.')
         logging.info('Pushing files from %s to %s', src, ltp_configs.LTPDIR)
         self.shell.Execute("mkdir %s -p" % ltp_configs.LTPDIR)
         self._dut.adb.push(src, ltp_configs.LTPDIR)
@@ -243,8 +243,11 @@ class KernelLtpTest(base_test_with_webdb.BaseTestWithWebDbClass):
         Args:
             n_bit: int, bitness
         """
-        self.PreTestSetup(n_bit)
-        self.PushFiles(n_bit)
+        test_bit = 'nativetest'
+        if n_bit == 64:
+            test_bit += '64'
+        self.PreTestSetup(test_bit)
+        self.PushFiles(test_bit)
 
         test_cases = list(
             self._testcases.Load(
@@ -252,7 +255,7 @@ class KernelLtpTest(base_test_with_webdb.BaseTestWithWebDbClass):
 
         logging.info("Checking binary exists for all test cases.")
         self._requirement.ltp_bin_host_path = os.path.join(
-            self.data_file_path, str(n_bit), 'ltp', 'testcases', 'bin')
+            self.data_file_path, 'DATA', test_bit, 'ltp', 'testcases', 'bin')
         self._requirement.CheckAllTestCaseExecutables(test_cases)
         logging.info("Start running %i individual tests." % len(test_cases))
 

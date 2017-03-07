@@ -23,7 +23,7 @@ import threading
 import os
 
 from vts.runners.host import asserts
-from vts.runners.host import base_test_with_webdb
+from vts.runners.host import base_test
 from vts.runners.host import const
 from vts.runners.host import keys
 from vts.runners.host import test_runner
@@ -37,7 +37,7 @@ from vts.testcases.kernel.ltp import ltp_enums
 from vts.testcases.kernel.ltp import ltp_configs
 
 
-class KernelLtpTest(base_test_with_webdb.BaseTestWithWebDbClass):
+class KernelLtpTest(base_test.BaseTestClass):
     """Runs the LTP (Linux Test Project) test cases against Android OS kernel.
 
     Attributes:

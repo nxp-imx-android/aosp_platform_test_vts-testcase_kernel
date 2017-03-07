@@ -18,13 +18,13 @@
 import logging
 
 from vts.runners.host import asserts
-from vts.runners.host import base_test_with_webdb
+from vts.runners.host import base_test
 from vts.runners.host import const
 from vts.runners.host import test_runner
 from vts.utils.python.controllers import android_device
 
 
-class KernelProcFileApiTest(base_test_with_webdb.BaseTestWithWebDbClass):
+class KernelProcFileApiTest(base_test.BaseTestClass):
     """Test cases which check content of proc files."""
 
     def setUpClass(self):

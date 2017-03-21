@@ -74,8 +74,11 @@ class LinuxKselftestTest(base_test.BaseTestClass):
                 _64BIT or 64 for 64-bit tests;
         """
         self._shell.Execute("mkdir %s -p" % config.KSFT_DIR)
-        self._dut.adb.push("%s/%s/linux-kselftest/. %s" %
-            (self.data_file_path, n_bit, config.KSFT_DIR))
+        test_bit = 'nativetest'
+        if n_bit == _64BIT:
+            test_bit += '64'
+        self._dut.adb.push("%s/DATA/%s/linux-kselftest/. %s" %
+            (self.data_file_path, test_bit, config.KSFT_DIR))
 
     def PreTestSetup(self):
         """Sets up test before running."""

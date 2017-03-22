@@ -143,22 +143,30 @@ class KernelLtpTest(base_test.BaseTestClass):
 
     def PreTestSetup(self, test_bit):
         """Setups that needs to be done before any tests."""
-        replacements = {'#\\!/bin/sh': '#\\!/system/bin/sh',
-                        '#\\! /bin/sh': '#\\!/system/bin/sh',
-                        '#\\!/bin/bash': '#\\!/system/bin/sh',
-                        '#\\! /bin/bash': '#\\!/system/bin/sh',
+        replacements = {'#!/bin/sh': '#!/system/bin/sh',
+                        '#! /bin/sh': '#!/system/bin/sh',
+                        '#!/bin/bash': '#!/system/bin/sh',
+                        '#! /bin/bash': '#!/system/bin/sh',
                         'bs=1M': 'bs=1m',
                         '/var/run': ltp_configs.TMP}
         src_host = os.path.join(self.data_file_path, 'DATA', test_bit, 'ltp')
-        sed_command = self._shell_env.CreateSedCommand(src_host, replacements)
-        logging.info('Executing sed commands on host: %s', sed_command)
-        results = cmd_utils.ExecuteShellCommand(sed_command)
-        logging.info('Finished sed commands on host. Results: %s', results)
-        asserts.assertFalse(
-            any(results[cmd_utils.EXIT_CODE]),
-            "Error: pre-test setup failed. "
-            "Commands: {commands}. Results: {results}".format(
-                commands=sed_command, results=results))
+
+        count = 0
+        for (dirpath, dirnames, filenames) in os.walk(src_host):
+            for filename in filenames:
+                filepath = os.path.join(dirpath, filename)
+                content = ''
+                with open(filepath, 'r') as f:
+                    content = f.read()
+                content_replaced = content
+                for key in replacements:
+                    content_replaced = content_replaced.replace(
+                        key, replacements[key])
+                if content_replaced != content:
+                    with open(filepath, 'w') as f:
+                        f.write(content_replaced)
+                    count += 1
+        logging.info('Finished replacing script contents from %s files', count)
 
         self._report_thread_lock = threading.Lock()
 

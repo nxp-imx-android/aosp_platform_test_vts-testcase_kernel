@@ -16,26 +16,27 @@
 
 import os
 
+from vts.utils.python.os import path_utils
+
 from vts.testcases.kernel.ltp import ltp_enums
 
-VTS_LTP_OUTPUT = 'DATA/nativetest/ltp'
+VTS_LTP_OUTPUT = os.path.join('DATA', 'nativetest', 'ltp')
 LTP_RUNTEST_DIR = os.path.join(VTS_LTP_OUTPUT, 'runtest')
 LTP_DISABLED_BUILD_TESTS_CONFIG_PATH = os.path.join(VTS_LTP_OUTPUT, 'disabled_tests.txt')
-
 
 # Environment paths for ltp test cases
 # string, ltp build root directory on target
 LTPDIR = '/data/local/tmp/ltp'
 # Directory for environment variable 'TMP' needed by some test cases
-TMP = os.path.join(LTPDIR, 'tmp')
+TMP = path_utils.JoinTargetPath(LTPDIR, 'tmp')
 # Directory for environment variable 'TMPBASE' needed by some test cases
-TMPBASE = os.path.join(TMP, 'tmpbase')
+TMPBASE = path_utils.JoinTargetPath(TMP, 'tmpbase')
 # Directory for environment variable 'LTPTMP' needed by some test cases
-LTPTMP = os.path.join(TMP, 'ltptemp')
+LTPTMP = path_utils.JoinTargetPath(TMP, 'ltptemp')
 # Directory for environment variable 'TMPDIR' needed by some test cases
-TMPDIR = os.path.join(TMP, 'tmpdir')
+TMPDIR = path_utils.JoinTargetPath(TMP, 'tmpdir')
 # Path where ltp test binary exists
-LTPBINPATH = os.path.join(LTPDIR, 'testcases/bin')
+LTPBINPATH = path_utils.JoinTargetPath(LTPDIR, 'testcases', 'bin')
 # Add LTP's binary path to PATH
 PATH = '/system/bin:%s' % LTPBINPATH
 

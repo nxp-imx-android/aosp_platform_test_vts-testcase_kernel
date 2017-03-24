@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-import os
 import copy
 import logging
 import itertools
@@ -22,6 +21,7 @@ import operator
 
 from vts.runners.host import const
 from vts.utils.python.common import cmd_utils
+from vts.utils.python.os import path_utils
 
 from vts.testcases.kernel.ltp.shell_environment import shell_environment
 from vts.testcases.kernel.ltp import ltp_enums
@@ -146,7 +146,7 @@ class EnvironmentRequirementChecker(object):
 
         # Set all executables executable permission using chmod.
         logging.info("Setting permissions on device")
-        permission_command = "chmod 775 %s" % os.path.join(
+        permission_command = "chmod 775 %s" % path_utils.JoinTargetPath(
             ltp_configs.LTPBINPATH, '*')
         permission_result = self.shell.Execute(permission_command)
         if permission_result[const.EXIT_CODE][0]:

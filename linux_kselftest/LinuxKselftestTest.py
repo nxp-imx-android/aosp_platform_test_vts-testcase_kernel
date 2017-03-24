@@ -16,7 +16,6 @@
 #
 
 import logging
-import os
 
 from vts.runners.host import asserts
 from vts.runners.host import base_test
@@ -24,6 +23,7 @@ from vts.runners.host import const
 from vts.runners.host import keys
 from vts.runners.host import test_runner
 from vts.utils.python.controllers import android_device
+from vts.utils.python.os import path_utils
 
 from vts.testcases.kernel.linux_kselftest import kselftest_config as config
 
@@ -75,7 +75,7 @@ class LinuxKselftestTest(base_test.BaseTestClass):
         """
         self._shell.Execute("mkdir %s -p" % config.KSFT_DIR)
         test_bit = 'nativetest'
-        if n_bit == _64BIT:
+        if n_bit == self._64BIT:
             test_bit += '64'
         self._dut.adb.push("%s/DATA/%s/linux-kselftest/. %s" %
             (self.data_file_path, test_bit, config.KSFT_DIR))
@@ -118,9 +118,10 @@ class LinuxKselftestTest(base_test.BaseTestClass):
         if not testcase:
             asserts.skip("Test is not supported on this abi.")
 
-        chmod_cmd = "chmod -R 755 %s" % os.path.join(
+        chmod_cmd = "chmod -R 755 %s" % path_utils.JoinTargetPath(
             config.KSFT_DIR, testcase.testsuite)
-        cd_cmd = "cd %s" % os.path.join(config.KSFT_DIR, testcase.testsuite)
+        cd_cmd = "cd %s" % path_utils.JoinTargetPath(
+            config.KSFT_DIR, testcase.testsuite)
 
         cmd = [
             chmod_cmd,

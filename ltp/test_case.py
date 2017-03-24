@@ -15,8 +15,9 @@
 #
 
 import re
-import os
 import logging
+
+from vts.utils.python.os import path_utils
 
 from vts.testcases.kernel.ltp import ltp_enums
 from vts.testcases.kernel.ltp import ltp_configs
@@ -100,7 +101,8 @@ class TestCase(object):
                 tokens[0].find('=') > 0):
             return command
         else:  # Is Ltp executable
-            tokens[0] = os.path.join(ltp_configs.LTPBINPATH, tokens[0])
+            tokens[0] = path_utils.JoinTargetPath(ltp_configs.LTPBINPATH,
+                                                  tokens[0])
             return ' '.join(tokens)
 
     def GetCommand(self):
@@ -133,7 +135,7 @@ class TestCase(object):
             returned. For binaries in system's PATH, only the name will be
             returned.
         """
-        return [os.path.join(ltp_bin_path, executable)
+        return [path_utils.JoinTargetPath(ltp_bin_path, executable)
                 if executable not in ltp_configs.INTERNAL_BINS else executable
                 for executable in self.InternalGetExecutableNames()
                 if executable not in ltp_configs.INTERNAL_SHELL_COMMANDS]

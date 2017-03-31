@@ -35,7 +35,7 @@ class SyscallExistenceTest(base_test.BaseTestClass):
         self.dut = self.registerController(android_device)[0]
         self.dut.shell.InvokeTerminal(self.TEST_SHELL_NAME)
 
-    def tearDownTest(self):
+    def tearDown(self):
         self.dut.shell.InvokeTerminal(self.TEST_SHELL_NAME)
         results = getattr(self.dut.shell, self.TEST_SHELL_NAME).Execute("which ls")
         logging.info(str(results[const.STDOUT]))

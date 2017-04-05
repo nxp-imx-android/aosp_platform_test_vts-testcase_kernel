@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 """Required kernel configuration options for Treble.
 
     TODO(jaeshin): Uncomment configs that are temporarily commented out

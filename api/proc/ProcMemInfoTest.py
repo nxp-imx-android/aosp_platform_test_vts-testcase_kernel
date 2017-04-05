@@ -14,18 +14,27 @@
 # limitations under the License.
 #
 
-import KernelProcFileTestBase
-from KernelProcFileTestBase import repeat_rule, literal_token
+import logging
 
+from parse import with_pattern
+from vts.testcases.kernel.api.proc import KernelProcFileTestBase
+
+
+@with_pattern(r'[^ ^\t^\n^:^\0]+')
+def token_name(text):
+    return text
+
+@with_pattern(r'[ ]*[0-9]+')
+def token_lu(text):
+    return int(text)
 
 class ProcMemInfoTest(KernelProcFileTestBase.KernelProcFileTestBase):
-    """
-    /proc/meminfo reports statistics about memory usage on the system.
+    '''/proc/meminfo reports statistics about memory usage on the system.
 
     No new fields should be added to the upstream implementation.
-    """
+    '''
 
-    ALLOWED_FIELDS = {
+    REQUIRED_FIELDS = {
         "MemTotal",
         "MemFree",
         "MemAvailable",
@@ -62,20 +71,21 @@ class ProcMemInfoTest(KernelProcFileTestBase.KernelProcFileTestBase):
         "VmallocChunk",
     }
 
-    t_KB = literal_token(r'kB')
-
-    start = 'lines'
-    p_lines = repeat_rule('line')
-
-    def p_line(self, p):
-        'line : STRING COLON SPACEs NUMBER SPACE KB NEWLINE'
-        p[0] = [p[1], p[4]]
+    def parse_contents(self, contents):
+        lines = contents.split('\n')
+        if lines[-1] != '':
+            raise SyntaxError("missing final newline")
+        return [self.parse_line("{:name}: {:lu} kB", line, dict(name=token_name, lu=token_lu))
+                for line in lines[:-1]]
 
     def result_correct(self, parse_result):
+        required_fields = self.REQUIRED_FIELDS.copy()
         for line in parse_result:
-            if line[0] not in self.ALLOWED_FIELDS:
-                print "'%s' is an illegal field" % line[0]
-                return False
+            if line[0] in required_fields:
+                required_fields.remove(line[0])
+        if len(required_fields) > 0:
+            logging.error("Required fields not present: %s", str(required_fields))
+            return False
         return True
 
     def get_path(self):

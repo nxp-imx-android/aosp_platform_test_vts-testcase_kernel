@@ -14,37 +14,79 @@
 # limitations under the License.
 #
 
-import KernelProcFileTestBase
-from KernelProcFileTestBase import repeat_rule, literal_token
+from vts.testcases.kernel.api.proc import KernelProcFileTestBase
+from vts.testcases.kernel.api.proc.KernelProcFileTestBase import repeat_rule, literal_token
 
 
 class ProcVmallocInfoTest(KernelProcFileTestBase.KernelProcFileTestBase):
-    '''
-    /proc/vmallocinfo provides info on vmalloc'd ranges.
-    '''
+    '''/proc/vmallocinfo provides info on vmalloc'd ranges.'''
 
     start = 'lines'
 
-    t_PLUS = literal_token(r'\+')
-    t_SLASH = literal_token(r'/')
-    t_STRING = r'[a-zA-Z\(\)_0-9\-@\.]+'
+    t_STRING = r'[^ ^\t^\n^-^=]+'
+
+    t_PAGES = literal_token('pages')
+    t_PHYS = literal_token('phys')
+    t_IOREMAP = literal_token('ioremap')
+    t_VMALLOC = literal_token('vmalloc')
+    t_VMAP = literal_token('vmap')
+    t_USER = literal_token('user')
+    t_VPAGES = literal_token('vpages')
+
     t_ignore = ' '
 
     p_lines = repeat_rule('line')
 
     def p_line(self, p):
-        '''line : addr_range NUMBER STRING NEWLINE
-                | addr_range NUMBER STRING PLUS HEX_LITERAL SLASH HEX_LITERAL STRING NEWLINE
-                | addr_range NUMBER STRING PLUS HEX_LITERAL SLASH HEX_LITERAL NEWLINE
-                | addr_range NUMBER STRING PLUS HEX_LITERAL SLASH HEX_LITERAL \
-                        STRING EQUALS NUMBER STRING NEWLINE
-                | addr_range NUMBER STRING PLUS HEX_LITERAL SLASH HEX_LITERAL \
-                        STRING EQUALS NUMBER STRING STRING NEWLINE'''
+        'line : addr_range NUMBER caller pages phys ioremap vmalloc vmap user vpages NEWLINE'
         p[0] = p[1:]
 
     def p_addr_range(self, p):
         'addr_range : HEX_LITERAL DASH HEX_LITERAL'
         p[0] = [p[1], p[3]]
+
+    def p_caller(self, p):
+        '''caller : STRING
+                  | empty'''
+        p[0] = p[1:]
+
+    def p_pages(self, p):
+        '''pages : PAGES EQUALS NUMBER
+                 | empty'''
+        if len(p) > 2:
+            p[0] = [p[1], p[3]]
+        else:
+            p[0] = []
+
+    def p_phys(self, p):
+        '''phys : PHYS EQUALS STRING
+                  | empty'''
+        p[0] = p[1:]
+
+    def p_ioremap(self, p):
+        '''ioremap : IOREMAP
+                   | empty'''
+        p[0] = p[1:]
+
+    def p_vmalloc(self, p):
+        '''vmalloc : VMALLOC
+                   | empty'''
+        p[0] = p[1:]
+
+    def p_vmap(self, p):
+        '''vmap : VMAP
+                | empty'''
+        p[0] = p[1:]
+
+    def p_user(self, p):
+        '''user : USER
+                | empty'''
+        p[0] = p[1:]
+
+    def p_vpages(self, p):
+        '''vpages : VPAGES
+                  | empty'''
+        p[0] = p[1:]
 
     def get_path(self):
         return "/proc/vmallocinfo"

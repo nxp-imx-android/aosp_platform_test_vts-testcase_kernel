@@ -17,19 +17,14 @@
 from vts.testcases.kernel.api.proc import KernelProcFileTestBase
 
 
-class ProcShowUidStatTest(KernelProcFileTestBase.KernelProcFileTestBase):
-    '''/proc/uid_cputime/show_uid_stat provides the time a UID's processes spend
-    in user and kernel space.
+class ProcModulesTest(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/modules contains information about loaded kernel modules.'''
 
-    This is an Android specific file.
-    '''
+    def parse_contents(self, contents):
+        return ''
 
-    start = 'lines'
-    p_lines = KernelProcFileTestBase.repeat_rule('line')
-
-    def p_line(self, p):
-        'line : NUMBER COLON SPACE NUMBER SPACE NUMBER SPACE NUMBER NEWLINE'
-        p[0] = [p[1], p[4], p[6], p[8]]
+    def result_correct(self, parse_result):
+        return True
 
     def get_path(self):
-        return "/proc/uid_cputime/show_uid_stat"
+        return "/proc/modules"

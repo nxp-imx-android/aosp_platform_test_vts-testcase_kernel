@@ -28,6 +28,39 @@ from vts.runners.host import test_runner
 from vts.testcases.kernel.api.proc import required_kernel_configs as configs
 from vts.utils.python.controllers import android_device
 
+from ProcMemInfoTest import ProcMemInfoTest
+from ProcZoneInfoTest import ProcZoneInfoTest
+from ProcShowUidStatTest import ProcShowUidStatTest
+from ProcCpuInfoTest import ProcCpuInfoTest
+from ProcStatTest import ProcStatTest
+from ProcVmallocInfoTest import ProcVmallocInfoTest
+from ProcRemoveUidRangeTest import ProcRemoveUidRangeTest
+from ProcQtaguidCtrlTest import ProcQtaguidCtrlTest
+from ProcMapsTest import ProcMapsTest
+from ProcSimpleFileTests import ProcKptrRestrictTest
+from ProcSimpleFileTests import ProcMmapMinAddrTest
+from ProcSimpleFileTests import ProcMmapRndBitsTest
+from ProcSimpleFileTests import ProcMmapRndCompatBitsTest
+from ProcSimpleFileTests import ProcOverCommitMemoryTest
+from ProcSimpleFileTests import ProcRandomizeVaSpaceTest
+
+TEST_OBJECTS = {
+    ProcMemInfoTest(),
+    ProcZoneInfoTest(),
+    ProcShowUidStatTest(),
+    ProcCpuInfoTest(),
+    ProcStatTest(),
+    ProcVmallocInfoTest(),
+    ProcKptrRestrictTest(),
+    ProcRandomizeVaSpaceTest(),
+    ProcMmapMinAddrTest(),
+    ProcMmapRndBitsTest(),
+    ProcMmapRndCompatBitsTest(),
+    ProcOverCommitMemoryTest(),
+    ProcRemoveUidRangeTest(),
+    ProcQtaguidCtrlTest(),
+    ProcMapsTest(),
+}
 
 class KernelProcFileApiTest(base_test.BaseTestClass):
     """Test cases which check content of proc files.
@@ -45,6 +78,30 @@ class KernelProcFileApiTest(base_test.BaseTestClass):
         self.shell = self.dut.shell.KernelApiTest
         self._temp_dir = tempfile.mkdtemp()
 
+    def runProcFileTest(self, test_object):
+        """Reads from the file and checks that it parses and the content is valid.
+
+        Args:
+            test_object: inherits KernelProcFileTestBase, contains the test functions
+        """
+        logging.info("Testing format of %s" % (test_object.get_path()))
+        asserts.assertTrue(
+            test_object.prepare_test(self.shell), "Setup failed!")
+
+        file_content = self.ReadFileContent(test_object.get_path())
+        try:
+            parse_result = test_object.parse_contents(file_content)
+        except SyntaxError as e:
+            asserts.fail("Failed to parse! " + str(e))
+        asserts.assertTrue(
+            test_object.result_correct(parse_result), "Results not valid!")
+
+    def generateProcFileTests(self):
+        """Run all proc file tests."""
+        self.runGeneratedTests(test_func=self.runProcFileTest,
+                settings=TEST_OBJECTS,
+                name_func=lambda test_obj: "test" + test_obj.__class__.__name__)
+
     def ReadFileContent(self, filepath):
         """Read the content of a file and perform assertions.
 
@@ -52,51 +109,19 @@ class KernelProcFileApiTest(base_test.BaseTestClass):
             filepath: string, path to file
 
         Returns:
-            string, content of file"""
+            string, content of file
+        """
         cmd = "cat %s" % filepath
         results = self.shell.Execute(cmd)
         logging.info("%s: Shell command '%s' results: %s", filepath, cmd,
                      results)
 
         # checks the exit code
-        asserts.assertEqual(results[const.EXIT_CODE][0], 0,
-                            "%s: Error happened while reading the file." %
-                            filepath)
+        asserts.assertEqual(
+            results[const.EXIT_CODE][0], 0,
+            "%s: Error happened while reading the file." % filepath)
 
         return results[const.STDOUT][0]
-
-    def ConvertToInteger(self, text):
-        """Check whether a given text is interger.
-
-        Args:
-            text, string
-
-        Returns:
-            bool, True if is integer
-        """
-        try:
-            return int(text)
-        except:
-            asserts.fail("Content '%s' is not integer" % text)
-
-    def testMmapRndBitsAndMmapRndBits(self):
-        """Check the value of /proc/sys/vm/mmap_rnd_bits."""
-        filepath = "/proc/sys/vm/mmap_rnd_bits"
-        content = self.ReadFileContent(filepath)
-        value = self.ConvertToInteger(content)
-        asserts.assertTrue(
-            value >= 8, "%s: bits of mmap_rnd_bits '%s' should be higher than 8"
-            % (filepath, value))
-
-    def testMmapRndBitsAndMmapRndCompatBits(self):
-        """Check the value of /proc/sys/vm/mmap_rnd_bits."""
-        filepath = "/proc/sys/vm/mmap_rnd_compat_bits"
-        content = self.ReadFileContent(filepath)
-        value = self.ConvertToInteger(content)
-        asserts.assertTrue(
-            value >= 8,
-            "%s: bits of mmap_rnd_compat_bits '%s' should be higher than 8" %
-            (filepath, value))
 
     def testCheckConfigs(self):
         """Ensures all options from android-base.cfg are enabled."""
@@ -117,19 +142,19 @@ class KernelProcFileApiTest(base_test.BaseTestClass):
         should_be_enabled = []
         should_not_be_set = []
         for config_name, config_state in configs.CONFIGS.iteritems():
-            if (config_state == "y" and (config_name not in device_configs or
-                device_configs[config_name] not in ("y", "m"))):
+            if (config_state == "y" and
+                (config_name not in device_configs or
+                 device_configs[config_name] not in ("y", "m"))):
                 should_be_enabled.append(config_name)
             elif config_state == "n" and config_name in device_configs:
-                should_not_be_set.append(
-                    config_name + "=" + device_configs[config_name])
+                should_not_be_set.append(config_name + "=" +
+                                         device_configs[config_name])
 
         asserts.assertTrue(
             len(should_be_enabled) == 0 and len(should_not_be_set) == 0,
             ("The following kernel configs should be enabled: [%s].\n"
              "The following kernel configs should not be set: [%s]") %
-            (", ".join(should_be_enabled), ", ".join(should_not_be_set))
-        )
+            (", ".join(should_be_enabled), ", ".join(should_not_be_set)))
 
     def tearDownClass(self):
         """Deletes the temporary directory."""

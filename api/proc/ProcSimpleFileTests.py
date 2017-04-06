@@ -16,6 +16,8 @@
 
 import KernelProcFileTestBase
 
+from vts.utils.python.file import file_utils
+
 
 class ProcKptrRestrictTest(KernelProcFileTestBase.KernelProcFileTestBase):
     '''
@@ -33,6 +35,11 @@ class ProcKptrRestrictTest(KernelProcFileTestBase.KernelProcFileTestBase):
 
     def get_path(self):
         return "/proc/sys/kernel/kptr_restrict"
+
+    def get_permission_checker(self):
+        """Get r/w file permission checker.
+        """
+        return file_utils.IsReadWrite
 
 
 class ProcRandomizeVaSpaceTest(KernelProcFileTestBase.KernelProcFileTestBase):
@@ -52,6 +59,11 @@ class ProcRandomizeVaSpaceTest(KernelProcFileTestBase.KernelProcFileTestBase):
     def get_path(self):
         return "/proc/sys/kernel/randomize_va_space"
 
+    def get_permission_checker(self):
+        """Get r/w file permission checker.
+        """
+        return file_utils.IsReadWrite
+
 
 class ProcOverCommitMemoryTest(KernelProcFileTestBase.KernelProcFileTestBase):
     '''
@@ -69,6 +81,11 @@ class ProcOverCommitMemoryTest(KernelProcFileTestBase.KernelProcFileTestBase):
     def get_path(self):
         return "/proc/sys/vm/overcommit_memory"
 
+    def get_permission_checker(self):
+        """Get r/w file permission checker.
+        """
+        return file_utils.IsReadWrite
+
 
 class ProcMmapMinAddrTest(KernelProcFileTestBase.KernelProcFileTestBase):
     '''
@@ -82,6 +99,11 @@ class ProcMmapMinAddrTest(KernelProcFileTestBase.KernelProcFileTestBase):
 
     def get_path(self):
         return "/proc/sys/vm/mmap_min_addr"
+
+    def get_permission_checker(self):
+        """Get r/w file permission checker.
+        """
+        return file_utils.IsReadWrite
 
 
 class ProcMmapRndBitsTest(KernelProcFileTestBase.KernelProcFileTestBase):
@@ -100,6 +122,11 @@ class ProcMmapRndBitsTest(KernelProcFileTestBase.KernelProcFileTestBase):
 
     def get_path(self):
         return "/proc/sys/vm/mmap_rnd_bits"
+
+    def get_permission_checker(self):
+        """Get r/w file permission checker.
+        """
+        return file_utils.IsReadWrite
 
 
 class ProcMmapRndCompatBitsTest(ProcMmapRndBitsTest):

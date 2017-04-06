@@ -16,6 +16,7 @@
 
 import ProcShowUidStatTest
 from vts.runners.host import const
+from vts.utils.python.file import file_utils
 
 
 class ProcRemoveUidRangeTest(ProcShowUidStatTest.ProcShowUidStatTest):
@@ -52,3 +53,11 @@ class ProcRemoveUidRangeTest(ProcShowUidStatTest.ProcShowUidStatTest):
                 print line
                 return False
         return True
+
+    def get_path(self):
+        return "/proc/uid_cputime/remove_uid_range"
+
+    def get_permission_checker(self):
+        """Get write-only file permission checker.
+        """
+        return file_utils.IsWriteOnly

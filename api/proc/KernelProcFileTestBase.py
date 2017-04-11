@@ -19,6 +19,7 @@ import os
 import sys
 from ply import lex
 from ply import yacc
+from vts.utils.python.file import file_utils
 
 
 def repeat_rule(to_repeat, zero_ok=False):
@@ -155,3 +156,16 @@ class KernelProcFileTestBase(object):
         proc file.
         """
         return True
+
+    def get_permission_checker(self):
+        """Gets the function handle to use for validating file permissions.
+
+        Return the function that will check if the permissions are correct.
+        By default, return the IsReadOnly function from file_utils.
+
+        Returns:
+            function which takes one argument (the unix file permission bits
+            in octal format) and returns True if the permissions are correct,
+            False otherwise.
+        """
+        return file_utils.IsReadOnly

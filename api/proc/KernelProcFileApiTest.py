@@ -27,6 +27,7 @@ from vts.runners.host import const
 from vts.runners.host import test_runner
 from vts.testcases.kernel.api.proc import required_kernel_configs as configs
 from vts.utils.python.controllers import android_device
+from vts.utils.python.file import file_utils
 
 from ProcMemInfoTest import ProcMemInfoTest
 from ProcZoneInfoTest import ProcZoneInfoTest
@@ -78,12 +79,37 @@ class KernelProcFileApiTest(base_test.BaseTestClass):
         self.shell = self.dut.shell.KernelApiTest
         self._temp_dir = tempfile.mkdtemp()
 
+    def checkPermissionsAndExistence(self, path, check_permission):
+        """Asserts that the specified path exists and has the correct permission.
+
+        Args:
+            path: string, path to validate existence and permissions
+            check_permission: function which takes unix permissions in octal
+                              format and returns True if the permissions are
+                              correct, False otherwise.
+        """
+        asserts.assertTrue(
+            file_utils.Exists(path, self.shell),
+            "%s: File does not exist." % path)
+        try:
+            permission = file_utils.GetPermission(path, self.shell)
+            asserts.assertTrue(
+                check_permission(permission),
+                "%s: File has invalid permissions (%s)" %
+                (path, permission))
+        except (ValueError, IOError) as e:
+            asserts.fail("Failed to assert permissions: %s" % str(e))
+
+
     def runProcFileTest(self, test_object):
         """Reads from the file and checks that it parses and the content is valid.
 
         Args:
             test_object: inherits KernelProcFileTestBase, contains the test functions
         """
+        self.checkPermissionsAndExistence(
+            test_object.get_path(), test_object.get_permission_checker())
+
         logging.info("Testing format of %s" % (test_object.get_path()))
         asserts.assertTrue(
             test_object.prepare_test(self.shell), "Setup failed!")
@@ -125,6 +151,11 @@ class KernelProcFileApiTest(base_test.BaseTestClass):
 
     def testCheckConfigs(self):
         """Ensures all options from android-base.cfg are enabled."""
+
+        logging.info("Testing existence of %s" % self.PROC_FILE_PATH)
+        self.checkPermissionsAndExistence(
+            self.PROC_FILE_PATH, file_utils.IsReadOnly)
+
         self.dut.adb.pull("%s %s" % (self.PROC_FILE_PATH, self._temp_dir))
         logging.info("Adb pull %s to %s", self.PROC_FILE_PATH, self._temp_dir)
 

@@ -16,6 +16,7 @@
 
 import KernelProcFileTestBase
 from KernelProcFileTestBase import repeat_rule, literal_token
+from vts.utils.python.file import file_utils
 
 
 class ProcQtaguidCtrlTest(KernelProcFileTestBase.KernelProcFileTestBase):
@@ -52,3 +53,8 @@ class ProcQtaguidCtrlTest(KernelProcFileTestBase.KernelProcFileTestBase):
 
     def get_path(self):
         return "/proc/net/xt_qtaguid/ctrl"
+
+    def get_permission_checker(self):
+        """Get r/w file permission checker.
+        """
+        return file_utils.IsReadWrite

@@ -21,16 +21,12 @@
     <target_preparer class="com.android.tradefed.targetprep.VtsPythonVirtualenvPreparer"/>
     <test class="com.android.tradefed.testtype.VtsMultiDeviceTest">
         <option name="test-module-name" value="VtsKernelBinderTest"/>
-        <option name="binary-test-source" value="_32bit::DATA/nativetest/binderValueTypeTest/binderValueTypeTest" />
-        <option name="binary-test-source" value="_64bit::DATA/nativetest64/binderValueTypeTest/binderValueTypeTest" />
         <option name="binary-test-source" value="_32bit::DATA/nativetest/binderSafeInterfaceTest/binderSafeInterfaceTest" />
         <option name="binary-test-source" value="_64bit::DATA/nativetest64/binderSafeInterfaceTest/binderSafeInterfaceTest" />
         <option name="binary-test-source" value="_32bit::DATA/nativetest/binderLibTest/binderLibTest" />
         <option name="binary-test-source" value="_64bit::DATA/nativetest64/binderLibTest/binderLibTest" />
         <option name="binary-test-source" value="_32bit::DATA/nativetest/binderDriverInterfaceTest/binderDriverInterfaceTest" />
         <option name="binary-test-source" value="_64bit::DATA/nativetest64/binderDriverInterfaceTest/binderDriverInterfaceTest" />
-        <option name="binary-test-source" value="_32bit::DATA/nativetest/binderTextOutputTest/binderTextOutputTest" />
-        <option name="binary-test-source" value="_64bit::DATA/nativetest64/binderTextOutputTest/binderTextOutputTest" />
         <option name="binary-test-type" value="gtest"/>
         <option name="test-timeout" value="10m"/>
     </test>

@@ -14,21 +14,18 @@
 # limitations under the License.
 #
 
-import KernelProcFileTestBase
+from vts.testcases.kernel.api.proc import KernelProcFileTestBase
 
 from vts.utils.python.file import file_utils
 
 
 class ProcKptrRestrictTest(KernelProcFileTestBase.KernelProcFileTestBase):
-    '''
-    /proc/sys/kernel/kptr_restrict determines whether kernel pointers are printed
+    '''/proc/sys/kernel/kptr_restrict determines whether kernel pointers are printed
     in proc files.
     '''
-    start = 'num'
 
-    def p_num(self, p):
-        'num : NUMBER NEWLINE'
-        p[0] = p[1]
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
 
     def result_correct(self, result):
         return result >= 0 and result <= 4
@@ -43,15 +40,12 @@ class ProcKptrRestrictTest(KernelProcFileTestBase.KernelProcFileTestBase):
 
 
 class ProcRandomizeVaSpaceTest(KernelProcFileTestBase.KernelProcFileTestBase):
-    '''
-    /proc/sys/kernel/randomize_va_space determines the address layout randomization
+    '''/proc/sys/kernel/randomize_va_space determines the address layout randomization
     policy for the system.
     '''
-    start = 'num'
 
-    def p_num(self, p):
-        'num : NUMBER NEWLINE'
-        p[0] = p[1]
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
 
     def result_correct(self, result):
         return result >= 0 and result <= 2
@@ -66,14 +60,11 @@ class ProcRandomizeVaSpaceTest(KernelProcFileTestBase.KernelProcFileTestBase):
 
 
 class ProcOverCommitMemoryTest(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/vm/overcommit_memory determines the kernel virtual memory accounting mode.
     '''
-    /proc/sys/vm/overcommit_memory determines the kernel virtual memory accounting mode.
-    '''
-    start = 'num'
 
-    def p_num(self, p):
-        'num : NUMBER NEWLINE'
-        p[0] = p[1]
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
 
     def result_correct(self, result):
         return result >= 0 and result <= 2
@@ -88,14 +79,11 @@ class ProcOverCommitMemoryTest(KernelProcFileTestBase.KernelProcFileTestBase):
 
 
 class ProcMmapMinAddrTest(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/vm/mmap_min_addr specifies the minimum address that can be mmap'd.
     '''
-    /proc/sys/vm/mmap_min_addr specifies the minimum address that can be mmap'd.
-    '''
-    start = 'num'
 
-    def p_num(self, p):
-        'num : NUMBER NEWLINE'
-        p[0] = p[1]
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
 
     def get_path(self):
         return "/proc/sys/vm/mmap_min_addr"
@@ -107,15 +95,12 @@ class ProcMmapMinAddrTest(KernelProcFileTestBase.KernelProcFileTestBase):
 
 
 class ProcMmapRndBitsTest(KernelProcFileTestBase.KernelProcFileTestBase):
-    '''
-    /proc/sys/vm/mmap_rnd_(compat_)bits specifies the amount of randomness in mmap'd
+    '''/proc/sys/vm/mmap_rnd_(compat_)bits specifies the amount of randomness in mmap'd
     addresses. Must be >= 8.
     '''
-    start = 'num'
 
-    def p_num(self, p):
-        'num : NUMBER NEWLINE'
-        p[0] = p[1]
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
 
     def result_correct(self, result):
         return result >= 8

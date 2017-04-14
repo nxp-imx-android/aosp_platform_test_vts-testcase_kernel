@@ -17,19 +17,13 @@
 from vts.testcases.kernel.api.proc import KernelProcFileTestBase
 
 
-class ProcShowUidStatTest(KernelProcFileTestBase.KernelProcFileTestBase):
-    '''/proc/uid_cputime/show_uid_stat provides the time a UID's processes spend
-    in user and kernel space.
+class ProcCmdlineTest(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/cmdline contains arguments passed to the kernel.'''
 
-    This is an Android specific file.
-    '''
-
-    start = 'lines'
-    p_lines = KernelProcFileTestBase.repeat_rule('line')
-
-    def p_line(self, p):
-        'line : NUMBER COLON SPACE NUMBER SPACE NUMBER SPACE NUMBER NEWLINE'
-        p[0] = [p[1], p[4], p[6], p[8]]
+    def parse_contents(self, contents):
+        if len(contents) == 0 or contents[-1] != '\n':
+            raise SyntaxError("missing newline")
+        return contents[:-1].split(' ')
 
     def get_path(self):
-        return "/proc/uid_cputime/show_uid_stat"
+        return "/proc/cmdline"

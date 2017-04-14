@@ -14,24 +14,63 @@
 # limitations under the License.
 #
 
-import KernelProcFileTestBase
-from KernelProcFileTestBase import repeat_rule
+from vts.testcases.kernel.api.proc import KernelProcFileTestBase
+from vts.testcases.kernel.api.proc.KernelProcFileTestBase import repeat_rule, literal_token
 
 
 class ProcStatTest(KernelProcFileTestBase.KernelProcFileTestBase):
-    '''
-    /proc/stat provides kernel and system statistics.
-    '''
+    '''/proc/stat provides kernel and system statistics.'''
 
-    start = 'lines'
+    start = 'stat'
 
-    p_lines = repeat_rule('line')
+    t_CPU = literal_token(r'cpu[0-9]*')
+    t_INTR = literal_token(r'intr')
+    t_CTXT = literal_token(r'ctxt')
+    t_BTIME = literal_token(r'btime')
+    t_PROCESSES = literal_token(r'processes')
+    t_PROCS_RUNNING = literal_token(r'procs_running')
+    t_PROCS_BLOCKED = literal_token(r'procs_blocked')
+    t_SOFTIRQ = literal_token(r'softirq')
+
+    p_cpus = repeat_rule('cpu')
     p_numbers = repeat_rule('NUMBER')
 
     t_ignore = ' '
 
-    def p_line(self, p):
-        'line : STRING NUMBERs NEWLINE'
+    def p_stat(self, p):
+        'stat : cpus intr ctxt btime processes procs_running procs_blocked softirq'
+        p[0] = p[1:]
+
+    def p_cpu(self, p):
+        'cpu : CPU NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NEWLINE'
+        p[0] = p[1:]
+
+    def p_intr(self, p):
+        'intr : INTR NUMBERs NEWLINE'
+        p[0] = p[1:]
+
+    def p_ctxt(self, p):
+        'ctxt : CTXT NUMBER NEWLINE'
+        p[0] = p[1:]
+
+    def p_btime(self, p):
+        'btime : BTIME NUMBER NEWLINE'
+        p[0] = p[1:]
+
+    def p_processes(self, p):
+        'processes : PROCESSES NUMBER NEWLINE'
+        p[0] = p[1:]
+
+    def p_procs_running(self, p):
+        'procs_running : PROCS_RUNNING NUMBER NEWLINE'
+        p[0] = p[1:]
+
+    def p_procs_blocked(self, p):
+        'procs_blocked : PROCS_BLOCKED NUMBER NEWLINE'
+        p[0] = p[1:]
+
+    def p_softirq(self, p):
+        'softirq : SOFTIRQ NUMBERs NEWLINE'
         p[0] = p[1:]
 
     def get_path(self):

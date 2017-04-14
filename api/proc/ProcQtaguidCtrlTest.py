@@ -14,42 +14,37 @@
 # limitations under the License.
 #
 
-import KernelProcFileTestBase
-from KernelProcFileTestBase import repeat_rule, literal_token
+from vts.testcases.kernel.api.proc import KernelProcFileTestBase
+from vts.testcases.kernel.api.proc.KernelProcFileTestBase import repeat_rule, literal_token
 from vts.utils.python.file import file_utils
 
 
 class ProcQtaguidCtrlTest(KernelProcFileTestBase.KernelProcFileTestBase):
-    '''
-    /proc/net/xt_qtaguid/ctrl provides information about tagged sockets.
-    '''
+    '''/proc/net/xt_qtaguid/ctrl provides information about tagged sockets.
 
-    start = 'content'
+    File content consists of possibly several lines of socket info followed by a
+    single line of events info, followed by a terminating newline.'''
 
-    t_EVENTS = literal_token(r'events')
-    t_TAG = literal_token(r'tag')
-    t_UID = literal_token(r'uid')
-    t_PID = literal_token(r'pid')
-    t_FCOUNT = literal_token(r'f_count')
-    t_LPAREN = literal_token(r'\(')
-    t_RPAREN = literal_token(r'\)')
-
-    p_lines = repeat_rule('line', zero_ok=True)
-    p_attrs = repeat_rule('attr')
-
-    def p_content(self, p):
-        'content : lines EVENTS COLON attrs NEWLINE'
-        p[0] = p[1:]
-
-    def p_line(self, p):
-        'line : STRING EQUALS NUMBER SPACE TAG EQUALS HEX_LITERAL SPACE \
-                LPAREN UID EQUALS NUMBER RPAREN SPACE PID EQUALS NUMBER SPACE \
-                FCOUNT EQUALS NUMBER NEWLINE'
-        p[0] = p[1:]
-
-    def p_attr(self, p):
-        'attr : SPACE STRING EQUALS NUMBER'
-        p[0] = [p[2], p[4]]
+    def parse_contents(self, contents):
+        result = []
+        lines = contents.split('\n')
+        if len(lines) == 0 or lines[-1] != '':
+            raise SyntaxError
+        for line in lines[:-2]:
+            parsed = self.parse_line(
+                "sock={:d} tag=0x{:x} (uid={:d}) pid={:d} f_count={:d}", line)
+            if any(map(lambda x: x < 0, parsed)):
+                raise SyntaxError("Negative numbers not allowed!")
+            result.append(parsed)
+        parsed = self.parse_line(
+            "events: sockets_tagged={:d} sockets_untagged={:d} counter_set_changes={:d} "
+            "delete_cmds={:d} iface_events={:d} match_calls={:d} match_calls_prepost={:d} "
+            "match_found_sk={:d} match_found_sk_in_ct={:d} match_found_no_sk_in_ct={:d} "
+            "match_no_sk={:d} match_no_sk_file={:d}", lines[-2])
+        if any(map(lambda x: x < 0, parsed)):
+            raise SyntaxError("Negative numbers not allowed!")
+        result.append(parsed)
+        return result
 
     def get_path(self):
         return "/proc/net/xt_qtaguid/ctrl"

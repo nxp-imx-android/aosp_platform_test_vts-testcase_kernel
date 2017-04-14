@@ -14,45 +14,57 @@
 # limitations under the License.
 #
 
-import KernelProcFileTestBase
-from KernelProcFileTestBase import repeat_rule, literal_token
+from parse import with_pattern
+from vts.testcases.kernel.api.proc import KernelProcFileTestBase
 
+
+@with_pattern(r'[0-9a-f]{8,}')
+def token_addr(text):
+    return int(text, 16)
+
+@with_pattern(r'[0-9a-f]{2,5}')
+def token_mm(text):
+    return int(text, 16)
+
+@with_pattern(r'[0-9]+')
+def token_lu(text):
+    return int(text)
+
+@with_pattern(r'[^\n^\0]*')
+def token_path(text):
+    return text.strip()
+
+@with_pattern(r'[r-]')
+def token_rbit(text):
+    return text
+
+@with_pattern(r'[w-]')
+def token_wbit(text):
+    return text
+
+@with_pattern(r'[x-]')
+def token_xbit(text):
+    return text
+
+@with_pattern(r'[sp]')
+def token_spbit(text):
+    return text
 
 class ProcMapsTest(KernelProcFileTestBase.KernelProcFileTestBase):
     '''/proc/self/maps provides currently mapped memory regions and permissions.'''
 
-    start = 'lines'
-
-    t_STRING = literal_token(r'[a-zA-Z\(\)_\-0-9@]+')
-    t_PATH = r'/[^\0^\n]*'
-    t_BRACKET_ITEM = r'\[[^\0^\n]*\]'
-    t_DASH = r'-'
-
-    t_ignore = r' '
-
-    p_lines = repeat_rule('line')
-
-    def p_line(self, p):
-        'line : STRING STRING STRING STRING COLON STRING STRING source NEWLINE'
-        rng = p[1].split('-')
-        try:
-            if len(rng) != 2:
-                print 'Invalid address range format!'
-                raise SyntaxError
-            p[0] = [int(rng[0], 16), int(rng[1], 16), p[2], int(p[3], 16), int(p[4], 16),\
-                    int(p[6], 16), int(p[7]), p[8]]
-        except ValueError:
-            print 'Invalid number!'
-            raise SyntaxError
-
-    def p_source(self, p):
-        '''source : PATH
-                  | BRACKET_ITEM
-                  | empty'''
-        if p[1] is None:
-            p[0] = []
-        else:
-            p[0] = p[1]
+    def parse_contents(self, contents):
+        result = []
+        lines = contents.split('\n')
+        if lines[-1] != '':
+            raise SyntaxError("missing final newline")
+        for line in lines[:-1]:
+            parsed = self.parse_line(
+                    "{:addr}-{:addr} {:rbit}{:wbit}{:xbit}{:spbit} {:addr} {:mm}:{:mm} {:lu}{:path}",
+                line, dict(mm=token_mm, addr=token_addr, lu=token_lu, path=token_path,
+                    rbit=token_rbit, wbit=token_wbit, xbit=token_xbit, spbit=token_spbit))
+            result.append(parsed)
+        return result
 
     def get_path(self):
         return "/proc/self/maps"

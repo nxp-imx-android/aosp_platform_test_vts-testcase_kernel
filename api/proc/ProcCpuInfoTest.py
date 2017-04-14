@@ -14,8 +14,8 @@
 # limitations under the License.
 #
 
-import KernelProcFileTestBase
-from KernelProcFileTestBase import repeat_rule, literal_token
+from vts.testcases.kernel.api.proc import KernelProcFileTestBase
+from vts.testcases.kernel.api.proc.KernelProcFileTestBase import repeat_rule, literal_token
 
 
 class ProcCpuInfoTest(KernelProcFileTestBase.KernelProcFileTestBase):

@@ -14,14 +14,12 @@
 # limitations under the License.
 #
 
-import KernelProcFileTestBase
-from KernelProcFileTestBase import repeat_rule, literal_token
+from vts.testcases.kernel.api.proc import KernelProcFileTestBase
+from vts.testcases.kernel.api.proc.KernelProcFileTestBase import repeat_rule, literal_token
 
 
 class ProcZoneInfoTest(KernelProcFileTestBase.KernelProcFileTestBase):
-    '''
-    /proc/zoneinfo displays information about memory zones.
-    '''
+    '''/proc/zoneinfo displays information about memory zones.'''
 
     t_APAGES = literal_token(r'pages')
     t_PAGESETS = literal_token(r'pagesets')

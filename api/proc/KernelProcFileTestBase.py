@@ -16,7 +16,11 @@
 #
 
 import os
+import parse
 import sys
+
+from abc import ABCMeta
+from abc import abstractmethod
 from ply import lex
 from ply import yacc
 from vts.utils.python.file import file_utils
@@ -68,6 +72,8 @@ class KernelProcFileTestBase(object):
 
     Child class should also specify a `start` variable to give the starting rule.
     """
+
+    __metaclass__ = ABCMeta
 
     def t_HEX_LITERAL(self, t):
         r'0x[a-f0-9]+'
@@ -130,30 +136,63 @@ class KernelProcFileTestBase(object):
         self.parser = yacc.yacc(module=self, write_tables=False, \
                 errorlog=yacc.PlyLogger(sys.stderr)) #open(os.devnull, 'w')))
 
-    def parse_contents(self, file_contents):
+    def parse_line(self, rule, line, custom={}):
+        """Parse a line of text with the parse library.
+
+        Args:
+            line: string, a line of text
+            rule: string, a format rule. See parse documentation
+            custom: dict, maps to custom type conversion functions
+
+        Returns:
+            list, information parsed from the line
+
+        Raises:
+            SyntaxError: if the line could not be parsed.
         """
-        Using the internal parser, parse the contents and return a structure
-        constructed according to the parsing rules
+        parsed = parse.parse(rule, line, custom)
+        if parsed is None:
+            raise SyntaxError("Failed to parse line %s according to rule %s" % (line, rule))
+        return list(parsed)
+
+    def parse_contents(self, file_contents):
+        """Using the internal parser, parse the contents.
+
+        Args:
+            file_contents: string, entire contents of a file
+
+        Returns:
+            list, a parsed representation of the file
+
+        Raises:
+            SyntaxError: if the file could not be parsed
         """
         return self.parser.parse(file_contents, lexer=self.lexer)
 
+    @abstractmethod
     def get_path(self):
-        """
-        Return the full path of this proc file.
-        """
-        return ""
+        """Returns the full path of this proc file (string)."""
+        pass
 
     def prepare_test(self, shell):
-        """
-        Performs any actions necessary before testing the proc file.
-        Return True if successful.
+        """Performs any actions necessary before testing the proc file.
+
+        Args:
+            shell: shell object, for preparation that requires device access
+
+        Returns:
+            boolean, True if successful.
         """
         return True
 
     def result_correct(self, parse_result):
-        """
-        Return True if the parsed result meets the requirements for the
-        proc file.
+        """Returns: True if the parsed result meets the requirements (boolean)."""
+        return True
+
+    def test_format(self):
+        """Returns:
+            boolean, True if the file should be read and its format tested.
+                     False if only the existence and permission should be tested.
         """
         return True
 

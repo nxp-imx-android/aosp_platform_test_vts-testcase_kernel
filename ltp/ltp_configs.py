@@ -155,10 +155,11 @@ TEST_SUITES_REQUIRE_SINGLE_THREAD_MODE = [
 # or testsuite.testname_**bit, or just testname. Using just testname
 # is not recommended
 STAGING_TESTS = [
+    # b/37861231
+    'modules.delete_module02',
     # Flaky on pixel
     # b/32417988
     'syscalls.waitpid02_64bit',
-
     # Tests currently only failing on pixels,
     # these will be inspected soon
     'syscalls.open14',

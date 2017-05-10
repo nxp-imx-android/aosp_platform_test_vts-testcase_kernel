@@ -473,6 +473,9 @@ class KernelLtpTest(base_test.BaseTestClass):
         if not self._dut.is64Bit:
             logging.info('Target device does not support 64 bit tests.')
             return
+        if self.abi_bitness != None and self.abi_bitness != '64':
+            logging.info('Skipped 64 bit tests on %s bit ABI.', self.abi_bitness)
+            return
 
         self.TestNBits(self._64BIT)
 
@@ -480,6 +483,9 @@ class KernelLtpTest(base_test.BaseTestClass):
         """Runs all 32-bit LTP test cases."""
         if not self.run_32bit:
             logging.info('User specified not to run 32 bit version LTP tests.')
+            return
+        if self.abi_bitness != None and self.abi_bitness != '32':
+            logging.info('Skipped 32 bit tests on %s bit ABI.', self.abi_bitness)
             return
 
         self.TestNBits(self._32BIT)

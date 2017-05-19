@@ -155,6 +155,10 @@ TEST_SUITES_REQUIRE_SINGLE_THREAD_MODE = [
 # or testsuite.testname_**bit, or just testname. Using just testname
 # is not recommended
 STAGING_TESTS = [
+    # b/38393835 failing for kernel 4.4, 4.9
+    'syscalls.writev01',
+    'syscalls.writev03',
+    'syscalls.writev04',
     # b/37861231
     'modules.delete_module02',
     # Flaky on pixel

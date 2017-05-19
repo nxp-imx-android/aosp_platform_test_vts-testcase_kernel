@@ -28,6 +28,7 @@ from vts.runners.host import const
 from vts.runners.host import keys
 from vts.runners.host import test_runner
 from vts.utils.python.common import cmd_utils
+from vts.utils.python.common import list_utils
 from vts.utils.python.controllers import android_device
 
 from vts.testcases.kernel.ltp import test_cases_parser
@@ -80,6 +81,10 @@ class KernelLtpTest(base_test.BaseTestClass):
         logging.info("%s: %s", ltp_enums.ConfigKeys.NUMBER_OF_THREADS,
                      self.number_of_threads)
 
+        self.include_filter = list_utils.ExpandItemDelimiters(
+            self.include_filter, ',', to_str=True)
+        self.exclude_filter = list_utils.ExpandItemDelimiters(
+            self.include_filter, ',', to_str=True)
         self.include_filter = self.ExpandFilter(self.include_filter)
         self.exclude_filter = self.ExpandFilter(self.exclude_filter)
 
@@ -94,18 +99,21 @@ class KernelLtpTest(base_test.BaseTestClass):
 
         disabled_tests = self.ExpandFilter(ltp_configs.DISABLED_TESTS)
         staging_tests = self.ExpandFilter(ltp_configs.STAGING_TESTS)
+
         self._testcases = test_cases_parser.TestCasesParser(
             self.data_file_path, self.filterOneTest, disabled_tests,
             staging_tests)
 
-        self._env = {ltp_enums.ShellEnvKeys.TMP: ltp_configs.TMP,
-                     ltp_enums.ShellEnvKeys.TMPBASE: ltp_configs.TMPBASE,
-                     ltp_enums.ShellEnvKeys.LTPTMP: ltp_configs.LTPTMP,
-                     ltp_enums.ShellEnvKeys.TMPDIR: ltp_configs.TMPDIR,
-                     ltp_enums.ShellEnvKeys.LTP_DEV_FS_TYPE:
-                     ltp_configs.LTP_DEV_FS_TYPE,
-                     ltp_enums.ShellEnvKeys.LTPROOT: ltp_configs.LTPDIR,
-                     ltp_enums.ShellEnvKeys.PATH: ltp_configs.PATH}
+        self._env = {
+            ltp_enums.ShellEnvKeys.TMP: ltp_configs.TMP,
+            ltp_enums.ShellEnvKeys.TMPBASE: ltp_configs.TMPBASE,
+            ltp_enums.ShellEnvKeys.LTPTMP: ltp_configs.LTPTMP,
+            ltp_enums.ShellEnvKeys.TMPDIR: ltp_configs.TMPDIR,
+            ltp_enums.ShellEnvKeys.LTP_DEV_FS_TYPE:
+            ltp_configs.LTP_DEV_FS_TYPE,
+            ltp_enums.ShellEnvKeys.LTPROOT: ltp_configs.LTPDIR,
+            ltp_enums.ShellEnvKeys.PATH: ltp_configs.PATH
+        }
 
     @property
     def shell(self):
@@ -135,7 +143,7 @@ class KernelLtpTest(base_test.BaseTestClass):
         for item in input_list:
             if (item.endswith(const.SUFFIX_32BIT) or
                     item.endswith(const.SUFFIX_64BIT)):
-                result.append(item)
+                result.append(str(item))
             else:
                 result.append("%s_%s" % (item, const.SUFFIX_32BIT))
                 result.append("%s_%s" % (item, const.SUFFIX_64BIT))
@@ -143,12 +151,14 @@ class KernelLtpTest(base_test.BaseTestClass):
 
     def PreTestSetup(self, test_bit):
         """Setups that needs to be done before any tests."""
-        replacements = {'#!/bin/sh': '#!/system/bin/sh',
-                        '#! /bin/sh': '#!/system/bin/sh',
-                        '#!/bin/bash': '#!/system/bin/sh',
-                        '#! /bin/bash': '#!/system/bin/sh',
-                        'bs=1M': 'bs=1m',
-                        '/var/run': ltp_configs.TMP}
+        replacements = {
+            '#!/bin/sh': '#!/system/bin/sh',
+            '#! /bin/sh': '#!/system/bin/sh',
+            '#!/bin/bash': '#!/system/bin/sh',
+            '#! /bin/bash': '#!/system/bin/sh',
+            'bs=1M': 'bs=1m',
+            '/var/run': ltp_configs.TMP
+        }
         src_host = os.path.join(self.data_file_path, 'DATA', test_bit, 'ltp')
 
         count = 0
@@ -350,8 +360,10 @@ class KernelLtpTest(base_test.BaseTestClass):
 
         failed_multithread_tests = set()
         with futures.ThreadPoolExecutor(max_workers=n_workers) as executor:
-            fs = [executor.submit(self.RunLtpWorker, q, args, name_func, i)
-                  for i in xrange(n_workers)]
+            fs = [
+                executor.submit(self.RunLtpWorker, q, args, name_func, i)
+                for i in xrange(n_workers)
+            ]
 
             failed_test_sets = map(futures.Future.result, fs)
             for failed_test_set in failed_test_sets:
@@ -474,7 +486,8 @@ class KernelLtpTest(base_test.BaseTestClass):
             logging.info('Target device does not support 64 bit tests.')
             return
         if self.abi_bitness != None and self.abi_bitness != '64':
-            logging.info('Skipped 64 bit tests on %s bit ABI.', self.abi_bitness)
+            logging.info('Skipped 64 bit tests on %s bit ABI.',
+                         self.abi_bitness)
             return
 
         self.TestNBits(self._64BIT)
@@ -485,7 +498,8 @@ class KernelLtpTest(base_test.BaseTestClass):
             logging.info('User specified not to run 32 bit version LTP tests.')
             return
         if self.abi_bitness != None and self.abi_bitness != '32':
-            logging.info('Skipped 32 bit tests on %s bit ABI.', self.abi_bitness)
+            logging.info('Skipped 32 bit tests on %s bit ABI.',
+                         self.abi_bitness)
             return
 
         self.TestNBits(self._32BIT)

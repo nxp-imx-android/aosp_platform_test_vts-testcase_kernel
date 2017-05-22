@@ -234,7 +234,10 @@ class KernelLtpTest(base_test.BaseTestClass):
 
         test_cases = list(
             self._testcases.Load(
-                ltp_configs.LTPDIR, n_bit=n_bit, run_staging=self.run_staging))
+                ltp_configs.LTPDIR,
+                n_bit,
+                self.include_filter,
+                run_staging=self.run_staging))
 
         logging.info("Checking binary exists for all test cases.")
         self._requirement.ltp_bin_host_path = os.path.join(

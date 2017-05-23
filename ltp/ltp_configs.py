@@ -155,6 +155,9 @@ TEST_SUITES_REQUIRE_SINGLE_THREAD_MODE = [
 # or testsuite.testname_**bit, or just testname. Using just testname
 # is not recommended
 STAGING_TESTS = [
+    # Recently fixed, validating in staging
+    'syscalls.creat08',
+    'syscalls.open10',
     # b/38393835 failing for kernel 4.4, 4.9
     'syscalls.writev01',
     'syscalls.writev03',
@@ -529,8 +532,6 @@ DISABLED_TESTS = [
     'syscalls.getrusage04',
     # b/31154962
     'cpuhotplug.cpuhotplug02',
-    # b/32385889
-    'syscalls.creat08',
     # The following test cases are uncategorized
     'syscalls.fcntl34',
     'syscalls.fcntl34_64',
@@ -593,7 +594,6 @@ DISABLED_TESTS = [
     'syscalls.nice04',
     'syscalls.open01',
     'syscalls.open08',
-    'syscalls.open10',
     'syscalls.open11',
     'syscalls.madvise01',
     'syscalls.madvise02',

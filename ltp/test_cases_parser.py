@@ -62,7 +62,7 @@ class TestCasesParser(object):
         else:
             return items
 
-    def Load(self, ltp_dir, n_bit, run_staging=False):
+    def Load(self, ltp_dir, n_bit, include_filter, run_staging=False):
         """Read the definition file and yields a TestCase generator."""
         run_scritp = self.GenerateLtpRunScript()
 
@@ -98,14 +98,15 @@ class TestCasesParser(object):
                 testcase.note = "filtered"
 
             # For skipping tests that are not designed or ready for Android
-            if test_display_name in self._disabled_tests:
+            if (test_display_name in self._disabled_tests and
+                    test_display_name not in include_filter):
                 logging.info("[Parser] Skipping test case %s. Reason: "
                              "disabled" % testcase.fullname)
                 continue
 
             # For separating staging tests from stable tests
             if test_display_name in self._staging_tests:
-                if not run_staging:
+                if not run_staging and test_display_name not in include_filter:
                     # Skip staging tests in stable run
                     continue
                 else:
@@ -161,8 +162,8 @@ class TestCasesParser(object):
                                if testname in disabled_tests_list else '')
             testname_modified = testname_prefix + testname
 
-            result.append("\t".join([testsuite, testname_modified, line[len(
-                testname):].strip()]))
+            result.append("\t".join(
+                [testsuite, testname_modified, line[len(testname):].strip()]))
         return result
 
     def GenerateLtpRunScript(self):

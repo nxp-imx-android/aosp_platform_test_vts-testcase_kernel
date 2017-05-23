@@ -20,6 +20,6 @@ include $(call all-subdir-makefiles)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := LinuxKselftestTest
+LOCAL_MODULE := VtsKernelLinuxKselftest
 VTS_CONFIG_SRC_DIR := testcases/kernel/linux_kselftest/stable
 include test/vts/tools/build/Android.host_config.mk

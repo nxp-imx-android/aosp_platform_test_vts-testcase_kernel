@@ -39,8 +39,9 @@ class ProcCpuInfoTest(KernelProcFileTestBase.KernelProcFileTestBase):
     t_STRING = r'[^:^ ^\t^\n]+'
 
     # Numbers and literals are tokenized as strings instead
-    t_NUMBER = r'[0-9]+'
-    t_HEX_LITERAL = r'[0-9a-f]+'
+    t_NUMBER = r'x'
+    t_HEX_LITERAL = r'x'
+    t_FLOAT =  r'x'
 
     p_lines = repeat_rule('line')
     p_string_spaces = repeat_rule('string_space', zero_ok=True)

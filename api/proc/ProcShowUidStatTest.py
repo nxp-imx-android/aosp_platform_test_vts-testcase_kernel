@@ -28,8 +28,12 @@ class ProcShowUidStatTest(KernelProcFileTestBase.KernelProcFileTestBase):
     p_lines = KernelProcFileTestBase.repeat_rule('line')
 
     def p_line(self, p):
-        'line : NUMBER COLON SPACE NUMBER SPACE NUMBER SPACE NUMBER NEWLINE'
-        p[0] = [p[1], p[4], p[6], p[8]]
+        '''line : NUMBER COLON SPACE NUMBER SPACE NUMBER SPACE NUMBER NEWLINE
+                | NUMBER COLON SPACE NUMBER SPACE NUMBER NEWLINE'''
+        if len(p) == 10:
+            p[0] = [p[1], p[4], p[6], p[8]]
+        else:
+            p[0] = [p[1], p[4], p[6]]
 
     def get_path(self):
         return "/proc/uid_cputime/show_uid_stat"

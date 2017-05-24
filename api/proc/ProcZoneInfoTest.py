@@ -30,6 +30,7 @@ class ProcZoneInfoTest(KernelProcFileTestBase.KernelProcFileTestBase):
     t_NODE = literal_token(r'Node')
     t_ZONE = literal_token(r'zone')
     t_PROTECTION = literal_token(r'protection')
+    t_PERNODE = literal_token(r'per-node')
     t_LPAREN = literal_token(r'\(')
     t_RPAREN = literal_token(r'\)')
 
@@ -44,8 +45,13 @@ class ProcZoneInfoTest(KernelProcFileTestBase.KernelProcFileTestBase):
     p_numcommas = repeat_rule('numcomma')
 
     def p_node(self, p):
-        'node : heading APAGES lines protection PAGESETS NEWLINE cpus colonlines'
+        'node : heading pernode APAGES lines protection PAGESETS NEWLINE cpus colonlines'
         p[0] = [p[1], p[3], p[4], p[7], p[8]]
+
+    def p_pernode(self, p):
+        '''pernode : PERNODE STATS NEWLINE lines
+                   | empty'''
+        p[0] = [] if len(p) == 2 else [p[1], p[4]]
 
     def p_protection(self, p):
         'protection : PROTECTION COLON LPAREN numcommas NUMBER RPAREN NEWLINE'

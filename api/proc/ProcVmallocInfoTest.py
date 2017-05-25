@@ -26,12 +26,16 @@ class ProcVmallocInfoTest(KernelProcFileTestBase.KernelProcFileTestBase):
     t_STRING = r'[^ ^\t^\n^-^=]+'
 
     t_PAGES = literal_token('pages')
-    t_PHYS = literal_token('phys')
     t_IOREMAP = literal_token('ioremap')
     t_VMALLOC = literal_token('vmalloc')
     t_VMAP = literal_token('vmap')
     t_USER = literal_token('user')
     t_VPAGES = literal_token('vpages')
+
+    def t_PHYS(self, t):
+        r'phys=[a-f0-9]+'
+        t.value = [t.value[:4], int(t.value[5:], 16)]
+        return t
 
     t_ignore = ' '
 
@@ -53,15 +57,12 @@ class ProcVmallocInfoTest(KernelProcFileTestBase.KernelProcFileTestBase):
     def p_pages(self, p):
         '''pages : PAGES EQUALS NUMBER
                  | empty'''
-        if len(p) > 2:
-            p[0] = [p[1], p[3]]
-        else:
-            p[0] = []
+        p[0] = [] if len(p) == 2 else [p[1], p[3]]
 
     def p_phys(self, p):
-        '''phys : PHYS EQUALS STRING
-                  | empty'''
-        p[0] = p[1:]
+        '''phys : PHYS
+                | empty'''
+        p[0] = p[1]
 
     def p_ioremap(self, p):
         '''ioremap : IOREMAP

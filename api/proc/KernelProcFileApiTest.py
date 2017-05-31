@@ -95,7 +95,7 @@ class KernelProcFileApiTest(base_test.BaseTestClass):
         file_content = self.ReadFileContent(filepath)
         try:
             parse_result = test_object.parse_contents(file_content)
-        except SyntaxError as e:
+        except (SyntaxError, ValueError, IndexError) as e:
             asserts.fail("Failed to parse! " + str(e))
         asserts.assertTrue(
             test_object.result_correct(parse_result), "Results not valid!")

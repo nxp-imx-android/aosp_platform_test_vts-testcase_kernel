@@ -107,10 +107,11 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
         return configs
 
     def testKernelConfigs(self):
-        """Ensures all configs conform to android-base.cfg requirements.
+        """Ensures all kernel configs conform to Android requirements.
 
         Detects kernel version of device and validates against appropriate
-        Common Android Kernel android-base.cfg.
+        Common Android Kernel android-base.cfg and Android Treble
+        requirements.
         """
         logging.info("Testing existence of %s" % self.PROC_FILE_PATH)
         file_utils.assertPermissionsAndExistence(
@@ -148,6 +149,10 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
                   device_configs[config_name] != config_state):
                 incorrect_config_state.append(config_name + "=" +
                                               device_configs[config_name])
+
+        if ("CONFIG_OF" not in device_configs and
+            "CONFIG_ACPI" not in device_configs):
+               should_be_enabled.append("CONFIG_OF | CONFIG_ACPI")
 
         asserts.assertTrue(
             len(should_be_enabled) == 0 and len(should_not_be_set) == 0 and

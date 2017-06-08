@@ -81,9 +81,6 @@ class KernelLtpTest(base_test.BaseTestClass):
         logging.info("%s: %s", ltp_enums.ConfigKeys.NUMBER_OF_THREADS,
                      self.number_of_threads)
 
-        self.include_filter = self.ExpandFilter(self.include_filter)
-        self.exclude_filter = self.ExpandFilter(self.exclude_filter)
-
         self._dut = self.registerController(android_device)[0]
         logging.info("product_type: %s", self._dut.product_type)
         self._dut.shell.InvokeTerminal("one")
@@ -117,30 +114,6 @@ class KernelLtpTest(base_test.BaseTestClass):
     def shell(self, shell):
         """Set shell object"""
         self._shell = shell
-
-    def ExpandFilter(self, input_list):
-        '''Expand filter items with bitness suffix.
-
-        If a filter item contains bitness suffix, only test name with that tag will be included
-        in output.
-        Otherwise, both 32bit and 64bit suffix will be paired to the test name in output
-        list.
-
-        Args:
-            input_list: list of string, the list to expand
-
-        Returns:
-            A list of string
-        '''
-        result = []
-        for item in input_list:
-            if (item.endswith(const.SUFFIX_32BIT) or
-                    item.endswith(const.SUFFIX_64BIT)):
-                result.append(item)
-            else:
-                result.append("%s_%s" % (item, const.SUFFIX_32BIT))
-                result.append("%s_%s" % (item, const.SUFFIX_64BIT))
-        return result
 
     def PreTestSetup(self, test_bit):
         """Setups that needs to be done before any tests."""

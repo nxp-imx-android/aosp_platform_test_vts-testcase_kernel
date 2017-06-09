@@ -90,8 +90,8 @@ class KernelLtpTest(base_test.BaseTestClass):
             self.shell)
         self._shell_env = shell_environment.ShellEnvironment(self.shell)
 
-        disabled_tests = self.ExpandFilter(ltp_configs.DISABLED_TESTS)
-        staging_tests = self.ExpandFilter(ltp_configs.STAGING_TESTS)
+        disabled_tests = self.ExpandFilterBitness(ltp_configs.DISABLED_TESTS)
+        staging_tests = self.ExpandFilterBitness(ltp_configs.STAGING_TESTS)
 
         self._testcases = test_cases_parser.TestCasesParser(
             self.data_file_path, self.filterOneTest, disabled_tests,

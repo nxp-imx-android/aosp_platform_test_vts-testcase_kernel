@@ -50,7 +50,6 @@ TEST_OBJECTS = {
     ProcMemInfoTest.ProcMemInfoTest(),
     ProcSimpleFileTests.ProcMmapMinAddrTest(),
     ProcSimpleFileTests.ProcMmapRndBitsTest(),
-    ProcSimpleFileTests.ProcMmapRndCompatBitsTest(),
     ProcModulesTest.ProcModulesTest(),
     ProcMountsTest.ProcMountsTest(),
     ProcSimpleFileTests.ProcOverCommitMemoryTest(),
@@ -62,6 +61,10 @@ TEST_OBJECTS = {
     ProcVersionTest.ProcVersionTest(),
     ProcVmallocInfoTest.ProcVmallocInfoTest(),
     ProcZoneInfoTest.ProcZoneInfoTest(),
+}
+
+TEST_OBJECTS_64 = {
+    ProcSimpleFileTests.ProcMmapRndCompatBitsTest(),
 }
 
 
@@ -80,6 +83,8 @@ class KernelProcFileApiTest(base_test.BaseTestClass):
         Args:
             test_object: inherits KernelProcFileTestBase, contains the test functions
         """
+        asserts.skipIf(test_object in TEST_OBJECTS_64 and not self.dut.is64Bit,
+                       "Skip test for 64-bit kernel.")
         filepath = test_object.get_path()
         file_utils.assertPermissionsAndExistence(
             self.shell, filepath, test_object.get_permission_checker())
@@ -104,7 +109,7 @@ class KernelProcFileApiTest(base_test.BaseTestClass):
         """Run all proc file tests."""
         self.runGeneratedTests(
             test_func=self.runProcFileTest,
-            settings=TEST_OBJECTS,
+            settings=TEST_OBJECTS.union(TEST_OBJECTS_64),
             name_func=lambda test_obj: "test" + test_obj.__class__.__name__)
 
     def ReadFileContent(self, filepath):

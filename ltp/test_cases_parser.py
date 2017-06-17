@@ -31,15 +31,15 @@ class TestCasesParser(object):
     Attributes:
         _data_path: string, the vts data path on host side
         _filter_func: function, a filter method that will emit exception if a test is filtered
-        disabled_tests: list of string
-        staging_tests: list of string
+        _stable_tests: list of string, names of tests that are stable
+        _disabled_tests: list of string, names of tests that are disabled
     """
 
-    def __init__(self, data_path, filter_func, disabled_tests, staging_tests):
+    def __init__(self, data_path, filter_func, stable_tests, disabled_tests):
         self._data_path = data_path
         self._filter_func = filter_func
+        self._stable_tests = stable_tests
         self._disabled_tests = disabled_tests
-        self._staging_tests = staging_tests
 
     def ValidateDefinition(self, line):
         """Validate a tab delimited test case definition.
@@ -105,7 +105,7 @@ class TestCasesParser(object):
                 continue
 
             # For separating staging tests from stable tests
-            if test_display_name in self._staging_tests:
+            if test_display_name not in self._stable_tests:
                 if not run_staging and test_display_name not in include_filter:
                     # Skip staging tests in stable run
                     continue

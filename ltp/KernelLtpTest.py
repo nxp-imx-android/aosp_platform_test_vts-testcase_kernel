@@ -90,12 +90,14 @@ class KernelLtpTest(base_test.BaseTestClass):
             self.shell)
         self._shell_env = shell_environment.ShellEnvironment(self.shell)
 
+        stable_tests = self.ExpandFilterBitness(ltp_configs.STABLE_TESTS)
         disabled_tests = self.ExpandFilterBitness(ltp_configs.DISABLED_TESTS)
-        staging_tests = self.ExpandFilterBitness(ltp_configs.STAGING_TESTS)
 
         self._testcases = test_cases_parser.TestCasesParser(
-            self.data_file_path, self.filterOneTest, disabled_tests,
-            staging_tests)
+            self.data_file_path,
+            self.filterOneTest,
+            stable_tests,
+            disabled_tests)
 
         self._env = {
             ltp_enums.ShellEnvKeys.TMP: ltp_configs.TMP,

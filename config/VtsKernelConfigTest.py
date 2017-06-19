@@ -76,17 +76,46 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
 
         return kernel_version
 
-    def parseConfigFileToDict(self, file):
+    def checkKernelArch(self, configs):
+        """Find arch of the device kernel.
+
+        Uses the kernel configuration to determine the architecture
+        it is compiled for.
+
+        Args:
+            configs: dict containing device kernel configuration options
+
+        Returns:
+            A string containing the architecture of the device kernel. If
+            the architecture cannot be determined, an empty string is
+            returned.
+        """
+
+        CONFIG_ARM = "CONFIG_ARM"
+        CONFIG_ARM64 = "CONFIG_ARM64"
+        CONFIG_X86 = "CONFIG_X86"
+
+        if CONFIG_ARM in configs and configs[CONFIG_ARM] == "y":
+            return "arm"
+        elif CONFIG_ARM64 in configs and configs[CONFIG_ARM64] == "y":
+            return "arm64"
+        elif CONFIG_X86 in configs and configs[CONFIG_X86] == "y":
+            return "x86"
+        else:
+            print "Unable to determine kernel architecture."
+            return ""
+
+    def parseConfigFileToDict(self, file, configs):
         """Parse kernel config file to a dictionary.
 
         Args:
             file: file object, android-base.cfg or unzipped /proc/config.gz
+            configs: dict to which config options in file will be added
 
         Returns:
             dict: {config_name: config_state}
         """
         config_lines = [line.rstrip("\n") for line in file.readlines()]
-        configs = dict()
 
         for line in config_lines:
             if line.startswith("#") and line.endswith("is not set"):
@@ -120,19 +149,35 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
         logging.info("Validating kernel version of device.")
         kernel_version = self.checkKernelVersion()
 
+        # Pull configs from the universal config file.
+        configs = dict()
         config_file_path = os.path.join(self.data_file_path,
             self.KERNEL_CONFIG_FILE_PATH, "android-" + kernel_version,
             "android-base.cfg")
         with open(config_file_path, 'r') as config_file:
-            configs = self.parseConfigFileToDict(config_file)
+            configs = self.parseConfigFileToDict(config_file, configs)
 
+        # Pull configs from device.
+        device_configs = dict()
         self.dut.adb.pull("%s %s" % (self.PROC_FILE_PATH, self._temp_dir))
         logging.info("Adb pull %s to %s", self.PROC_FILE_PATH, self._temp_dir)
 
         localpath = os.path.join(self._temp_dir, "config.gz")
         with gzip.open(localpath, "rb") as device_config_file:
-            device_configs = self.parseConfigFileToDict(device_config_file)
+            device_configs = self.parseConfigFileToDict(device_config_file,
+                    device_configs)
 
+        # Check device architecture and pull arch-specific configs.
+        kernelArch = self.checkKernelArch(device_configs)
+        if kernelArch is not "":
+            config_file_path = os.path.join(self.data_file_path,
+                self.KERNEL_CONFIG_FILE_PATH, "android-" + kernel_version,
+                "android-base-%s.cfg" % kernelArch)
+            if os.path.isfile(config_file_path):
+                with open(config_file_path, 'r') as config_file:
+                    configs = self.parseConfigFileToDict(config_file, configs)
+
+        # Determine any deviations from the required configs.
         should_be_enabled = []
         should_not_be_set = []
         incorrect_config_state = []

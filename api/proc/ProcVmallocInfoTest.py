@@ -27,6 +27,7 @@ class ProcVmallocInfoTest(KernelProcFileTestBase.KernelProcFileTestBase):
 
     t_PAGES = literal_token('pages')
     t_IOREMAP = literal_token('ioremap')
+    t_MODULE = literal_token('\[[^\n^\0]*\]')
     t_VMALLOC = literal_token('vmalloc')
     t_VMAP = literal_token('vmap')
     t_USER = literal_token('user')
@@ -42,7 +43,7 @@ class ProcVmallocInfoTest(KernelProcFileTestBase.KernelProcFileTestBase):
     p_lines = repeat_rule('line')
 
     def p_line(self, p):
-        'line : addr_range NUMBER caller pages phys ioremap vmalloc vmap user vpages NEWLINE'
+        'line : addr_range NUMBER caller module pages phys ioremap vmalloc vmap user vpages NEWLINE'
         p[0] = p[1:]
 
     def p_addr_range(self, p):
@@ -51,6 +52,11 @@ class ProcVmallocInfoTest(KernelProcFileTestBase.KernelProcFileTestBase):
 
     def p_caller(self, p):
         '''caller : STRING
+                  | empty'''
+        p[0] = p[1:]
+
+    def p_module(self, p):
+        '''module : MODULE
                   | empty'''
         p[0] = p[1:]
 

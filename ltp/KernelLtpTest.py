@@ -26,6 +26,7 @@ from vts.runners.host import asserts
 from vts.runners.host import base_test
 from vts.runners.host import const
 from vts.runners.host import keys
+from vts.runners.host import records
 from vts.runners.host import test_runner
 from vts.utils.python.common import cmd_utils
 from vts.utils.python.common import list_utils
@@ -429,7 +430,8 @@ class KernelLtpTest(base_test.BaseTestClass):
             **kwargs: any additional keyword arguments for runner
         """
         self._report_thread_lock.acquire()
-        self.results.requested.append(test_name)
+        tr_record = records.TestResultRecord(test_name, self.TAG)
+        self.results.requested.append(tr_record)
         try:
             self.execOneTest(test_name, function, args, **kwargs)
         except Exception as e:

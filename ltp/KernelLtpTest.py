@@ -36,6 +36,8 @@ from vts.testcases.kernel.ltp import environment_requirement_checker as env_chec
 from vts.testcases.kernel.ltp.shell_environment import shell_environment
 from vts.testcases.kernel.ltp import ltp_enums
 from vts.testcases.kernel.ltp import ltp_configs
+from vts.testcases.kernel.ltp.configs import stable_tests
+from vts.testcases.kernel.ltp.configs import disabled_tests
 
 
 class KernelLtpTest(base_test.BaseTestClass):
@@ -89,14 +91,14 @@ class KernelLtpTest(base_test.BaseTestClass):
             self.shell)
         self._shell_env = shell_environment.ShellEnvironment(self.shell)
 
-        stable_tests = self.ExpandFilterBitness(ltp_configs.STABLE_TESTS)
-        disabled_tests = self.ExpandFilterBitness(ltp_configs.DISABLED_TESTS)
+        stable_test_list = self.ExpandFilterBitness(stable_tests.STABLE_TESTS)
+        disabled_test_list = self.ExpandFilterBitness(disabled_tests.DISABLED_TESTS)
 
         self._testcases = test_cases_parser.TestCasesParser(
             self.data_file_path,
             self.filterOneTest,
-            stable_tests,
-            disabled_tests)
+            stable_test_list,
+            disabled_test_list)
 
         self._env = {
             ltp_enums.ShellEnvKeys.TMP: ltp_configs.TMP,

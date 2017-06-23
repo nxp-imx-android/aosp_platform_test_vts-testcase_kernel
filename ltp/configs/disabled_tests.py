@@ -292,6 +292,9 @@ DISABLED_TESTS = [
     'cpuhotplug.cpuhotplug06',
     'input.input06',
     'dio.dio10',
+    # dio29 and dio30 take too long to finish
+    'dio.dio29',
+    'dio.dio30',
     'fsx.fsx-linux',
     'dio.dio04',
     'numa.Numa-testcases',

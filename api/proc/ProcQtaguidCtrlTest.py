@@ -16,7 +16,7 @@
 
 from vts.testcases.kernel.api.proc import KernelProcFileTestBase
 from vts.testcases.kernel.api.proc.KernelProcFileTestBase import repeat_rule, literal_token
-from vts.utils.python.file import file_utils
+from vts.utils.python.file import target_file_utils
 
 
 class ProcQtaguidCtrlTest(KernelProcFileTestBase.KernelProcFileTestBase):
@@ -52,4 +52,4 @@ class ProcQtaguidCtrlTest(KernelProcFileTestBase.KernelProcFileTestBase):
     def get_permission_checker(self):
         """Get r/w file permission checker.
         """
-        return file_utils.IsReadWrite
+        return target_file_utils.IsReadWrite

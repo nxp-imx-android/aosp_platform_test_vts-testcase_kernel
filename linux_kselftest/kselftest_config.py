@@ -48,7 +48,6 @@ KSFT_CASES_STABLE = map(lambda x: test_case.LinuxKselftestTestcase(*(x)), [
     ("timers/nsleep-lat", ["arm", "x86"], [32, 64]),
     ("timers/set-timer-lat", ["arm", "x86"], [32, 64]),
     ("timers/inconsistency-check", ["arm", "x86"], [32, 64]),
-    ("timers/alarmtimer-suspend", ["arm", "x86"], [32, 64]),
     ("timers/raw_skew", ["arm", "x86"], [32, 64]),
     ("timers/threadtest", ["arm", "x86"], [32, 64]),
     ("timers/set-tai", ["arm", "x86"], [32, 64]),
@@ -59,6 +58,7 @@ KSFT_CASES_STAGING = map(lambda x: test_case.LinuxKselftestTestcase(*(x)), [
 # TODO(trong): enable pstore test.
 #    ("pstore/pstore_tests", ["arm", "x86"], [32, 64]),
     ("seccomp/seccomp_bpf", ["arm", "x86"], [32, 64]),
+    ("timers/alarmtimer-suspend", ["arm", "x86"], [32, 64]),
     ("x86/single_step_syscall", ["x86"], [32, 64]),
     ("x86/sysret_ss_attrs", ["x86"], [32]),
     ("x86/syscall_nt", ["x86"], [32, 64]),

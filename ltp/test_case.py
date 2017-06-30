@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+import os
 import re
 import logging
 
@@ -126,8 +127,8 @@ class TestCase(object):
                 if executable.find('=') > 0 else executable
                 for executable in executables)
 
-    def GetRequiredExecutablePaths(self, ltp_bin_path=ltp_configs.LTPBINPATH):
-        """Get required executables' paths.
+    def GetRequiredExecutablePaths(self, ltp_bin_host_path):
+        """Get required executables' paths on host.
 
         Returns:
             A list of all executables' paths that will be needed
@@ -135,7 +136,7 @@ class TestCase(object):
             returned. For binaries in system's PATH, only the name will be
             returned.
         """
-        return [path_utils.JoinTargetPath(ltp_bin_path, executable)
+        return [os.path.join(ltp_bin_host_path, executable)
                 if executable not in ltp_configs.INTERNAL_BINS else executable
                 for executable in self.InternalGetExecutableNames()
                 if executable not in ltp_configs.INTERNAL_SHELL_COMMANDS]

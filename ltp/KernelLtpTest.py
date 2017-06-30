@@ -395,7 +395,7 @@ class KernelLtpTest(base_test.BaseTestClass):
             # Check whether test case is filtered out by base_test's filtering method
             if test_case.is_filtered:
                 self.InternalResultReportMultiThread(test_name, asserts.skipIf,
-                                                     (False, test_case.note))
+                                                     (True, test_case.note))
                 continue
             logging.info("Worker {} starts checking requirement "
                          "for '{}'.".format(id, test_case))
@@ -406,7 +406,7 @@ class KernelLtpTest(base_test.BaseTestClass):
                 logging.info("Worker {} reports requirement "
                              "not satisfied for '{}'.".format(id, test_case))
                 self.InternalResultReportMultiThread(test_name, asserts.skipIf,
-                                                     (False, test_case.note))
+                                                     (True, test_case.note))
                 continue
 
             cmd = "export {envp} && {commands}".format(

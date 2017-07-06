@@ -155,6 +155,11 @@ TEST_SUITES_REQUIRE_SINGLE_THREAD_MODE = [
 # or testsuite.testname_**bit, or just testname. Using just testname
 # is not recommended
 STAGING_TESTS = [
+    # flakey due to b/62575538
+    'syscalls.epoll_ctl01_32bit',
+    'syscalls.epoll_ctl01_64bit',
+    'syscalls.epoll_wait01_32bit',
+    'syscalls.epoll_wait01_64bit',
     # b/38393835 failing for kernel 4.4, 4.9
     'syscalls.writev01',
     'syscalls.writev03',

@@ -368,12 +368,14 @@ STABLE_TESTS = [
     'syscalls.epoll01_64bit',
     'syscalls.epoll_create1_01_32bit',
     'syscalls.epoll_create1_01_64bit',
-    'syscalls.epoll_ctl01_32bit',
-    'syscalls.epoll_ctl01_64bit',
+# epoll_ctl01 flakey due to b/62575538
+#    'syscalls.epoll_ctl01_32bit',
+#    'syscalls.epoll_ctl01_64bit',
     'syscalls.epoll_ctl02_32bit',
     'syscalls.epoll_ctl02_64bit',
-    'syscalls.epoll_wait01_32bit',
-    'syscalls.epoll_wait01_64bit',
+# epoll_wait01 flakey due to b/62575538
+#    'syscalls.epoll_wait01_32bit',
+#    'syscalls.epoll_wait01_64bit',
     'syscalls.epoll_wait02_32bit',
     'syscalls.epoll_wait02_64bit',
     'syscalls.epoll_wait03_32bit',

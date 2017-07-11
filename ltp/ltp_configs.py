@@ -158,6 +158,11 @@ STAGING_TESTS = [
     # Recently fixed, validating in staging
     'syscalls.creat08',
     'syscalls.open10',
+    # flakey due to b/62575538
+    'syscalls.epoll_ctl01_32bit',
+    'syscalls.epoll_ctl01_64bit',
+    'syscalls.epoll_wait01_32bit',
+    'syscalls.epoll_wait01_64bit',
     # b/38393835 failing for kernel 4.4, 4.9
     'syscalls.writev01',
     'syscalls.writev03',

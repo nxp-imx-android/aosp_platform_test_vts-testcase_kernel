@@ -36,6 +36,7 @@ from vts.testcases.kernel.ltp.shell_environment import shell_environment
 from vts.testcases.kernel.ltp import ltp_enums
 from vts.testcases.kernel.ltp import ltp_configs
 
+RANDOM_SEED = 0
 
 class KernelLtpTest(base_test.BaseTestClass):
     """Runs the LTP (Linux Test Project) test cases against Android OS kernel.
@@ -338,6 +339,7 @@ class KernelLtpTest(base_test.BaseTestClass):
             name_func=name_func)
 
         # Shuffle the tests to reduce resource competition probability
+        random.seed(RANDOM_SEED)
         random.shuffle(settings_multithread)
 
         # Create a queue for thread workers to pull tasks

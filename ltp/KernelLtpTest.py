@@ -139,14 +139,14 @@ class KernelLtpTest(base_test.BaseTestClass):
             for filename in filenames:
                 filepath = os.path.join(dirpath, filename)
                 content = ''
-                with open(filepath, 'r') as f:
+                with open(filepath, 'rb') as f:
                     content = f.read()
                 content_replaced = content
                 for key in replacements:
                     content_replaced = content_replaced.replace(
                         key, replacements[key])
                 if content_replaced != content:
-                    with open(filepath, 'w') as f:
+                    with open(filepath, 'wb') as f:
                         f.write(content_replaced)
                     count += 1
         logging.info('Finished replacing script contents from %s files', count)

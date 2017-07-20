@@ -36,6 +36,7 @@ from vts.testcases.kernel.ltp.shell_environment import shell_environment
 from vts.testcases.kernel.ltp import ltp_enums
 from vts.testcases.kernel.ltp import ltp_configs
 
+RANDOM_SEED = 0
 
 class KernelLtpTest(base_test.BaseTestClass):
     """Runs the LTP (Linux Test Project) test cases against Android OS kernel.
@@ -80,9 +81,6 @@ class KernelLtpTest(base_test.BaseTestClass):
         logging.info("%s: %s", ltp_enums.ConfigKeys.NUMBER_OF_THREADS,
                      self.number_of_threads)
 
-        self.include_filter = self.ExpandFilter(self.include_filter)
-        self.exclude_filter = self.ExpandFilter(self.exclude_filter)
-
         self._dut = self.registerController(android_device)[0]
         logging.info("product_type: %s", self._dut.product_type)
         self._dut.shell.InvokeTerminal("one")
@@ -92,8 +90,9 @@ class KernelLtpTest(base_test.BaseTestClass):
             self.shell)
         self._shell_env = shell_environment.ShellEnvironment(self.shell)
 
-        disabled_tests = self.ExpandFilter(ltp_configs.DISABLED_TESTS)
-        staging_tests = self.ExpandFilter(ltp_configs.STAGING_TESTS)
+        disabled_tests = self.ExpandFilterBitness(ltp_configs.DISABLED_TESTS)
+        staging_tests = self.ExpandFilterBitness(ltp_configs.STAGING_TESTS)
+
         self._testcases = test_cases_parser.TestCasesParser(
             self.data_file_path, self.filterOneTest, disabled_tests,
             staging_tests)
@@ -117,30 +116,6 @@ class KernelLtpTest(base_test.BaseTestClass):
         """Set shell object"""
         self._shell = shell
 
-    def ExpandFilter(self, input_list):
-        '''Expand filter items with bitness suffix.
-
-        If a filter item contains bitness suffix, only test name with that tag will be included
-        in output.
-        Otherwise, both 32bit and 64bit suffix will be paired to the test name in output
-        list.
-
-        Args:
-            input_list: list of string, the list to expand
-
-        Returns:
-            A list of string
-        '''
-        result = []
-        for item in input_list:
-            if (item.endswith(const.SUFFIX_32BIT) or
-                    item.endswith(const.SUFFIX_64BIT)):
-                result.append(item)
-            else:
-                result.append("%s_%s" % (item, const.SUFFIX_32BIT))
-                result.append("%s_%s" % (item, const.SUFFIX_64BIT))
-        return result
-
     def PreTestSetup(self, test_bit):
         """Setups that needs to be done before any tests."""
         replacements = {'#!/bin/sh': '#!/system/bin/sh',
@@ -156,14 +131,14 @@ class KernelLtpTest(base_test.BaseTestClass):
             for filename in filenames:
                 filepath = os.path.join(dirpath, filename)
                 content = ''
-                with open(filepath, 'r') as f:
+                with open(filepath, 'rb') as f:
                     content = f.read()
                 content_replaced = content
                 for key in replacements:
                     content_replaced = content_replaced.replace(
                         key, replacements[key])
                 if content_replaced != content:
-                    with open(filepath, 'w') as f:
+                    with open(filepath, 'wb') as f:
                         f.write(content_replaced)
                     count += 1
         logging.info('Finished replacing script contents from %s files', count)
@@ -338,6 +313,7 @@ class KernelLtpTest(base_test.BaseTestClass):
             name_func=name_func)
 
         # Shuffle the tests to reduce resource competition probability
+        random.seed(RANDOM_SEED)
         random.shuffle(settings_multithread)
 
         # Create a queue for thread workers to pull tasks
@@ -393,7 +369,7 @@ class KernelLtpTest(base_test.BaseTestClass):
             # Check whether test case is filtered out by base_test's filtering method
             if test_case.is_filtered:
                 self.InternalResultReportMultiThread(test_name, asserts.skipIf,
-                                                     (False, test_case.note))
+                                                     (True, test_case.note))
                 continue
             logging.info("Worker {} starts checking requirement "
                          "for '{}'.".format(id, test_case))
@@ -404,7 +380,7 @@ class KernelLtpTest(base_test.BaseTestClass):
                 logging.info("Worker {} reports requirement "
                              "not satisfied for '{}'.".format(id, test_case))
                 self.InternalResultReportMultiThread(test_name, asserts.skipIf,
-                                                     (False, test_case.note))
+                                                     (True, test_case.note))
                 continue
 
             cmd = "export {envp} && {commands}".format(

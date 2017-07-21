@@ -40,6 +40,8 @@ from vts.testcases.kernel.ltp.configs import stable_tests
 from vts.testcases.kernel.ltp.configs import disabled_tests
 
 RANDOM_SEED = 0
+#TCP connection timeout
+TIMEOUT_TCP_IN_SECS = 180
 
 class KernelLtpTest(base_test.BaseTestClass):
     """Runs the LTP (Linux Test Project) test cases against Android OS kernel.
@@ -87,6 +89,7 @@ class KernelLtpTest(base_test.BaseTestClass):
         self._dut = self.android_devices[0]
         logging.info("product_type: %s", self._dut.product_type)
         self.shell = self._dut.shell
+        self.shell.SetConnTimeout(TIMEOUT_TCP_IN_SECS)
 
         self._requirement = env_checker.EnvironmentRequirementChecker(
             self.shell)
@@ -366,6 +369,7 @@ class KernelLtpTest(base_test.BaseTestClass):
     def RunLtpWorker(self, testcases, args, name_func, id):
         """Worker thread to run a LTP test case at a time."""
         shell = getattr(self._dut.shell, "shell_thread_{}".format(id))
+        shell.SetConnTimeout(TIMEOUT_TCP_IN_SECS)
         failed_tests = set()
 
         while True:

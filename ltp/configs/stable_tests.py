@@ -203,6 +203,8 @@ STABLE_TESTS = [
     'pty.ptem01_64bit',
     'sched.hackbench01_32bit',
     'sched.hackbench01_64bit',
+    'sched.hackbench01_low_mem_32bit',
+    'sched.hackbench01_low_mem_64bit',
     'sched.hackbench02_32bit',
     'sched.hackbench02_64bit',
     'sched.pth_str01_32bit',

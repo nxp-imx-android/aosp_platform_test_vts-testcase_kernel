@@ -528,6 +528,8 @@ STAGING_TESTS = [
 # Tests disabled
 # Based on external/ltp commit 5f01077afe994f4107b147222f3956716d4a8fde
 DISABLED_TESTS = [
+    # b/63928505
+    'syscalls.add_key02',
     # gunzip newly added on 4/12/17 and test is failing because -r option is not yet implemented.
     'commands.gzip01',
     # b/32386191 getrusage04 result is flaky

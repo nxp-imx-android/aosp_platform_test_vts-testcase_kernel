@@ -44,6 +44,9 @@ PATH = '/system/bin:%s' % LTPBINPATH
 # File system type for loop device
 LTP_DEV_FS_TYPE = 'ext4'
 
+# File name suffix for low memory scenario group scripts
+LOW_MEMORY_SCENARIO_GROUP_SUFFIX = '_low_mem'
+
 # Binaries required by LTP test cases that should exist in PATH
 INTERNAL_BINS = [
     'mktemp',
@@ -137,6 +140,46 @@ TEST_SUITES = [
     'power_management_tests',
     'pty',
     'sched',
+    'syscalls',
+    'timers',
+    # The following are not included in default LTP scenario group
+    'securebits',
+    'tracing',
+]
+
+# List of LTP test suites to run
+TEST_SUITES_LOW_MEM = [
+    'admin_tools',
+    'can',
+    'cap_bounds',
+    'commands',
+    'connectors',
+    'containers',
+#     'controllers',
+    'cpuhotplug',
+    'dio',
+    'fcntl-locktests_android',
+    'filecaps',
+    'fs',
+    'fs_bind',
+    'fs_ext4',
+    'fs_perms_simple',
+    'fsx',
+    'hugetlb',
+    'hyperthreading',
+    'input',
+    'io',
+    'ipc',
+    'kernel_misc',
+    'math',
+    'mm',
+    'modules',
+    'nptl',
+    'numa',
+    'pipes',
+    'power_management_tests',
+    'pty',
+    'sched_low_mem',
     'syscalls',
     'timers',
     # The following are not included in default LTP scenario group

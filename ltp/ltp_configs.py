@@ -191,6 +191,7 @@ TEST_SUITES_REQUIRE_SINGLE_THREAD_MODE = [
     'dio',
     'io',
     'mm',
+    'timers',
 ]
 
 # Staging tests are for debugging and verifying fixed tests

@@ -192,4 +192,5 @@ TEST_SUITES_REQUIRE_SINGLE_THREAD_MODE = [
     'dio',
     'io',
     'mm',
+    'timers',
 ]

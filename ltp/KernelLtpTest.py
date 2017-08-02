@@ -38,6 +38,7 @@ from vts.testcases.kernel.ltp import ltp_configs
 
 RANDOM_SEED = 0
 
+
 class KernelLtpTest(base_test.BaseTestClass):
     """Runs the LTP (Linux Test Project) test cases against Android OS kernel.
 
@@ -232,9 +233,17 @@ class KernelLtpTest(base_test.BaseTestClass):
         self.PreTestSetup(test_bit)
         self.PushFiles(test_bit)
 
+        is_low_mem = self._dut.getProp('ro.config.low_ram').lower() == 'true'
+        if is_low_mem:
+            logging.info('Device is configured as a low RAM device.')
+
         test_cases = list(
             self._testcases.Load(
-                ltp_configs.LTPDIR, n_bit=n_bit, run_staging=self.run_staging))
+                ltp_configs.LTPDIR,
+                n_bit,
+                self.include_filter,
+                run_staging=self.run_staging,
+                is_low_mem=is_low_mem))
 
         logging.info("Checking binary exists for all test cases.")
         self._requirement.ltp_bin_host_path = os.path.join(

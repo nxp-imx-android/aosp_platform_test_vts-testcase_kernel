@@ -62,9 +62,26 @@ class TestCasesParser(object):
         else:
             return items
 
-    def Load(self, ltp_dir, n_bit, run_staging=False):
-        """Read the definition file and yields a TestCase generator."""
-        run_scritp = self.GenerateLtpRunScript()
+    def Load(self,
+             ltp_dir,
+             n_bit,
+             include_filter,
+             run_staging=False,
+             is_low_mem=False):
+        """Read the definition file and yields a TestCase generator.
+
+        Args:
+            ltp_dir: string, directory that contains ltp binaries and scripts
+            n_bit: int, bitness
+            include_filter: list of string, tests to be scheduled exclusively
+            run_staging: bool, whether to use staging configuration
+            is_low_mem: bool, whether to use low memory device configuration
+        """
+        scenario_groups = (ltp_configs.TEST_SUITES_LOW_MEM
+                           if is_low_mem else ltp_configs.TEST_SUITES)
+        logging.info('LTP scenario groups: %s', scenario_groups)
+
+        run_scritp = self.GenerateLtpRunScript(scenario_groups)
 
         for line in run_scritp:
             items = self.ValidateDefinition(line)
@@ -72,6 +89,10 @@ class TestCasesParser(object):
                 continue
 
             testsuite, testname, command = items
+            if is_low_mem and testsuite.endswith(
+                    ltp_configs.LOW_MEMORY_SCENARIO_GROUP_SUFFIX):
+                testsuite = testsuite[:-len(
+                    ltp_configs.LOW_MEMORY_SCENARIO_GROUP_SUFFIX)]
 
             # Tests failed to build will have prefix "DISABLED_"
             if testname.startswith("DISABLED_"):
@@ -98,14 +119,15 @@ class TestCasesParser(object):
                 testcase.note = "filtered"
 
             # For skipping tests that are not designed or ready for Android
-            if test_display_name in self._disabled_tests:
+            if (test_display_name in self._disabled_tests and
+                    test_display_name not in include_filter):
                 logging.info("[Parser] Skipping test case %s. Reason: "
                              "disabled" % testcase.fullname)
                 continue
 
             # For separating staging tests from stable tests
             if test_display_name in self._staging_tests:
-                if not run_staging:
+                if not run_staging and test_display_name not in include_filter:
                     # Skip staging tests in stable run
                     continue
                 else:
@@ -161,15 +183,15 @@ class TestCasesParser(object):
                                if testname in disabled_tests_list else '')
             testname_modified = testname_prefix + testname
 
-            result.append("\t".join([testsuite, testname_modified, line[len(
-                testname):].strip()]))
+            result.append("\t".join(
+                [testsuite, testname_modified, line[len(testname):].strip()]))
         return result
 
-    def GenerateLtpRunScript(self):
+    def GenerateLtpRunScript(self, scenario_groups):
         '''Given a scenario group generate test case script.
 
         Args:
-            scenario_group: string, file path of scanerio group file
+            scenario_groups: list of string, name of test scenario groups to use
 
         Returns:
             A list of string
@@ -179,7 +201,7 @@ class TestCasesParser(object):
         disabled_tests_list = self.ReadCommentedTxt(disabled_tests_path)
 
         result = []
-        for testsuite in ltp_configs.TEST_SUITES:
+        for testsuite in scenario_groups:
             result.extend(
                 self.GenerateLtpTestCases(testsuite, disabled_tests_list))
 

@@ -41,6 +41,10 @@ LTPBINPATH = path_utils.JoinTargetPath(LTPDIR, 'testcases', 'bin')
 # Add LTP's binary path to PATH
 PATH = '/system/bin:%s' % LTPBINPATH
 
+# Default number of threads to run LTP tests. Zero means matching to number
+# of CPU threads
+DEFAULT_NUMBER_OF_THREADS = 0
+
 # File system type for loop device
 LTP_DEV_FS_TYPE = 'ext4'
 
@@ -192,4 +196,5 @@ TEST_SUITES_REQUIRE_SINGLE_THREAD_MODE = [
     'dio',
     'io',
     'mm',
+    'timers',
 ]

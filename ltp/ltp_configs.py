@@ -41,6 +41,10 @@ LTPBINPATH = path_utils.JoinTargetPath(LTPDIR, 'testcases', 'bin')
 # Add LTP's binary path to PATH
 PATH = '/system/bin:%s' % LTPBINPATH
 
+# Default number of threads to run LTP tests. Zero means matching to number
+# of CPU threads
+DEFAULT_NUMBER_OF_THREADS = 0
+
 # File system type for loop device
 LTP_DEV_FS_TYPE = 'ext4'
 
@@ -189,8 +193,40 @@ TEST_SUITES_LOW_MEM = [
 
 # List of LTP test suites that will not run in multi-thread mode
 TEST_SUITES_REQUIRE_SINGLE_THREAD_MODE = [
+    'admin_tools',
+    'can',
+    'cap_bounds',
+    'commands',
+    'connectors',
+    'containers',
+    'controllers',
+    'cpuhotplug',
     'dio',
+    'fcntl-locktests_android',
+    'filecaps',
+    'fs',
+    'fs_bind',
+    'fs_ext4',
+    'fs_perms_simple',
+    'fsx',
+    'hugetlb',
+    'hyperthreading',
+    'input',
     'io',
+    'ipc',
+    'kernel_misc',
+    'math',
     'mm',
+    'modules',
+    'nptl',
+    'numa',
+    'pipes',
+    'power_management_tests',
+    'pty',
+    'sched',
+    'sched_low_mem',
+    'syscalls',
     'timers',
+    'securebits',
+    'tracing',
 ]

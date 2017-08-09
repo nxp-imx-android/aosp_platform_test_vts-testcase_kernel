@@ -32,7 +32,7 @@ class ProcQtaguidCtrlTest(KernelProcFileTestBase.KernelProcFileTestBase):
             raise SyntaxError
         for line in lines[:-2]:
             parsed = self.parse_line(
-                "sock={:d} tag=0x{:x} (uid={:d}) pid={:d} f_count={:d}", line)
+                "sock={:x} tag=0x{:x} (uid={:d}) pid={:d} f_count={:d}", line)
             if any(map(lambda x: x < 0, parsed)):
                 raise SyntaxError("Negative numbers not allowed!")
             result.append(parsed)

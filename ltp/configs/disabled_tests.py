@@ -316,7 +316,6 @@ DISABLED_TESTS = [
     'ipc.signal_test_01',
     'mm.data_space',
     'mm.mmapstress01',
-    'mm.mmapstress03',
     'mm.mmapstress09',
     'mm.mmapstress10',
     'syscalls.clock_nanosleep01',
@@ -399,8 +398,6 @@ DISABLED_TESTS = [
     'mm.mtest01',
     # Bug#30688574
     'syscalls.accept4_01',
-    # Bug#30689411
-    'mm.mmapstress03',
     # Bug #32100169
     'dma_thread_diotest.dma_thread_diotest1',
     'dma_thread_diotest.dma_thread_diotest2',

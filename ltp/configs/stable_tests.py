@@ -177,6 +177,8 @@ STABLE_TESTS = [
     'mm.mmap10_64bit',
     'mm.mmapstress02_32bit',
     'mm.mmapstress02_64bit',
+    'mm.mmapstress03_32bit',
+    'mm.mmapstress03_64bit',
     'mm.mmapstress05_32bit',
     'mm.mmapstress05_64bit',
     'mm.mmapstress06_32bit',

@@ -23,6 +23,8 @@ from vts.runners.host import const
 from vts.testcases.kernel.ltp import ltp_configs
 from vts.testcases.kernel.ltp import ltp_enums
 from vts.testcases.kernel.ltp import test_case
+from vts.testcases.kernel.ltp.configs import stable_tests
+from vts.testcases.kernel.ltp.configs import disabled_tests
 
 
 class TestCasesParser(object):
@@ -31,15 +33,16 @@ class TestCasesParser(object):
     Attributes:
         _data_path: string, the vts data path on host side
         _filter_func: function, a filter method that will emit exception if a test is filtered
-        _stable_tests: list of string, names of tests that are stable
-        _disabled_tests: list of string, names of tests that are disabled
+        _ltp_tests_filter: list of string, filter for tests that are stable and disabled
     """
 
-    def __init__(self, data_path, filter_func, stable_tests, disabled_tests):
+    def __init__(self, data_path, filter_func):
         self._data_path = data_path
         self._filter_func = filter_func
-        self._stable_tests = stable_tests
-        self._disabled_tests = disabled_tests
+        self._ltp_tests_filter = filter_utils.Filter(
+            stable_tests.STABLE_TESTS,
+            disabled_tests.DISABLED_TESTS,
+            enable_regex=True)
 
     def ValidateDefinition(self, line):
         """Validate a tab delimited test case definition.
@@ -65,7 +68,7 @@ class TestCasesParser(object):
     def Load(self,
              ltp_dir,
              n_bit,
-             include_filter,
+             test_filter,
              run_staging=False,
              is_low_mem=False):
         """Read the definition file and yields a TestCase generator.
@@ -73,7 +76,7 @@ class TestCasesParser(object):
         Args:
             ltp_dir: string, directory that contains ltp binaries and scripts
             n_bit: int, bitness
-            include_filter: list of string, tests to be scheduled exclusively
+            test_filter: Filter object, test name filter from base_test
             run_staging: bool, whether to use staging configuration
             is_low_mem: bool, whether to use low memory device configuration
         """
@@ -119,15 +122,16 @@ class TestCasesParser(object):
                 testcase.note = "filtered"
 
             # For skipping tests that are not designed or ready for Android
-            if (test_display_name in self._disabled_tests and
-                    test_display_name not in include_filter):
+            if (self._ltp_tests_filter.IsInExcludeFilter(test_display_name) and
+                    not test_filter.IsInIncludeFilter(test_display_name)):
                 logging.info("[Parser] Skipping test case %s. Reason: "
                              "disabled" % testcase.fullname)
                 continue
 
             # For separating staging tests from stable tests
-            if test_display_name not in self._stable_tests:
-                if not run_staging and test_display_name not in include_filter:
+            if not self._ltp_tests_filter.IsInIncludeFilter(test_display_name):
+                if not run_staging and not test_filter.IsInIncludeFilter(
+                        test_display_name):
                     # Skip staging tests in stable run
                     continue
                 else:

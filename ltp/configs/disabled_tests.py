@@ -327,7 +327,6 @@ DISABLED_TESTS = [
     # The following tests are not stable on 64bit version
     'input.input01_64bit',
     'input.input02_64bit',
-    'input.input03_64bit',
     'input.input04_64bit',
     'input.input05_64bit',
     'input.input06_64bit',
@@ -379,8 +378,6 @@ DISABLED_TESTS = [
     # Bug#30688551
     'syscalls.lstat03_64',
     'syscalls.lstat03',
-    # Bug#30688061
-    'input.input03',
     # Bug#30688056
     'cpuhotplug.cpuhotplug04',
     # Bug#30699880

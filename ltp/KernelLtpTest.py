@@ -29,6 +29,7 @@ from vts.runners.host import keys
 from vts.runners.host import records
 from vts.runners.host import test_runner
 from vts.utils.python.common import cmd_utils
+from vts.utils.python.common import filter_utils
 from vts.utils.python.common import list_utils
 
 from vts.testcases.kernel.ltp import test_cases_parser
@@ -36,8 +37,6 @@ from vts.testcases.kernel.ltp import environment_requirement_checker as env_chec
 from vts.testcases.kernel.ltp.shell_environment import shell_environment
 from vts.testcases.kernel.ltp import ltp_enums
 from vts.testcases.kernel.ltp import ltp_configs
-from vts.testcases.kernel.ltp.configs import stable_tests
-from vts.testcases.kernel.ltp.configs import disabled_tests
 
 RANDOM_SEED = 0
 #TCP connection timeout
@@ -61,8 +60,6 @@ class KernelLtpTest(base_test.BaseTestClass):
                            the number is less than 0, it will be set to 1. If
                            the number is greater than 0, that number of threads
                            will be created to run the tests.
-        include_filter: list of string, a list of test case names to run
-        exclude_filter: list of string, a list of test case names to exclude
     """
     _32BIT = "32"
     _64BIT = "64"
@@ -105,13 +102,8 @@ class KernelLtpTest(base_test.BaseTestClass):
             self.shell)
         self._shell_env = shell_environment.ShellEnvironment(self.shell)
 
-        stable_test_list = self.ExpandFilterBitness(stable_tests.STABLE_TESTS)
-        disabled_test_list = self.ExpandFilterBitness(
-            disabled_tests.DISABLED_TESTS)
-
         self._testcases = test_cases_parser.TestCasesParser(
-            self.data_file_path, self.filterOneTest, stable_test_list,
-            disabled_test_list)
+            self.data_file_path, self.filterOneTest)
 
         self._env = {
             ltp_enums.ShellEnvKeys.TMP: ltp_configs.TMP,
@@ -260,7 +252,7 @@ class KernelLtpTest(base_test.BaseTestClass):
             self._testcases.Load(
                 ltp_configs.LTPDIR,
                 n_bit,
-                self.include_filter,
+                self.test_filter,
                 run_staging=self.run_staging,
                 is_low_mem=is_low_mem))
 
@@ -309,7 +301,7 @@ class KernelLtpTest(base_test.BaseTestClass):
             n_workers = 1
 
         # Include filter is not empty; Run in sequential.
-        if self.include_filter:
+        if self.test_filter.include_filter:
             n_workers = 1
 
         # Number of thread is set to 0 (automatic)
@@ -415,7 +407,8 @@ class KernelLtpTest(base_test.BaseTestClass):
                 continue
 
             cmd = "export {envp} && cd {cwd} && {commands}".format(
-                envp=self.GetEnvp(), cwd=ltp_configs.LTPBINPATH,
+                envp=self.GetEnvp(),
+                cwd=ltp_configs.LTPBINPATH,
                 commands=test_case.command)
 
             logging.info("Worker {} starts executing command "
@@ -470,7 +463,8 @@ class KernelLtpTest(base_test.BaseTestClass):
         asserts.skipIf(not self._requirement.Check(test_case), test_case.note)
 
         cmd = "export {envp} && cd {cwd} && {commands}".format(
-            envp=self.GetEnvp(), cwd=ltp_configs.LTPBINPATH,
+            envp=self.GetEnvp(),
+            cwd=ltp_configs.LTPBINPATH,
             commands=test_case.command)
         logging.info("Executing %s", cmd)
         self.CheckResult(self.shell.Execute(cmd))

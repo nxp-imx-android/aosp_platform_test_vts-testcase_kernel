@@ -19,12 +19,12 @@ import logging
 import itertools
 
 from vts.runners.host import const
-
 from vts.testcases.kernel.ltp import ltp_configs
 from vts.testcases.kernel.ltp import ltp_enums
 from vts.testcases.kernel.ltp import test_case
 from vts.testcases.kernel.ltp.configs import stable_tests
 from vts.testcases.kernel.ltp.configs import disabled_tests
+from vts.utils.python.common import filter_utils
 
 
 class TestCasesParser(object):

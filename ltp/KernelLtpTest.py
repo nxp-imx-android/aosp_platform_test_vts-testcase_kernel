@@ -29,7 +29,6 @@ from vts.runners.host import keys
 from vts.runners.host import records
 from vts.runners.host import test_runner
 from vts.utils.python.common import cmd_utils
-from vts.utils.python.common import filter_utils
 from vts.utils.python.common import list_utils
 
 from vts.testcases.kernel.ltp import test_cases_parser

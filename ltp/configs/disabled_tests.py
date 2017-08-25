@@ -126,8 +126,6 @@ DISABLED_TESTS = [
     'syscalls.setuid04_16',
     'syscalls.splice02',
     'syscalls.sysconf01',
-    'syscalls.umask02',
-    'syscalls.umask03',
     'syscalls.umount01',
     'syscalls.umount02',
     'syscalls.umount03',

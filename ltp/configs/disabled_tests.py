@@ -127,16 +127,6 @@ DISABLED_TESTS = [
     'syscalls.setuid04_16',
     'syscalls.splice02',
     'syscalls.sysconf01',
-    'syscalls.syslog01',
-    'syscalls.syslog02',
-    'syscalls.syslog03',
-    'syscalls.syslog04',
-    'syscalls.syslog05',
-    'syscalls.syslog06',
-    'syscalls.syslog07',
-    'syscalls.syslog08',
-    'syscalls.syslog09',
-    'syscalls.syslog10',
     'syscalls.umask02',
     'syscalls.umask03',
     'syscalls.umount01',
@@ -337,7 +327,6 @@ DISABLED_TESTS = [
     # The following tests are not stable on 64bit version
     'input.input01_64bit',
     'input.input02_64bit',
-    'input.input03_64bit',
     'input.input04_64bit',
     'input.input05_64bit',
     'input.input06_64bit',
@@ -389,8 +378,6 @@ DISABLED_TESTS = [
     # Bug#30688551
     'syscalls.lstat03_64',
     'syscalls.lstat03',
-    # Bug#30688061
-    'input.input03',
     # Bug#30688056
     'cpuhotplug.cpuhotplug04',
     # Bug#30699880

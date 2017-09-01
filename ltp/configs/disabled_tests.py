@@ -173,7 +173,6 @@ DISABLED_TESTS = [
     'fs.rwtest04',
     'fs.rwtest05',
     'fs.iogen01',
-    'fs.fs_inod01',
     'fs.ftest06',
     'fs.isofs',
     'fsx.fsx-linux',

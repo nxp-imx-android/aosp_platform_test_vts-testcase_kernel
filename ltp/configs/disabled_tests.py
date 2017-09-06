@@ -396,7 +396,6 @@ DISABLED_TESTS = [
     'fs.quota_remount_test01',
     # Following tests added in LTP20170516 release are disabled because
     # they currently fail with VTS
-    'syscalls.access02',
     'syscalls.access04',
     'syscalls.getcwd01',
     'syscalls.getxattr04',

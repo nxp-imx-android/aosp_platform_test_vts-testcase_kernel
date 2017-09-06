@@ -30,7 +30,6 @@ DISABLED_TESTS = [
     'syscalls.fsync01',
     'syscalls.ftruncate04',
     'syscalls.ftruncate04_64',
-    'syscalls.getcwd02',
     'syscalls.getcwd03',
     'syscalls.getegid01_16',
     'syscalls.getegid02_16',
@@ -397,7 +396,6 @@ DISABLED_TESTS = [
     # Following tests added in LTP20170516 release are disabled because
     # they currently fail with VTS
     'syscalls.access04',
-    'syscalls.getcwd01',
     'syscalls.getxattr04',
     'syscalls.ioctl04',
     'syscalls.ioctl05',

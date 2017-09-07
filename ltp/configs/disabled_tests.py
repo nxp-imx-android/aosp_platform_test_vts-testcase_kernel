@@ -269,9 +269,6 @@ DISABLED_TESTS = [
     'commands.mkfs01',
     'commands.lsmod01',
     'commands.wc01',
-    # following 4 tests added int LTP20170516 are disabled here
-    # because they fail at the time of merge
-    'commands.tar01',
     'hyperthreading.smt_smp_enabled',
     'hyperthreading.smt_smp_affinity',
     'kernel_misc.zram03',

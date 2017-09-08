@@ -194,7 +194,6 @@ DISABLED_TESTS = [
     'math.float_iperb',
     'math.float_power',
     'math.float_trigo',
-    'pty.pty01',
     'containers.mqns_01_clone',
     'containers.mqns_02_clone',
     'containers.mqns_03_clone',
@@ -276,7 +275,6 @@ DISABLED_TESTS = [
     'fs_ext4.ext4-persist-prealloc',
     'cpuhotplug.cpuhotplug03',
     'cpuhotplug.cpuhotplug06',
-    'input.input06',
     'dio.dio10',
     # dio29 and dio30 take too long to finish
     'dio.dio29',
@@ -319,7 +317,6 @@ DISABLED_TESTS = [
     'input.input02_64bit',
     'input.input04_64bit',
     'input.input05_64bit',
-    'input.input06_64bit',
     # The following tests are failing on 64bit version
     'mm.overcommit_memory01_64bit',
     'mm.overcommit_memory02_64bit',
@@ -393,8 +390,6 @@ DISABLED_TESTS = [
     # they currently fail with VTS
     'syscalls.access04',
     'syscalls.ioctl04',
-    'syscalls.ioctl05',
     'syscalls.ioctl06',
     'syscalls.kcmp03',
-    'syscalls.madvise08',
 ]

@@ -271,7 +271,6 @@ DISABLED_TESTS = [
     'commands.wc01',
     # following 4 tests added int LTP20170516 are disabled here
     # because they fail at the time of merge
-    'commands.file01',
     'commands.ldd01',
     'commands.mv01',
     'commands.tar01',

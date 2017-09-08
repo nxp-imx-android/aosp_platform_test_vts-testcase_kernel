@@ -388,6 +388,8 @@ DISABLED_TESTS = [
     'dma_thread_diotest.dma_thread_diotest7',
     # b/33008689 (closed) requires mkfs.ext4 and loop device support.
     'fs.quota_remount_test01',
+    # https://b/65053723#comment19 (Flaky due to timeout dependency)
+    'syscalls.pselect01',
     # Following tests added in LTP20170516 release are disabled because
     # they currently fail with VTS
     'syscalls.access04',
@@ -397,5 +399,4 @@ DISABLED_TESTS = [
     'syscalls.ioctl06',
     'syscalls.kcmp03',
     'syscalls.madvise08',
-    'syscalls.pselect01',
 ]

@@ -390,10 +390,11 @@ DISABLED_TESTS = [
     'fs.quota_remount_test01',
     # https://b/65053723#comment19 (Flaky due to timeout dependency)
     'syscalls.pselect01',
+    # https://b/65053723#comment20 (seems to test for "xfs" specific bug)
+    'syscalls.getxattr04',
     # Following tests added in LTP20170516 release are disabled because
     # they currently fail with VTS
     'syscalls.access04',
-    'syscalls.getxattr04',
     'syscalls.ioctl04',
     'syscalls.ioctl05',
     'syscalls.ioctl06',

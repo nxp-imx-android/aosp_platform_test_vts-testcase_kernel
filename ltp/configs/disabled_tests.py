@@ -126,8 +126,6 @@ DISABLED_TESTS = [
     'syscalls.setuid04_16',
     'syscalls.splice02',
     'syscalls.sysconf01',
-    'syscalls.umask02',
-    'syscalls.umask03',
     'syscalls.umount01',
     'syscalls.umount02',
     'syscalls.umount03',
@@ -196,7 +194,6 @@ DISABLED_TESTS = [
     'math.float_iperb',
     'math.float_power',
     'math.float_trigo',
-    'pty.pty01',
     'containers.mqns_01_clone',
     'containers.mqns_02_clone',
     'containers.mqns_03_clone',
@@ -271,12 +268,6 @@ DISABLED_TESTS = [
     'commands.mkfs01',
     'commands.lsmod01',
     'commands.wc01',
-    # following 4 tests added int LTP20170516 are disabled here
-    # because they fail at the time of merge
-    'commands.file01',
-    'commands.ldd01',
-    'commands.mv01',
-    'commands.tar01',
     'hyperthreading.smt_smp_enabled',
     'hyperthreading.smt_smp_affinity',
     'kernel_misc.zram03',
@@ -284,7 +275,6 @@ DISABLED_TESTS = [
     'fs_ext4.ext4-persist-prealloc',
     'cpuhotplug.cpuhotplug03',
     'cpuhotplug.cpuhotplug06',
-    'input.input06',
     'dio.dio10',
     # dio29 and dio30 take too long to finish
     'dio.dio29',
@@ -327,7 +317,6 @@ DISABLED_TESTS = [
     'input.input02_64bit',
     'input.input04_64bit',
     'input.input05_64bit',
-    'input.input06_64bit',
     # The following tests are failing on 64bit version
     'mm.overcommit_memory01_64bit',
     'mm.overcommit_memory02_64bit',
@@ -393,14 +382,14 @@ DISABLED_TESTS = [
     'dma_thread_diotest.dma_thread_diotest7',
     # b/33008689 (closed) requires mkfs.ext4 and loop device support.
     'fs.quota_remount_test01',
+    # https://b/65053723#comment19 (Flaky due to timeout dependency)
+    'syscalls.pselect01',
+    # https://b/65053723#comment20 (seems to test for "xfs" specific bug)
+    'syscalls.getxattr04',
     # Following tests added in LTP20170516 release are disabled because
     # they currently fail with VTS
     'syscalls.access04',
-    'syscalls.getxattr04',
     'syscalls.ioctl04',
-    'syscalls.ioctl05',
     'syscalls.ioctl06',
     'syscalls.kcmp03',
-    'syscalls.madvise08',
-    'syscalls.pselect01',
 ]

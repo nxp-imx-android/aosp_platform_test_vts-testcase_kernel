@@ -338,6 +338,8 @@ DISABLED_TESTS = [
     'mm.thp02_64bit',
     'mm.thp03_64bit',
     'mm.vma01_64bit',
+    # b/65636203
+    'mm.thp01_32bit',
     # kmsg01 would pass but it occasionally causes socket timeout and misalignment
     # of request and response
     # b/32343072

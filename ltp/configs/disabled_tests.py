@@ -204,7 +204,6 @@ DISABLED_TESTS = [
     'hugetlb.hugemmap05_3',
     'commands.file',
     'commands.tar',
-    'commands.cpio',
     'commands.cp_tests01',
     'commands.ln_tests01',
     'commands.mkdir_tests01',

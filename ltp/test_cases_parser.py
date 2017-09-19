@@ -107,6 +107,10 @@ class TestCasesParser(object):
             # and we replace them with &&
             command = command.replace(';', '&&')
 
+            # Some test cases have hardcoded "/tmp" in the command
+            # we replace that with ltp_configs.TMPDIR
+            command = command.replace('/tmp', ltp_configs.TMPDIR)
+
             testcase = test_case.TestCase(
                 testsuite=testsuite, testname=testname, command=command)
 

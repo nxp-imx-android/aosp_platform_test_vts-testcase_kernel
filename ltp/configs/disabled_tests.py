@@ -224,7 +224,6 @@ DISABLED_TESTS = [
     'commands.file',
     'commands.tar',
     'commands.logrotate',
-    'commands.mail',
     'commands.cpio',
     'commands.cp_tests01',
     'commands.ln_tests01',

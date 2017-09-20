@@ -226,7 +226,6 @@ DISABLED_TESTS = [
     'commands.logrotate',
     'commands.mail',
     'commands.cpio',
-    'commands.unzip01',
     'commands.cp_tests01',
     'commands.ln_tests01',
     'commands.mkdir_tests01',

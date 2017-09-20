@@ -216,7 +216,6 @@ DISABLED_TESTS = [
     'filecaps.Filecaps',
     'cap_bounds.Cap_bounds',
     'fcntl-locktests_android.FCNTL_LOCKTESTS',
-    'admin_tools.su01',
     'numa.move_pages03',
     'numa.move_pages11',
     'hugetlb.hugemmap05_1',

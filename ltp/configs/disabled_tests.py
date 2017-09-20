@@ -222,7 +222,6 @@ DISABLED_TESTS = [
     'hugetlb.hugemmap05_2',
     'hugetlb.hugemmap05_3',
     'commands.ld',
-    'commands.objdump',
     'commands.file',
     'commands.tar',
     'commands.logrotate',

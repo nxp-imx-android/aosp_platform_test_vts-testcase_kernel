@@ -24,11 +24,11 @@ from vts.runners.host import test_runner
 
 from vts.testcases.kernel.api.proc import ProcCmdlineTest
 from vts.testcases.kernel.api.proc import ProcCpuInfoTest
+from vts.testcases.kernel.api.proc import ProcFsFileTests
 from vts.testcases.kernel.api.proc import ProcKmsgTest
 from vts.testcases.kernel.api.proc import ProcMapsTest
 from vts.testcases.kernel.api.proc import ProcMemInfoTest
 from vts.testcases.kernel.api.proc import ProcModulesTest
-from vts.testcases.kernel.api.proc import ProcMountsTest
 from vts.testcases.kernel.api.proc import ProcQtaguidCtrlTest
 from vts.testcases.kernel.api.proc import ProcRemoveUidRangeTest
 from vts.testcases.kernel.api.proc import ProcSimpleFileTests
@@ -44,18 +44,20 @@ from vts.utils.python.file import target_file_utils
 TEST_OBJECTS = {
     ProcCmdlineTest.ProcCmdlineTest(),
     ProcCpuInfoTest.ProcCpuInfoTest(),
+    ProcFsFileTests.ProcFilesystemsTest(),
+    ProcFsFileTests.ProcMountsTest(),
+    ProcFsFileTests.ProcSwapsTest(),
     ProcKmsgTest.ProcKmsgTest(),
-    ProcSimpleFileTests.ProcKptrRestrictTest(),
     ProcMapsTest.ProcMapsTest(),
     ProcMemInfoTest.ProcMemInfoTest(),
+    ProcModulesTest.ProcModulesTest(),
+    ProcQtaguidCtrlTest.ProcQtaguidCtrlTest(),
+    ProcRemoveUidRangeTest.ProcRemoveUidRangeTest(),
+    ProcSimpleFileTests.ProcKptrRestrictTest(),
     ProcSimpleFileTests.ProcMmapMinAddrTest(),
     ProcSimpleFileTests.ProcMmapRndBitsTest(),
-    ProcModulesTest.ProcModulesTest(),
-    ProcMountsTest.ProcMountsTest(),
     ProcSimpleFileTests.ProcOverCommitMemoryTest(),
-    ProcQtaguidCtrlTest.ProcQtaguidCtrlTest(),
     ProcSimpleFileTests.ProcRandomizeVaSpaceTest(),
-    ProcRemoveUidRangeTest.ProcRemoveUidRangeTest(),
     ProcShowUidStatTest.ProcShowUidStatTest(),
     ProcStatTest.ProcStatTest(),
     ProcVersionTest.ProcVersionTest(),

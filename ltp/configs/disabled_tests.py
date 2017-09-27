@@ -178,7 +178,6 @@ DISABLED_TESTS = [
     'mm.mtest06',
     'mm.shm_test01',
     'mm.mallocstress01',
-    'mm.mmapstress04',
     'mm.vma03',
     'mm.min_free_kbytes',
     'pipes.pipeio_1',

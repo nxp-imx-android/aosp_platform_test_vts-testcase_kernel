@@ -237,7 +237,6 @@ DISABLED_TESTS = [
     'fs.inode02',
     'ipc.signal_test_01',
     'mm.data_space',
-    'mm.mmapstress01',
     'mm.mmapstress10',
     'syscalls.clock_nanosleep01',
     'syscalls.clone04',

@@ -23,7 +23,7 @@ from vts.runners.host import const
 from vts.runners.host import test_runner
 
 from vts.testcases.kernel.api.proc import ProcCmdlineTest
-from vts.testcases.kernel.api.proc import ProcCpuInfoTest
+from vts.testcases.kernel.api.proc import ProcCpuFileTests
 from vts.testcases.kernel.api.proc import ProcFsFileTests
 from vts.testcases.kernel.api.proc import ProcKmsgTest
 from vts.testcases.kernel.api.proc import ProcMapsTest
@@ -43,7 +43,8 @@ from vts.utils.python.file import target_file_utils
 
 TEST_OBJECTS = {
     ProcCmdlineTest.ProcCmdlineTest(),
-    ProcCpuInfoTest.ProcCpuInfoTest(),
+    ProcCpuFileTests.ProcCpuInfoTest(),
+    ProcCpuFileTests.ProcLoadavgTest(),
     ProcFsFileTests.ProcFilesystemsTest(),
     ProcFsFileTests.ProcMountsTest(),
     ProcFsFileTests.ProcSwapsTest(),

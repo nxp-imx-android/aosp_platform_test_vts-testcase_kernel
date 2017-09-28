@@ -73,3 +73,13 @@ class ProcCpuInfoTest(KernelProcFileTestBase.KernelProcFileTestBase):
 
     def get_path(self):
         return "/proc/cpuinfo"
+
+
+class ProcLoadavgTest(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/loadavg displays CPU and IO load average over time.'''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:f} {:f} {:f} {:d}/{:d} {:d}\n", contents)
+
+    def get_path(self):
+        return "/proc/loadavg"

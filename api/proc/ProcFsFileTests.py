@@ -54,3 +54,44 @@ class ProcMountsTest(KernelProcFileTestBase.KernelProcFileTestBase):
 
     def get_path(self):
         return "/proc/self/mounts"
+
+class ProcFilesystemsTest(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/filesystems lists filesystems currently supported by kernel.'''
+
+    def parse_contents(self, contents):
+        if len(contents) == 0 or contents[-1] != '\n':
+            raise SyntaxError('Missing final newline')
+
+        result = []
+        for line in contents.split('\n')[:-1]:
+            parsed = line.split('\t')
+            num_columns = len(parsed)
+            if num_columns != 2:
+                raise SyntaxError('Wrong number of columns.')
+            result.append(parsed)
+        return result
+
+    def get_path(self):
+        return "/proc/filesystems"
+
+class ProcSwapsTest(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/swaps measures swap space utilization.'''
+
+    REQUIRED_COLUMNS = {
+        'Filename',
+        'Type',
+        'Size',
+        'Used',
+        'Priority'
+    }
+
+    def parse_contents(self, contents):
+        if len(contents) == 0 or contents[-1] != '\n':
+            raise SyntaxError('Missing final newline')
+        return map(lambda x: x.split(), contents.split('\n')[:-1])
+
+    def result_correct(self, result):
+        return self.REQUIRED_COLUMNS.issubset(result[0])
+
+    def get_path(self):
+        return "/proc/swaps"

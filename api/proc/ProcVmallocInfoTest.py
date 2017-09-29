@@ -95,6 +95,7 @@ class ProcVmallocInfoTest(KernelProcFileTestBase.KernelProcFileTestBase):
 
     def p_caller(self, p):
         '''caller : CALLER
+                  | HEX_LITERAL
                   | empty'''
         p[0] = p[1]
 

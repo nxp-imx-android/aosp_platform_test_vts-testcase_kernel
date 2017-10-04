@@ -22,6 +22,7 @@ from vts.runners.host import base_test
 from vts.runners.host import const
 from vts.runners.host import test_runner
 
+from vts.testcases.kernel.api.proc import ProcAsoundTests
 from vts.testcases.kernel.api.proc import ProcCmdlineTest
 from vts.testcases.kernel.api.proc import ProcCpuFileTests
 from vts.testcases.kernel.api.proc import ProcFsFileTests
@@ -42,6 +43,7 @@ from vts.utils.python.controllers import android_device
 from vts.utils.python.file import target_file_utils
 
 TEST_OBJECTS = {
+    ProcAsoundTests.ProcAsoundCardsTest(),
     ProcCmdlineTest.ProcCmdlineTest(),
     ProcCpuFileTests.ProcCpuInfoTest(),
     ProcCpuFileTests.ProcLoadavgTest(),

@@ -40,7 +40,7 @@ class ProcQtaguidCtrlTest(KernelProcFileTestBase.KernelProcFileTestBase):
             "events: sockets_tagged={:d} sockets_untagged={:d} counter_set_changes={:d} "
             "delete_cmds={:d} iface_events={:d} match_calls={:d} match_calls_prepost={:d} "
             "match_found_sk={:d} match_found_sk_in_ct={:d} match_found_no_sk_in_ct={:d} "
-            "match_no_sk={:d} match_no_sk_file={:d}", lines[-2])
+            "match_no_sk={:d} match_no_sk_gid={:d}", lines[-2])
         if any(map(lambda x: x < 0, parsed)):
             raise SyntaxError("Negative numbers not allowed!")
         result.append(parsed)

@@ -58,6 +58,7 @@ KSFT_CASES_STAGING = map(lambda x: test_case.LinuxKselftestTestcase(*(x)), [
 # TODO(trong): enable pstore test.
 #    ("pstore/pstore_tests", ["arm", "x86"], [32, 64]),
     ("breakpoints/breakpoint_test_arm64", ["arm"], [64]),
+    ("capabilities/test_execve", ["arm", "x86"], [32, 64]),
     ("seccomp/seccomp_bpf", ["arm", "x86"], [32, 64]),
     ("timers/alarmtimer-suspend", ["arm", "x86"], [32, 64]),
     ("x86/single_step_syscall", ["x86"], [32, 64]),

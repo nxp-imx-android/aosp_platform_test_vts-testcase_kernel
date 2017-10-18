@@ -92,28 +92,10 @@ class TestCase(object):
         """Set the test case's name."""
         self._testname = testname
 
-    def InternalAddLtpPathToCommand(self, command):
-        """Internal function to change binary in commands to their full path"""
-        tokens = command.strip().split()
-
-        # If not ltp executables:
-        if (tokens[0] in ltp_configs.INTERNAL_BINS or
-                tokens[0] in ltp_configs.INTERNAL_SHELL_COMMANDS or
-                tokens[0].find('=') > 0):
-            return command
-        else:  # Is Ltp executable
-            tokens[0] = path_utils.JoinTargetPath(ltp_configs.LTPBINPATH,
-                                                  tokens[0])
-            return ' '.join(tokens)
-
-    def GetCommand(self):
-        """Get test case's command.
-
-        Get the test case's command where ltp test binary names have been
-        replaced with their full paths
-        """
-        return '&&'.join((self.InternalAddLtpPathToCommand(command)
-                          for command in self._command.split('&&')))
+    @property
+    def command(self):
+        """Get the test case's command."""
+        return self._command
 
     def InternalGetExecutableNames(self):
         """Get a generator of all required executable file names"""

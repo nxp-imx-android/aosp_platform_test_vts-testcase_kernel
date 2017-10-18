@@ -400,8 +400,9 @@ class KernelLtpTest(base_test.BaseTestClass):
                                                      (True, test_case.note))
                 continue
 
-            cmd = "export {envp} && {commands}".format(
-                envp=self.GetEnvp(), commands=test_case.GetCommand())
+            cmd = "export {envp} && cd {cwd} && {commands}".format(
+                envp=self.GetEnvp(), cwd=ltp_configs.LTPBINPATH,
+                commands=test_case.command)
 
             logging.info("Worker {} starts executing command "
                          "for '{}'.\n  Command:{}".format(id, test_case, cmd))
@@ -454,8 +455,9 @@ class KernelLtpTest(base_test.BaseTestClass):
         asserts.skipIf(test_case.is_filtered, test_case.note)
         asserts.skipIf(not self._requirement.Check(test_case), test_case.note)
 
-        cmd = "export {envp} && {commands}".format(
-            envp=self.GetEnvp(), commands=test_case.GetCommand())
+        cmd = "export {envp} && cd {cwd} && {commands}".format(
+            envp=self.GetEnvp(), cwd=ltp_configs.LTPBINPATH,
+            commands=test_case.command)
         logging.info("Executing %s", cmd)
         self.CheckResult(self.shell.Execute(cmd))
 

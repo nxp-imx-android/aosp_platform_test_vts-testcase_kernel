@@ -61,6 +61,7 @@ KSFT_CASES_STAGING = map(lambda x: test_case.LinuxKselftestTestcase(*(x)), [
     ("capabilities/test_execve", ["arm", "x86"], [32, 64]),
     ("efivarfs/efivarfs.sh", ["arm", "x86"], [32, 64]),
     ("exec/execveat.sh", ["arm", "x86"], [32, 64]),
+    ("kcmp/kcmp_test", ["arm", "x86"], [32, 64]),
     ("seccomp/seccomp_bpf", ["arm", "x86"], [32, 64]),
     ("timers/alarmtimer-suspend", ["arm", "x86"], [32, 64]),
     ("x86/single_step_syscall", ["x86"], [32, 64]),

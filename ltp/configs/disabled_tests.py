@@ -336,4 +336,10 @@ DISABLED_TESTS = [
     'syscalls.ioctl04',
     'syscalls.ioctl06',
     'syscalls.kcmp03',
+    # TODO(b/67981135): Following tests added in LTP20170929 release are
+    # disabled because they currently fail with VTS
+    'mm.max_map_count_64bit',
+    'syscalls.chdir03_64bit',
+    'mm.max_map_count_32bit',
+    'syscalls.chdir03_32bit',
 ]

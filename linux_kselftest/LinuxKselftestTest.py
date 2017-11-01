@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python
 #
 # Copyright (C) 2016 The Android Open Source Project
 #
@@ -16,18 +16,18 @@
 #
 
 import logging
-import os
 
 from vts.runners.host import asserts
-from vts.runners.host import base_test_with_webdb
+from vts.runners.host import base_test
 from vts.runners.host import const
 from vts.runners.host import keys
 from vts.runners.host import test_runner
 from vts.utils.python.controllers import android_device
+from vts.utils.python.os import path_utils
 
 from vts.testcases.kernel.linux_kselftest import kselftest_config as config
 
-class LinuxKselftestTest(base_test_with_webdb.BaseTestWithWebDbClass):
+class LinuxKselftestTest(base_test.BaseTestClass):
     """Runs Linux Kselftest test cases against Android OS kernel.
 
     Attributes:
@@ -74,8 +74,11 @@ class LinuxKselftestTest(base_test_with_webdb.BaseTestWithWebDbClass):
                 _64BIT or 64 for 64-bit tests;
         """
         self._shell.Execute("mkdir %s -p" % config.KSFT_DIR)
-        self._dut.adb.push("%s/%s/linux-kselftest/. %s" %
-            (self.data_file_path, n_bit, config.KSFT_DIR))
+        test_bit = 'nativetest'
+        if n_bit == self._64BIT:
+            test_bit += '64'
+        self._dut.adb.push("%s/DATA/%s/linux-kselftest/. %s" %
+            (self.data_file_path, test_bit, config.KSFT_DIR))
 
     def PreTestSetup(self):
         """Sets up test before running."""
@@ -115,9 +118,10 @@ class LinuxKselftestTest(base_test_with_webdb.BaseTestWithWebDbClass):
         if not testcase:
             asserts.skip("Test is not supported on this abi.")
 
-        chmod_cmd = "chmod -R 755 %s" % os.path.join(
+        chmod_cmd = "chmod -R 755 %s" % path_utils.JoinTargetPath(
             config.KSFT_DIR, testcase.testsuite)
-        cd_cmd = "cd %s" % os.path.join(config.KSFT_DIR, testcase.testsuite)
+        cd_cmd = "cd %s" % path_utils.JoinTargetPath(
+            config.KSFT_DIR, testcase.testsuite)
 
         cmd = [
             chmod_cmd,

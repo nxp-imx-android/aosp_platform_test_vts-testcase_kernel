@@ -1,4 +1,3 @@
-#!/usr/bin/env python3.4
 #
 # Copyright (C) 2016 The Android Open Source Project
 #
@@ -44,22 +43,29 @@ KSFT_CASES_PRESUBMIT = map(lambda x: test_case.LinuxKselftestTestcase(*(x)), [
 KSFT_CASES_STABLE = map(lambda x: test_case.LinuxKselftestTestcase(*(x)), [
     ("net/psock_tpacket", ["arm", "x86"], [32, 64]),
     ("ptrace/peeksiginfo", ["arm", "x86"], [64]),
-    ("timers/posix_timers", ["arm", "x86"], [32, 64]),
+    ("timers/inconsistency-check", ["arm", "x86"], [32, 64]),
     ("timers/nanosleep", ["arm", "x86"], [32, 64]),
     ("timers/nsleep-lat", ["arm", "x86"], [32, 64]),
-    ("timers/set-timer-lat", ["arm", "x86"], [32, 64]),
-    ("timers/inconsistency-check", ["arm", "x86"], [32, 64]),
-    ("timers/alarmtimer-suspend", ["arm", "x86"], [32, 64]),
+    ("timers/posix_timers", ["arm", "x86"], [32, 64]),
     ("timers/raw_skew", ["arm", "x86"], [32, 64]),
-    ("timers/threadtest", ["arm", "x86"], [32, 64]),
     ("timers/set-tai", ["arm", "x86"], [32, 64]),
+    ("timers/set-timer-lat", ["arm", "x86"], [32, 64]),
+    ("timers/threadtest", ["arm", "x86"], [32, 64]),
     ("timers/valid-adjtimex", ["arm", "x86"], [64]),
 ])
 
 KSFT_CASES_STAGING = map(lambda x: test_case.LinuxKselftestTestcase(*(x)), [
 # TODO(trong): enable pstore test.
 #    ("pstore/pstore_tests", ["arm", "x86"], [32, 64]),
+    ("breakpoints/breakpoint_test_arm64", ["arm"], [64]),
+    ("capabilities/test_execve", ["arm", "x86"], [32, 64]),
+    ("efivarfs/efivarfs.sh", ["arm", "x86"], [32, 64]),
+    ("exec/execveat.sh", ["arm", "x86"], [32, 64]),
+    ("kcmp/kcmp_test", ["arm", "x86"], [32, 64]),
     ("seccomp/seccomp_bpf", ["arm", "x86"], [32, 64]),
+    ("size/get_size", ["arm", "x86"], [32, 64]),
+    ("splice/default_file_splice_read.sh", ["arm", "x86"], [32, 64]),
+    ("timers/rtctest", ["arm", "x86"], [32, 64]),
     ("x86/single_step_syscall", ["x86"], [32, 64]),
     ("x86/sysret_ss_attrs", ["x86"], [32]),
     ("x86/syscall_nt", ["x86"], [32, 64]),

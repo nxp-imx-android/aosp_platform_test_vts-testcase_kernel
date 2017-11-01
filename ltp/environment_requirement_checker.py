@@ -1,4 +1,3 @@
-#!/usr/bin/env python3.4
 #
 # Copyright (C) 2016 The Android Open Source Project
 #
@@ -15,14 +14,15 @@
 # limitations under the License.
 #
 
-import os
 import copy
 import logging
 import itertools
 import operator
+import os
 
 from vts.runners.host import const
 from vts.utils.python.common import cmd_utils
+from vts.utils.python.os import path_utils
 
 from vts.testcases.kernel.ltp.shell_environment import shell_environment
 from vts.testcases.kernel.ltp import ltp_enums
@@ -82,15 +82,15 @@ class EnvironmentRequirementChecker(object):
         """
         result = copy.copy(ltp_configs.REQUIREMENT_FOR_ALL)
 
-        result.extend(
-            rule
-            for rule, tests in ltp_configs.REQUIREMENTS_TO_TESTCASE.iteritems()
-            if test_case.fullname in tests)
+        result.extend(rule
+                      for rule, tests in
+                      ltp_configs.REQUIREMENTS_TO_TESTCASE.iteritems()
+                      if test_case.fullname in tests)
 
-        result.extend(
-            rule
-            for rule, tests in ltp_configs.REQUIREMENT_TO_TESTSUITE.iteritems()
-            if test_case.testsuite in tests)
+        result.extend(rule
+                      for rule, tests in
+                      ltp_configs.REQUIREMENT_TO_TESTSUITE.iteritems()
+                      if test_case.testsuite in tests)
 
         return list(set(result))
 
@@ -147,7 +147,7 @@ class EnvironmentRequirementChecker(object):
 
         # Set all executables executable permission using chmod.
         logging.info("Setting permissions on device")
-        permission_command = "chmod 775 %s" % os.path.join(
+        permission_command = "chmod 775 %s" % path_utils.JoinTargetPath(
             ltp_configs.LTPBINPATH, '*')
         permission_result = self.shell.Execute(permission_command)
         if permission_result[const.EXIT_CODE][0]:
@@ -157,25 +157,27 @@ class EnvironmentRequirementChecker(object):
         # Check existence of all executables used in test definition.
         # Some executables needed by test cases but not listed in test
         # definition will not be checked here
-        executable_exists_commands = [
-            "ls %s" % executable for executable in executables
-            if executable not in ltp_configs.INTERNAL_BINS
-        ]
-        logging.info("Checking binary existence on host: %s",
-                     executable_exists_commands)
+        logging.info("Checking binary existence on host")
 
-        cmd_results = cmd_utils.ExecuteShellCommand(executable_exists_commands)
-        executable_exists_results = map(operator.not_,
-                                        cmd_results[cmd_utils.EXIT_CODE])
-        logging.info("Finished checking binary existence on host: %s",
-                     cmd_results)
+        executable_exists_results = map(os.path.exists, executables)
 
         self._executable_available = dict(
             zip(executables, executable_exists_results))
 
+        not_exists = [
+            exe for exe, exists in self._executable_available.iteritems()
+            if not exists
+        ]
+        if not_exists:
+            logging.info("The following binaries does not exist: %s",
+                         not_exists)
+
+        logging.info("Finished checking binary existence on host.")
+
         # Check whether all the internal binaries in path needed exist
-        bin_path_exist_commands = ["which %s" % bin
-                                   for bin in ltp_configs.INTERNAL_BINS]
+        bin_path_exist_commands = [
+            "which %s" % bin for bin in ltp_configs.INTERNAL_BINS
+        ]
         bin_path_results = map(
             operator.not_,
             self.shell.Execute(bin_path_exist_commands)[const.EXIT_CODE])
@@ -204,8 +206,10 @@ class EnvironmentRequirementChecker(object):
 
         executables = test_case.GetRequiredExecutablePaths(
             self.ltp_bin_host_path)
-        results = [self._executable_available[executable]
-                   for executable in executables]
+        results = [
+            self._executable_available[executable]
+            for executable in executables
+        ]
 
         if not all(results):
             test_case.requirement_state = ltp_enums.RequirementState.UNSATISFIED

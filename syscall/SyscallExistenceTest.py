@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.4
+#!/usr/bin/env python
 #
 # Copyright (C) 2016 The Android Open Source Project
 #
@@ -19,12 +19,12 @@ import logging
 
 from vts.runners.host import const
 from vts.runners.host import asserts
-from vts.runners.host import base_test_with_webdb
+from vts.runners.host import base_test
 from vts.runners.host import test_runner
 from vts.utils.python.controllers import android_device
 
 
-class SyscallExistenceTest(base_test_with_webdb.BaseTestWithWebDbClass):
+class SyscallExistenceTest(base_test.BaseTestClass):
     """Tests to verify kernel syscall interface."""
     TEST_SHELL_NAME = "my_shell1"
     AARCH64__NR_name_to_handle_at = 264
@@ -35,7 +35,7 @@ class SyscallExistenceTest(base_test_with_webdb.BaseTestWithWebDbClass):
         self.dut = self.registerController(android_device)[0]
         self.dut.shell.InvokeTerminal(self.TEST_SHELL_NAME)
 
-    def tearDownTest(self):
+    def tearDown(self):
         self.dut.shell.InvokeTerminal(self.TEST_SHELL_NAME)
         results = getattr(self.dut.shell, self.TEST_SHELL_NAME).Execute("which ls")
         logging.info(str(results[const.STDOUT]))

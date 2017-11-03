@@ -215,7 +215,6 @@ class SocketTagUsrSpaceTest : public ::testing::Test {
     EXPECT_GE(qtaguid_deleteTagData(0, my_uid), 0) << "Failed to delete my_uid";
     EXPECT_GE(qtaguid_deleteTagData(0, inet_uid), 0)
         << "Failed to delete inet_uid";
-    EXPECT_GE(qtaguid_setPacifier(0), 0) << "Turn off pacifier fail";
     ASSERT_FALSE(sock_0.setup(valid_tag1)) << "socket0 setup failed";
     ASSERT_FALSE(sock_1.setup(valid_tag1)) << "socket1 setup failed";
   }
@@ -391,28 +390,6 @@ TEST_F(SocketTagUsrSpaceTest, UntagClosedSocketFail) {
   close(sock_1.fd);
   EXPECT_LT(qtaguid_untagSocket(sock_1.fd), 0)
       << "no tag attached, should fail";
-}
-
-/*
- * set the pacifier ON and try to modify the tags, expect no change to the
- * ctrl and stats file.
- */
-TEST_F(SocketTagUsrSpaceTest, PacifierFunctionTest) {
-  EXPECT_GE(qtaguid_tagSocket(sock_0.fd, max_uint_tag, my_uid), 0);
-  EXPECT_GE(qtaguid_setPacifier(1), 0);
-  EXPECT_GE(qtaguid_untagSocket(sock_0.fd), 0);
-  EXPECT_GE(qtaguid_tagSocket(sock_1.fd, valid_tag1, fake_uid2), 0);
-  EXPECT_FALSE(sock_1.checkTag(valid_tag1, fake_uid2))
-      << "Tag should not be there.";
-  EXPECT_GE(qtaguid_setPacifier(0), 0);
-  EXPECT_FALSE(sock_1.checkTag(valid_tag1, fake_uid2))
-      << "Tag should not be there.";
-  EXPECT_TRUE(sock_0.checkTag(max_uint_tag, my_uid)) << "tag not found";
-  EXPECT_GE(qtaguid_untagSocket(sock_0.fd), 0);
-  EXPECT_GE(qtaguid_tagSocket(sock_1.fd, valid_tag1, fake_uid2), 0);
-  EXPECT_FALSE(sock_0.checkTag(max_uint_tag, fake_uid))
-      << "Tag should not be there";
-  EXPECT_TRUE(sock_1.checkTag(valid_tag1, fake_uid2)) << "Tag not found";
 }
 
 /*

@@ -67,6 +67,7 @@ KSFT_CASES_STAGING = map(lambda x: test_case.LinuxKselftestTestcase(*(x)), [
     ("splice/default_file_splice_read.sh", ["arm", "x86"], [32, 64]),
     ("timers/rtctest", ["arm", "x86"], [32, 64]),
     ("vDSO/kselftest_vdso_test", ["arm", "x86"], [32, 64]),
+    ("vm/run_vmtests", ["arm", "x86"], [32, 64]),
     ("x86/single_step_syscall", ["x86"], [32, 64]),
     ("x86/sysret_ss_attrs", ["x86"], [32]),
     ("x86/syscall_nt", ["x86"], [32, 64]),

@@ -112,7 +112,7 @@ class LinuxKselftestTest(base_test.BaseTestClass):
         """Runs the given testcase and asserts the result.
 
         Args:
-            testcase: string, format testsuite/testname, specifies which
+            testcase: a LinuxKselftestTestcase object, specifies which
                 test case to run.
         """
         if not testcase:

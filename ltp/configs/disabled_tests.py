@@ -425,4 +425,7 @@ DISABLED_TESTS = [
     'syscalls.kcmp03',
     'syscalls.madvise08',
     'syscalls.pselect01',
+    # TODO(b/69117476): Following test needs to be checked to see it
+    # it correctly skips running
+    'tracing.ftrace_regression01',
 ]

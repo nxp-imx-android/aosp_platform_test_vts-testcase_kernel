@@ -1642,8 +1642,6 @@ STABLE_TESTS = [
     'timers.timer_settime02_64bit',
     'timers.timer_settime03_32bit',
     'timers.timer_settime03_64bit',
-    'tracing.ftrace-stress-test_32bit',
-    'tracing.ftrace-stress-test_64bit',
     'tracing.ftrace_regression02_32bit',
     'tracing.ftrace_regression02_64bit',
 ]

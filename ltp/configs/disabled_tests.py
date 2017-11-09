@@ -325,4 +325,7 @@ DISABLED_TESTS = [
     'syscalls.chdir03_64bit',
     'mm.max_map_count_32bit',
     'syscalls.chdir03_32bit',
+    # TODO(b/69117476): Following test needs to be checked to see it
+    # it correctly skips running
+    'tracing.ftrace_regression01',
 ]

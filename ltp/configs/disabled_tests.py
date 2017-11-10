@@ -171,8 +171,6 @@ DISABLED_TESTS = [
     'fs.ftest06',
     'fs.isofs',
     'fsx.fsx-linux',
-    'io.aio01',
-    'io.aio02',
     'mm.mtest06',
     'mm.shm_test01',
     'mm.mallocstress01',

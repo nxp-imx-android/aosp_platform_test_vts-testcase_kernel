@@ -1,8 +1,6 @@
 # Tests disabled
 # Based on external/ltp commit 5f01077afe994f4107b147222f3956716d4a8fde
 DISABLED_TESTS = [
-    # gunzip newly added on 4/12/17 and test is failing because -r option is not yet implemented.
-    'commands.gzip01',
     # b/32386191 getrusage04 result is flaky
     'syscalls.getrusage04',
     # b/31154962
@@ -173,8 +171,6 @@ DISABLED_TESTS = [
     'fs.ftest06',
     'fs.isofs',
     'fsx.fsx-linux',
-    'io.aio01',
-    'io.aio02',
     'mm.mtest06',
     'mm.shm_test01',
     'mm.mallocstress01',
@@ -201,17 +197,6 @@ DISABLED_TESTS = [
     'hugetlb.hugemmap05_1',
     'hugetlb.hugemmap05_2',
     'hugetlb.hugemmap05_3',
-    'commands.file',
-    'commands.tar',
-    'commands.cp_tests01',
-    'commands.ln_tests01',
-    'commands.mkdir_tests01',
-    'commands.mv_tests01',
-    'commands.size01',
-    'commands.du01',
-    'commands.mkfs01',
-    'commands.lsmod01',
-    'commands.wc01',
     'hyperthreading.smt_smp_enabled',
     'hyperthreading.smt_smp_affinity',
     'kernel_misc.zram03',
@@ -266,8 +251,6 @@ DISABLED_TESTS = [
     'mm.overcommit_memory04_64bit',
     'mm.overcommit_memory05_64bit',
     'mm.overcommit_memory06_64bit',
-    # 'which' in Android does not accept the tested options b/31152668
-    'commands.which01',
     # tests that are currently killing some lab devices 64bit on (pixel and bullhead)
     # b/31181781
     'mm.oom01_64bit',
@@ -342,4 +325,7 @@ DISABLED_TESTS = [
     'syscalls.chdir03_64bit',
     'mm.max_map_count_32bit',
     'syscalls.chdir03_32bit',
+    # TODO(b/69117476): Following test needs to be checked to see it
+    # it correctly skips running
+    'tracing.ftrace_regression01',
 ]

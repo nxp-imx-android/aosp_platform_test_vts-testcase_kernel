@@ -1628,8 +1628,6 @@ STABLE_TESTS = [
     'timers.clock_settime02_64bit',
     'timers.clock_settime03_32bit',
     'timers.clock_settime03_64bit',
-    'timers.leapsec_timer_32bit',
-    'timers.leapsec_timer_64bit',
     'timers.timer_create02_32bit',
     'timers.timer_create02_64bit',
     'timers.timer_create03_32bit',

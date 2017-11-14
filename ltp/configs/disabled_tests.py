@@ -70,7 +70,6 @@ DISABLED_TESTS = [
     'syscalls.madvise06',
     'syscalls.pathconf01',
     'syscalls.preadv02',
-    'syscalls.pwritev01_64',
     'syscalls.pwritev02',
     'syscalls.quotactl01',
     'syscalls.readlink04',

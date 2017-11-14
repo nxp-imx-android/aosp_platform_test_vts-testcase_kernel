@@ -28,7 +28,6 @@ DISABLED_TESTS = [
     'syscalls.fsync01',
     'syscalls.ftruncate04',
     'syscalls.ftruncate04_64',
-    'syscalls.getcwd03',
     'syscalls.getegid01_16',
     'syscalls.getegid02_16',
     'syscalls.geteuid01_16',

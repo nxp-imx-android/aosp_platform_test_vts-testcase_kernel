@@ -232,7 +232,6 @@ DISABLED_TESTS = [
     'syscalls.setdomainname01',
     'syscalls.setdomainname02',
     'syscalls.setdomainname03',
-    'syscalls.sighold02',
     'syscalls.sigpending02',
     'syscalls.sigrelse01',
     'syscalls.vfork02',

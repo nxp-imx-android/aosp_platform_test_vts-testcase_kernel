@@ -46,7 +46,6 @@ DISABLED_TESTS = [
     'syscalls.lchown03_16',
     'syscalls.link08',
     'syscalls.linkat02',
-    'syscalls.mkdir03',
     'syscalls.rmdir02',
     'syscalls.mkdirat02',
     'syscalls.mknod07',

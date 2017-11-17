@@ -10,8 +10,6 @@ DISABLED_TESTS = [
     'syscalls.fcntl34_64',
     'syscalls.inotify06',
     'syscalls.abort01',
-    'syscalls.chmod05',
-    'syscalls.chmod07',
     'syscalls.chown01_16',
     'syscalls.chown02_16',
     'syscalls.chown03_16',

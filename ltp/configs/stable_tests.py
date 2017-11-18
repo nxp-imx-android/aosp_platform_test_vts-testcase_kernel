@@ -159,8 +159,6 @@ STABLE_TESTS = [
     'math.fptest01_64bit',
     'math.fptest02_32bit',
     'math.fptest02_64bit',
-    'mm.max_map_count_32bit',
-    'mm.max_map_count_64bit',
     'mm.mem01_32bit',
     'mm.mem01_64bit',
     'mm.mem02_32bit',

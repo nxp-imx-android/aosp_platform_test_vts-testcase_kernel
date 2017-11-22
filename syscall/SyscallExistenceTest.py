@@ -27,12 +27,19 @@ from vts.utils.python.controllers import android_device
 class SyscallExistenceTest(base_test.BaseTestClass):
     """Tests to verify kernel syscall interface."""
     TEST_SHELL_NAME = "my_shell1"
-    AARCH64__NR_name_to_handle_at = 264
-    AARCH64__NR_open_by_handle_at = 265
-    AARCH64__NR_uselib = 1077
 
     def setUpClass(self):
         self.dut = self.registerController(android_device)[0]
+        if "arm" in self.dut.cpu_abi:
+            self.ARCH64__NR_name_to_handle_at = 264
+            self.ARCH64__NR_open_by_handle_at = 265
+            self.ARCH64__NR_uselib = 1077
+        elif "x86" in self.dut.cpu_abi:
+            self.ARCH64__NR_name_to_handle_at = 303
+            self.ARCH64__NR_open_by_handle_at = 304
+            self.ARCH64__NR_uselib = 134
+        else:
+            asserts.fail("Unknown CPU ABI: %s" % self.dut.cpu_abi)
         self.dut.shell.InvokeTerminal(self.TEST_SHELL_NAME)
 
     def tearDown(self):
@@ -47,8 +54,8 @@ class SyscallExistenceTest(base_test.BaseTestClass):
         """Testcase to verify syscall [name_to_handle_at] is disabled."""
         if self.dut.is64Bit:
             logging.info("testing syscall: name_to_handle_at [%d]",
-                         self.AARCH64__NR_name_to_handle_at)
-            asserts.assertTrue(self.SyscallDisabled(self.AARCH64__NR_name_to_handle_at),
+                         self.ARCH64__NR_name_to_handle_at)
+            asserts.assertTrue(self.SyscallDisabled(self.ARCH64__NR_name_to_handle_at),
                                "syscall [name_to_handle_at] should be disabled")
         else:
             asserts.skip("32-bit not supported")
@@ -57,8 +64,8 @@ class SyscallExistenceTest(base_test.BaseTestClass):
         """Testcase to verify syscall [open_by_handle_at] is disabled."""
         if self.dut.is64Bit:
             logging.info("testing syscall: open_by_handle_at [%d]",
-                         self.AARCH64__NR_open_by_handle_at)
-            asserts.assertTrue(self.SyscallDisabled(self.AARCH64__NR_open_by_handle_at),
+                         self.ARCH64__NR_open_by_handle_at)
+            asserts.assertTrue(self.SyscallDisabled(self.ARCH64__NR_open_by_handle_at),
                                "syscall [open_by_handle_at] should be disabled")
         else:
             asserts.skip("32-bit not supported")
@@ -67,8 +74,8 @@ class SyscallExistenceTest(base_test.BaseTestClass):
         """Testcase to verify syscall [uselib] is disabled."""
         if self.dut.is64Bit:
             logging.info("testing syscall: uselib [%d]",
-                         self.AARCH64__NR_uselib)
-            asserts.assertTrue(self.SyscallDisabled(self.AARCH64__NR_uselib),
+                         self.ARCH64__NR_uselib)
+            asserts.assertTrue(self.SyscallDisabled(self.ARCH64__NR_uselib),
                                "syscall [uselib] should be disabled")
         else:
             asserts.skip("32-bit not supported")

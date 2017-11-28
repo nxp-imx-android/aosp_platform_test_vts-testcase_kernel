@@ -400,15 +400,9 @@ class KernelLtpTest(base_test.BaseTestClass):
                                                      (True, test_case.note))
                 continue
 
-<<<<<<< HEAD
-            cmd = "export {envp} && {commands}".format(
-                envp=self.GetEnvp(), commands=test_case.GetCommand())
-=======
             cmd = "export {envp} && cd {cwd} && {commands}".format(
-                envp=self.GetEnvp(),
-                cwd=ltp_configs.LTPBINPATH,
+                envp=self.GetEnvp(), cwd=ltp_configs.LTPBINPATH,
                 commands=test_case.command)
->>>>>>> d6a5ac6... update LTP to use the new filter class from runner
 
             logging.info("Worker {} starts executing command "
                          "for '{}'.\n  Command:{}".format(id, test_case, cmd))
@@ -461,15 +455,9 @@ class KernelLtpTest(base_test.BaseTestClass):
         asserts.skipIf(test_case.is_filtered, test_case.note)
         asserts.skipIf(not self._requirement.Check(test_case), test_case.note)
 
-<<<<<<< HEAD
-        cmd = "export {envp} && {commands}".format(
-            envp=self.GetEnvp(), commands=test_case.GetCommand())
-=======
         cmd = "export {envp} && cd {cwd} && {commands}".format(
-            envp=self.GetEnvp(),
-            cwd=ltp_configs.LTPBINPATH,
+            envp=self.GetEnvp(), cwd=ltp_configs.LTPBINPATH,
             commands=test_case.command)
->>>>>>> d6a5ac6... update LTP to use the new filter class from runner
         logging.info("Executing %s", cmd)
         self.CheckResult(self.shell.Execute(cmd))
 

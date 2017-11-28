@@ -1014,4 +1014,6 @@ DISABLED_TESTS = [
     'dma_thread_diotest.dma_thread_diotest7',
     # b/33008689 (closed) requires mkfs.ext4 and loop device support.
     'fs.quota_remount_test01',
+    'tracing.ftrace-stress-test_32bit',
+    'tracing.ftrace-stress-test_64bit',
 ]

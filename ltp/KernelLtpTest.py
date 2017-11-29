@@ -26,9 +26,9 @@ from vts.runners.host import asserts
 from vts.runners.host import base_test
 from vts.runners.host import const
 from vts.runners.host import keys
+from vts.runners.host import records
 from vts.runners.host import test_runner
 from vts.utils.python.common import cmd_utils
-from vts.utils.python.controllers import android_device
 
 from vts.testcases.kernel.ltp import test_cases_parser
 from vts.testcases.kernel.ltp import environment_requirement_checker as env_checker
@@ -90,10 +90,9 @@ class KernelLtpTest(base_test.BaseTestClass):
         logging.info("%s: %s", ltp_enums.ConfigKeys.LTP_NUMBER_OF_THREADS,
                      self.number_of_threads)
 
-        self._dut = self.registerController(android_device)[0]
+        self._dut = self.android_devices[0]
         logging.info("product_type: %s", self._dut.product_type)
-        self._dut.shell.InvokeTerminal("one")
-        self.shell = self._dut.shell.one
+        self.shell = self._dut.shell
 
         self._requirement = env_checker.EnvironmentRequirementChecker(
             self.shell)
@@ -437,7 +436,8 @@ class KernelLtpTest(base_test.BaseTestClass):
             **kwargs: any additional keyword arguments for runner
         """
         self._report_thread_lock.acquire()
-        self.results.requested.append(test_name)
+        tr_record = records.TestResultRecord(test_name, self.TAG)
+        self.results.requested.append(tr_record)
         try:
             self.execOneTest(test_name, function, args, **kwargs)
         except Exception as e:

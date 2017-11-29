@@ -23,6 +23,10 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES := \
   syscall_exists.cpp \
 
+LOCAL_CFLAGS := \
+  -Wall \
+  -Werror \
+
 LOCAL_SHARED_LIBRARIES := \
   libutils \
   libcutils \

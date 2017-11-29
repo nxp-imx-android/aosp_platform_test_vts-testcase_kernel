@@ -1018,4 +1018,6 @@ DISABLED_TESTS = [
     'fs.quota_remount_test01',
     'tracing.ftrace-stress-test_32bit',
     'tracing.ftrace-stress-test_64bit',
+    'tracing.ftrace_regression02_32bit',
+    'tracing.ftrace_regression02_64bit',
 ]

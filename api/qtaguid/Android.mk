@@ -24,7 +24,11 @@ LOCAL_SHARED_LIBRARIES += libcutils libutils liblog libbase
 LOCAL_STATIC_LIBRARIES += libtestUtil
 LOCAL_C_INCLUDES += system/extras/tests/include \
                     test/vts/testcases/system/qtaguid/sample
-LOCAL_CFLAGS += -fno-strict-aliasing
+LOCAL_CFLAGS += \
+  -fno-strict-aliasing \
+  -Wall \
+  -Werror \
+  -Wno-unused-variable \
 
 include $(BUILD_NATIVE_TEST)
 

@@ -725,8 +725,6 @@ STABLE_TESTS = [
     'syscalls.getrusage01_64bit',
     'syscalls.getrusage02_32bit',
     'syscalls.getrusage02_64bit',
-    'syscalls.getrusage03_32bit',
-    'syscalls.getrusage03_64bit',
     'syscalls.getsid01_32bit',
     'syscalls.getsid01_64bit',
     'syscalls.getsid02_32bit',

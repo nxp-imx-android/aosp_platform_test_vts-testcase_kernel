@@ -65,7 +65,7 @@ class TestCasesParser(object):
     def Load(self,
              ltp_dir,
              n_bit,
-             include_filter,
+             test_filter,
              run_staging=False,
              is_low_mem=False):
         """Read the definition file and yields a TestCase generator.
@@ -73,7 +73,7 @@ class TestCasesParser(object):
         Args:
             ltp_dir: string, directory that contains ltp binaries and scripts
             n_bit: int, bitness
-            include_filter: list of string, tests to be scheduled exclusively
+            test_filter: Filter object, test name filter from base_test
             run_staging: bool, whether to use staging configuration
             is_low_mem: bool, whether to use low memory device configuration
         """
@@ -120,14 +120,15 @@ class TestCasesParser(object):
 
             # For skipping tests that are not designed or ready for Android
             if (test_display_name in self._disabled_tests and
-                    test_display_name not in include_filter):
+                    not test_filter.IsInIncludeFilter(test_display_name)):
                 logging.info("[Parser] Skipping test case %s. Reason: "
                              "disabled" % testcase.fullname)
                 continue
 
             # For separating staging tests from stable tests
             if test_display_name in self._staging_tests:
-                if not run_staging and test_display_name not in include_filter:
+                if not run_staging and not test_filter.IsInIncludeFilter(
+                        test_display_name):
                     # Skip staging tests in stable run
                     continue
                 else:

@@ -190,6 +190,9 @@ class KernelLtpTest(base_test.BaseTestClass):
         if not results:
             return (self._FAIL, "No response received. Socket timeout")
 
+        if None in results.values():
+            return (self._FAIL, "Command result is empty.")
+
         # For LTP test cases, we run one shell command for each test case
         # So the result should also contains only one execution output
         stdout = results[const.STDOUT][0]

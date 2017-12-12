@@ -23,6 +23,10 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES := \
   syscall_exists.cpp \
 
+LOCAL_CFLAGS := \
+  -Wall \
+  -Werror \
+
 LOCAL_SHARED_LIBRARIES := \
   libutils \
   libcutils \
@@ -38,4 +42,4 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := SyscallExistenceTest
 
 VTS_CONFIG_SRC_DIR := testcases/kernel/syscall
-include test/vts/tools/build/Android.host_config.mk
+-include test/vts/tools/build/Android.host_config.mk

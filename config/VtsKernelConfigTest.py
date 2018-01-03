@@ -198,6 +198,12 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
                 "CONFIG_ACPI" not in device_configs):
             should_be_enabled.append("CONFIG_OF | CONFIG_ACPI")
 
+        if ("CONFIG_ANDROID_LOW_MEMORY_KILLER" not in device_configs and
+                ("CONFIG_MEMCG" not in device_configs or
+                 "CONFIG_MEMCG_SWAP" not in device_configs)):
+            should_be_enabled.append("CONFIG_ANDROID_LOW_MEMORY_KILLER | "
+                                     "(CONFIG_MEMCG & CONFIG_MEMCG_SWAP)")
+
         asserts.assertTrue(
             len(should_be_enabled) == 0 and len(should_not_be_set) == 0 and
             len(incorrect_config_state) == 0,

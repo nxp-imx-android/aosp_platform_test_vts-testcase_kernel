@@ -428,4 +428,7 @@ DISABLED_TESTS = [
     # TODO(b/69117476): Following test needs to be checked to see it
     # it correctly skips running
     'tracing.ftrace_regression01',
+    # b/71780005
+    'fs.fs_racer_32bit',
+    'fs.fs_racer_64bit',
 ]

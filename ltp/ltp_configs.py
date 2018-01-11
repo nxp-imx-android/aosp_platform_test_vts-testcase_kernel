@@ -1020,4 +1020,7 @@ DISABLED_TESTS = [
     'tracing.ftrace-stress-test_64bit',
     'tracing.ftrace_regression02_32bit',
     'tracing.ftrace_regression02_64bit',
+    # b/71780005
+    'fs.fs_racer_64bit',
+    'fs.fs_racer_32bit',
 ]

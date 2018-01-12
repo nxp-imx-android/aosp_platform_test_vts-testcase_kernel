@@ -446,7 +446,7 @@ class KernelLtpTest(base_test.BaseTestClass):
             **kwargs: any additional keyword arguments for runner
         """
         self._report_thread_lock.acquire()
-        tr_record = records.TestResultRecord(test_name, self.TAG)
+        tr_record = records.TestResultRecord(test_name, self.test_module_name)
         self.results.requested.append(tr_record)
         try:
             self.execOneTest(test_name, function, args, **kwargs)

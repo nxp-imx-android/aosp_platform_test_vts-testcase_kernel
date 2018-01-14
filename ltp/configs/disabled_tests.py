@@ -320,4 +320,29 @@ DISABLED_TESTS = [
     # TODO(b/69117476): Following test needs to be checked to see it
     # it correctly skips running
     'tracing.ftrace_regression01',
+    # b/71780005: causes /data to get filled repeatedly
+    'fs.fs_racer_32bit',
+    'fs.fs_racer_64bit',
+    # b/71414136: fails in VTS
+    'commands.file01',
+    # b/71415362: fails in VTS
+    'fs.proc01',
+    # b/71415693: fails in VTS
+    'hugetlb.hugemmap01',
+    'hugetlb.hugemmap02',
+    'hugetlb.hugemmap04',
+    'hugetlb.hugemmap06',
+    # b/71416672: fails in VTS
+    'mm.ksm03_1',
+    'mm.ksm03',
+    # b/71416706: fails in VTS
+    'syscalls.cve-2017-5669',
+    # b/71416738: fails in VTS
+    'syscalls.fcntl35_64',
+    'syscalls.fcntl35',
+    # b/71416760: fails in VTS
+    'syscalls.fcntl36_64',
+    'syscalls.fcntl36',
+    # b/71416822: fails in VTS
+    'tracing.dynamic_debug01',
 ]

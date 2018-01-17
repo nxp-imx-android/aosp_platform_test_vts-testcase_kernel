@@ -63,8 +63,6 @@ STABLE_TESTS = [
     'dio.dio28_64bit',
     'fs.fs_di_32bit',
     'fs.fs_di_64bit',
-    'fs.fs_racer_32bit',
-    'fs.fs_racer_64bit',
     'fs.ftest02_32bit',
     'fs.ftest02_64bit',
     'fs.inode01_32bit',

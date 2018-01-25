@@ -47,6 +47,7 @@ TEST_OBJECTS = {
     ProcCmdlineTest.ProcCmdlineTest(),
     ProcCpuFileTests.ProcCpuInfoTest(),
     ProcCpuFileTests.ProcLoadavgTest(),
+    ProcFsFileTests.ProcDiskstatsTest(),
     ProcFsFileTests.ProcFilesystemsTest(),
     ProcFsFileTests.ProcMountsTest(),
     ProcFsFileTests.ProcSwapsTest(),

@@ -38,7 +38,7 @@ from vts.testcases.kernel.ltp import ltp_enums
 from vts.testcases.kernel.ltp import ltp_configs
 
 RANDOM_SEED = 0
-#TCP connection timeout
+# TCP connection timeout
 TIMEOUT_TCP_IN_SECS = 180
 
 

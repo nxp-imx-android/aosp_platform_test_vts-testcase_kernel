@@ -18,6 +18,7 @@ from vts.testcases.kernel.api.proc import KernelProcFileTestBase
 
 from vts.utils.python.file import target_file_utils
 
+# Test for /proc/sys/kernel/*.
 
 class ProcKptrRestrictTest(KernelProcFileTestBase.KernelProcFileTestBase):
     '''/proc/sys/kernel/kptr_restrict determines whether kernel pointers are printed
@@ -58,6 +59,8 @@ class ProcRandomizeVaSpaceTest(KernelProcFileTestBase.KernelProcFileTestBase):
         """
         return target_file_utils.IsReadWrite
 
+
+# Tests for /proc/sys/vm/*.
 
 class ProcOverCommitMemoryTest(KernelProcFileTestBase.KernelProcFileTestBase):
     '''/proc/sys/vm/overcommit_memory determines the kernel virtual memory accounting mode.
@@ -117,3 +120,70 @@ class ProcMmapRndBitsTest(KernelProcFileTestBase.KernelProcFileTestBase):
 class ProcMmapRndCompatBitsTest(ProcMmapRndBitsTest):
     def get_path(self):
         return "/proc/sys/vm/mmap_rnd_compat_bits"
+
+
+# Tests for /proc/sys/fs/*.
+
+class ProcPipeMaxSize(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/fs/pipe-max-size reports the maximum size (in bytes) of
+    individual pipes.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def get_path(self):
+        return "/proc/sys/fs/pipe-max-size"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
+class ProcProtectedHardlinks(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/fs/protected_hardlinks reports hardlink creation behavior.'''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def result_correct(self, result):
+        return result in [0, 1]
+
+    def get_path(self):
+        return "/proc/sys/fs/protected_hardlinks"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
+class ProcProtectedSymlinks(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/fs/protected_symlinks reports symlink following behavior.'''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def result_correct(self, result):
+        return result in [0, 1]
+
+    def get_path(self):
+        return "/proc/sys/fs/protected_symlinks"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
+class ProcSuidDumpable(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/fs/suid_dumpable value can be used to query and set the core
+    dump mode for setuid or otherwise protected/tainted binaries.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def result_correct(self, result):
+        return result in [0, 1, 2]
+
+    def get_path(self):
+        return "/proc/sys/fs/suid_dumpable"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite

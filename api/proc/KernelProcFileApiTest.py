@@ -67,6 +67,7 @@ TEST_OBJECTS = {
     ProcSimpleFileTests.ProcRandomizeVaSpaceTest(),
     ProcShowUidStatTest.ProcShowUidStatTest(),
     ProcSimpleFileTests.ProcSuidDumpable(),
+    ProcSimpleFileTests.ProcUptime(),
     ProcStatTest.ProcStatTest(),
     ProcVersionTest.ProcVersionTest(),
     ProcVmallocInfoTest.ProcVmallocInfoTest(),

@@ -187,3 +187,13 @@ class ProcSuidDumpable(KernelProcFileTestBase.KernelProcFileTestBase):
 
     def get_permission_checker(self):
         return target_file_utils.IsReadWrite
+
+
+class ProcUptime(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/uptime tells how long the system has been running.'''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:f} {:f}\n", contents)[0]
+
+    def get_path(self):
+        return "/proc/uptime"

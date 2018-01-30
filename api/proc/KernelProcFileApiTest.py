@@ -37,6 +37,7 @@ from vts.testcases.kernel.api.proc import ProcShowUidStatTest
 from vts.testcases.kernel.api.proc import ProcStatTest
 from vts.testcases.kernel.api.proc import ProcVersionTest
 from vts.testcases.kernel.api.proc import ProcVmallocInfoTest
+from vts.testcases.kernel.api.proc import ProcVmstatTest
 from vts.testcases.kernel.api.proc import ProcZoneInfoTest
 
 from vts.utils.python.controllers import android_device
@@ -71,6 +72,7 @@ TEST_OBJECTS = {
     ProcStatTest.ProcStatTest(),
     ProcVersionTest.ProcVersionTest(),
     ProcVmallocInfoTest.ProcVmallocInfoTest(),
+    ProcVmstatTest.ProcVmstat(),
     ProcZoneInfoTest.ProcZoneInfoTest(),
 }
 

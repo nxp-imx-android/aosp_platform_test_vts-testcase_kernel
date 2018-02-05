@@ -127,8 +127,6 @@ STABLE_TESTS = [
     'fs_perms_simple.fs_perms18_64bit',
     'input.input01_32bit',
     'input.input02_32bit',
-    'input.input03_32bit',
-    'input.input03_64bit',
     'input.input04_32bit',
     'input.input05_32bit',
     'ipc.pipe_test_01_32bit',

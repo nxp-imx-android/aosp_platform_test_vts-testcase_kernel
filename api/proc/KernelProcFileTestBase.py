@@ -186,6 +186,10 @@ class KernelProcFileTestBase(object):
         """
         return True
 
+    def file_optional(self):
+        """Returns: True if file is allowed to be absent (boolean)."""
+        return False
+
     def result_correct(self, parse_result):
         """Returns: True if the parsed result meets the requirements (boolean)."""
         return True

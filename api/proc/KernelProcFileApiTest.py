@@ -28,6 +28,7 @@ from vts.testcases.kernel.api.proc import ProcCpuFileTests
 from vts.testcases.kernel.api.proc import ProcFsFileTests
 from vts.testcases.kernel.api.proc import ProcKmsgTest
 from vts.testcases.kernel.api.proc import ProcMapsTest
+from vts.testcases.kernel.api.proc import ProcMiscTest
 from vts.testcases.kernel.api.proc import ProcMemInfoTest
 from vts.testcases.kernel.api.proc import ProcModulesTest
 from vts.testcases.kernel.api.proc import ProcQtaguidCtrlTest
@@ -35,6 +36,7 @@ from vts.testcases.kernel.api.proc import ProcRemoveUidRangeTest
 from vts.testcases.kernel.api.proc import ProcSimpleFileTests
 from vts.testcases.kernel.api.proc import ProcShowUidStatTest
 from vts.testcases.kernel.api.proc import ProcStatTest
+from vts.testcases.kernel.api.proc import ProcUidTimeInStateTest
 from vts.testcases.kernel.api.proc import ProcVersionTest
 from vts.testcases.kernel.api.proc import ProcVmallocInfoTest
 from vts.testcases.kernel.api.proc import ProcVmstatTest
@@ -54,14 +56,22 @@ TEST_OBJECTS = {
     ProcFsFileTests.ProcSwapsTest(),
     ProcKmsgTest.ProcKmsgTest(),
     ProcMapsTest.ProcMapsTest(),
+    ProcMiscTest.ProcMisc(),
     ProcMemInfoTest.ProcMemInfoTest(),
     ProcModulesTest.ProcModulesTest(),
     ProcQtaguidCtrlTest.ProcQtaguidCtrlTest(),
     ProcRemoveUidRangeTest.ProcRemoveUidRangeTest(),
+    ProcSimpleFileTests.ProcCorePipeLimit(),
+    ProcSimpleFileTests.ProcDmesgRestrict(),
     ProcSimpleFileTests.ProcKptrRestrictTest(),
     ProcSimpleFileTests.ProcMmapMinAddrTest(),
     ProcSimpleFileTests.ProcMmapRndBitsTest(),
+    ProcSimpleFileTests.ProcModulesDisabled(),
     ProcSimpleFileTests.ProcOverCommitMemoryTest(),
+    ProcSimpleFileTests.ProcPanicOnOops(),
+    ProcSimpleFileTests.ProcPerfEventMaxSampleRate(),
+    ProcSimpleFileTests.ProcPerfEventParanoid(),
+    ProcSimpleFileTests.ProcPidMax(),
     ProcSimpleFileTests.ProcPipeMaxSize(),
     ProcSimpleFileTests.ProcProtectedHardlinks(),
     ProcSimpleFileTests.ProcProtectedSymlinks(),
@@ -70,6 +80,7 @@ TEST_OBJECTS = {
     ProcSimpleFileTests.ProcSuidDumpable(),
     ProcSimpleFileTests.ProcUptime(),
     ProcStatTest.ProcStatTest(),
+    ProcUidTimeInStateTest.ProcUidTimeInStateTest(),
     ProcVersionTest.ProcVersionTest(),
     ProcVmallocInfoTest.ProcVmallocInfoTest(),
     ProcVmstatTest.ProcVmstat(),
@@ -99,6 +110,9 @@ class KernelProcFileApiTest(base_test.BaseTestClass):
         asserts.skipIf(test_object in TEST_OBJECTS_64 and not self.dut.is64Bit,
                        "Skip test for 64-bit kernel.")
         filepath = test_object.get_path()
+        asserts.skipIf(not target_file_utils.Exists(filepath, self.shell) and
+                       test_object.file_optional(),
+                       "%s does not exist and is optional." % filepath)
         target_file_utils.assertPermissionsAndExistence(
             self.shell, filepath, test_object.get_permission_checker())
 

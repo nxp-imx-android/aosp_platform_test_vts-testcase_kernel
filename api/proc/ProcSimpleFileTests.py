@@ -20,6 +20,39 @@ from vts.utils.python.file import target_file_utils
 
 # Test for /proc/sys/kernel/*.
 
+class ProcCorePipeLimit(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/kernel/core_pipe_limit defines how many concurrent crashing
+    processes may be piped to user space applications in parallel.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def get_path(self):
+        return "/proc/sys/kernel/core_pipe_limit"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
+class ProcDmesgRestrict(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/kernel/dmesg_restrict indicates whether unprivileged users are
+    prevented from using dmesg.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def result_correct(self, result):
+        return result in [0, 1]
+
+    def get_path(self):
+        return "/proc/sys/kernel/dmesg_restrict"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
 class ProcKptrRestrictTest(KernelProcFileTestBase.KernelProcFileTestBase):
     '''/proc/sys/kernel/kptr_restrict determines whether kernel pointers are printed
     in proc files.
@@ -37,6 +70,83 @@ class ProcKptrRestrictTest(KernelProcFileTestBase.KernelProcFileTestBase):
     def get_permission_checker(self):
         """Get r/w file permission checker.
         """
+        return target_file_utils.IsReadWrite
+
+
+class ProcModulesDisabled(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/kernel/modules_disabled indicates if modules are allowed to be
+    loaded.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def result_correct(self, result):
+        return result in [0, 1]
+
+    def get_path(self):
+        return "/proc/sys/kernel/modules_disabled"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
+class ProcPanicOnOops(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/kernel/panic_on_oops controls kernel's behaviour on oops.'''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def result_correct(self, result):
+        return result in [0, 1]
+
+    def get_path(self):
+        return "/proc/sys/kernel/panic_on_oops"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
+class ProcPerfEventMaxSampleRate(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/kernel/perf_event_max_sample_rate sets the maximum sample rate
+    of performance events.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def get_path(self):
+        return "/proc/sys/kernel/perf_event_max_sample_rate"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
+class ProcPerfEventParanoid(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/kernel/perf_event_paranoid controls use of the performance
+    events system by unprivileged users.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def get_path(self):
+        return "/proc/sys/kernel/perf_event_paranoid"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
+class ProcPidMax(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/kernel/pid_max is the pid allocation wrap value.'''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def get_path(self):
+        return "/proc/sys/kernel/pid_max"
+
+    def get_permission_checker(self):
         return target_file_utils.IsReadWrite
 
 

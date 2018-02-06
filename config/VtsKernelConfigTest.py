@@ -40,7 +40,7 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
 
     PROC_FILE_PATH = "/proc/config.gz"
     KERNEL_CONFIG_FILE_PATH = "vts/testcases/kernel/config/data"
-    SUPPORTED_KERNEL_VERSIONS = ["3.18", "4.4", "4.9"]
+    SUPPORTED_KERNEL_VERSIONS = ["4.4", "4.9", "4.14"]
 
     def setUpClass(self):
         required_params = [keys.ConfigKeys.IKEY_DATA_FILE_PATH]
@@ -52,7 +52,7 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
         self._temp_dir = tempfile.mkdtemp()
 
     def checkKernelVersion(self):
-        """Validate the kernel version of DUT is a valid O kernel version.
+        """Validate the kernel version of DUT is a valid kernel version.
 
         Returns:
             string, kernel version of device

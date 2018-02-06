@@ -28,6 +28,7 @@ from vts.testcases.kernel.api.proc import ProcCpuFileTests
 from vts.testcases.kernel.api.proc import ProcFsFileTests
 from vts.testcases.kernel.api.proc import ProcKmsgTest
 from vts.testcases.kernel.api.proc import ProcMapsTest
+from vts.testcases.kernel.api.proc import ProcMiscTest
 from vts.testcases.kernel.api.proc import ProcMemInfoTest
 from vts.testcases.kernel.api.proc import ProcModulesTest
 from vts.testcases.kernel.api.proc import ProcQtaguidCtrlTest
@@ -55,6 +56,7 @@ TEST_OBJECTS = {
     ProcFsFileTests.ProcSwapsTest(),
     ProcKmsgTest.ProcKmsgTest(),
     ProcMapsTest.ProcMapsTest(),
+    ProcMiscTest.ProcMisc(),
     ProcMemInfoTest.ProcMemInfoTest(),
     ProcModulesTest.ProcModulesTest(),
     ProcQtaguidCtrlTest.ProcQtaguidCtrlTest(),

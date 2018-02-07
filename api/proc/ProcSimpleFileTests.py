@@ -172,6 +172,77 @@ class ProcRandomizeVaSpaceTest(KernelProcFileTestBase.KernelProcFileTestBase):
 
 # Tests for /proc/sys/vm/*.
 
+class ProcDirtyBackgroundBytes(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/vm/dirty_background_bytes contains the amount of dirty memory
+    at which the background kernel flusher threads will start writeback.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def get_path(self):
+        return "/proc/sys/vm/dirty_background_bytes"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
+class ProcDirtyBackgroundRatio(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/vm/dirty_background_ratio contains, as a percentage of total
+    available memory that contains free pages and reclaimable pages, the number
+    of pages at which the background kernel flusher threads will start writing
+    out dirty data.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def result_correct(self, result):
+        return result >= 0 and result <= 100
+
+    def get_path(self):
+        return "/proc/sys/vm/dirty_background_ratio"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
+class ProcDropCaches(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''Writing to /proc/sys/vm/drop_caches will cause the kernel to drop clean
+    caches.
+    '''
+
+    def parse_contents(self, contents):
+        # Format of this file is not documented, so don't check that.
+        return ''
+
+    def get_path(self):
+        return "/proc/sys/vm/drop_caches"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
+class ProcExtraFreeKbytes(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/vm/extra_free_kbytes tells the VM to keep extra free memory
+    between the threshold where background reclaim (kswapd) kicks in, and the
+    threshold where direct reclaim (by allocating processes) kicks in.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def get_path(self):
+        return "/proc/sys/vm/extra_free_kbytes"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+    def file_optional(self):
+        # This file isn't in Android common kernel.
+        return True
+
+
 class ProcOverCommitMemoryTest(KernelProcFileTestBase.KernelProcFileTestBase):
     '''/proc/sys/vm/overcommit_memory determines the kernel virtual memory accounting mode.
     '''
@@ -188,6 +259,21 @@ class ProcOverCommitMemoryTest(KernelProcFileTestBase.KernelProcFileTestBase):
     def get_permission_checker(self):
         """Get r/w file permission checker.
         """
+        return target_file_utils.IsReadWrite
+
+
+class ProcMaxMapCount(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/vm/max_map_count contains the maximum number of memory map areas a process
+    may have.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def get_path(self):
+        return "/proc/sys/vm/max_map_count"
+
+    def get_permission_checker(self):
         return target_file_utils.IsReadWrite
 
 
@@ -230,6 +316,21 @@ class ProcMmapRndBitsTest(KernelProcFileTestBase.KernelProcFileTestBase):
 class ProcMmapRndCompatBitsTest(ProcMmapRndBitsTest):
     def get_path(self):
         return "/proc/sys/vm/mmap_rnd_compat_bits"
+
+
+class ProcPageCluster(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/vm/page-cluster controls the number of pages up to which
+    consecutive pages are read in from swap in a single attempt.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def get_path(self):
+        return "/proc/sys/vm/page-cluster"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
 
 
 # Tests for /proc/sys/fs/*.

@@ -38,7 +38,6 @@ DISABLED_TESTS = [
     'syscalls.getuid03_16',
     'syscalls.ioctl03',
     'syscalls.inotify03',
-    'syscalls.kill11',
     'syscalls.lchown01_16',
     'syscalls.lchown02_16',
     'syscalls.lchown03_16',

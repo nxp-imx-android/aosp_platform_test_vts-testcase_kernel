@@ -318,11 +318,6 @@ DISABLED_TESTS = [
     'commands.file01',
     # b/71415362: fails in VTS
     'fs.proc01',
-    # b/71415693: fails in VTS
-    'hugetlb.hugemmap01',
-    'hugetlb.hugemmap02',
-    'hugetlb.hugemmap04',
-    'hugetlb.hugemmap06',
     # b/71416672: fails in VTS
     'mm.ksm03_1',
     'mm.ksm03',

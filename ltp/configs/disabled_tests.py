@@ -210,7 +210,6 @@ DISABLED_TESTS = [
     'fs.ftest08',
     'fs.inode02',
     'ipc.signal_test_01',
-    'mm.data_space',
     'mm.mmapstress10',
     'syscalls.fcntl14',
     'syscalls.fcntl14',

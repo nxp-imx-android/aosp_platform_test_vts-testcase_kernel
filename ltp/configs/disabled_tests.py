@@ -212,7 +212,6 @@ DISABLED_TESTS = [
     'ipc.signal_test_01',
     'mm.data_space',
     'mm.mmapstress10',
-    'syscalls.clone04',
     'syscalls.fcntl14',
     'syscalls.fcntl14',
     'syscalls.fcntl14_64',

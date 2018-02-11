@@ -43,6 +43,7 @@ class TestCasesParser(object):
             stable_tests.STABLE_TESTS,
             disabled_tests.DISABLED_TESTS,
             enable_regex=True)
+        self._ltp_tests_filter.ExpandBitness()
 
     def ValidateDefinition(self, line):
         """Validate a tab delimited test case definition.

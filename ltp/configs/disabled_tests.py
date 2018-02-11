@@ -62,9 +62,6 @@ DISABLED_TESTS = [
     'syscalls.open01',
     'syscalls.open08',
     'syscalls.open11',
-    'syscalls.madvise01',
-    'syscalls.madvise02',
-    'syscalls.madvise06',
     'syscalls.pathconf01',
     'syscalls.preadv02',
     'syscalls.pwritev02',
@@ -213,9 +210,7 @@ DISABLED_TESTS = [
     'fs.ftest08',
     'fs.inode02',
     'ipc.signal_test_01',
-    'mm.data_space',
     'mm.mmapstress10',
-    'syscalls.clone04',
     'syscalls.fcntl14',
     'syscalls.fcntl14',
     'syscalls.fcntl14_64',
@@ -321,11 +316,6 @@ DISABLED_TESTS = [
     'commands.file01',
     # b/71415362: fails in VTS
     'fs.proc01',
-    # b/71415693: fails in VTS
-    'hugetlb.hugemmap01',
-    'hugetlb.hugemmap02',
-    'hugetlb.hugemmap04',
-    'hugetlb.hugemmap06',
     # b/71416672: fails in VTS
     'mm.ksm03_1',
     'mm.ksm03',

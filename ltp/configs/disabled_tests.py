@@ -63,7 +63,6 @@ DISABLED_TESTS = [
     'syscalls.preadv02',
     'syscalls.pwritev02',
     'syscalls.quotactl01',
-    'syscalls.readlink04',
     'syscalls.rename11',
     'syscalls.renameat01',
     'syscalls.request_key01',

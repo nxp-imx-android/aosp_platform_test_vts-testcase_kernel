@@ -23,6 +23,7 @@ from vts.runners.host import base_test
 from vts.runners.host import const
 from vts.runners.host import keys
 from vts.runners.host import test_runner
+from vts.utils.python.android import api
 from vts.utils.python.controllers import android_device
 from vts.utils.python.file import target_file_utils
 
@@ -32,8 +33,6 @@ class VtsKernelVersionTest(base_test.BaseTestClass):
     supported.
     """
 
-    SUPPORTED_KERNEL_VERSIONS = [[4, 4, 0], [4, 9, 0], [4, 14, 0]]
-
     def setUpClass(self):
         required_params = [keys.ConfigKeys.IKEY_DATA_FILE_PATH]
         self.getUserParams(required_params)
@@ -41,6 +40,15 @@ class VtsKernelVersionTest(base_test.BaseTestClass):
         self.dut.shell.InvokeTerminal(
             "KernelVersionTest")  # creates a remote shell instance.
         self.shell = self.dut.shell.KernelVersionTest
+        try:
+            first_api_level = int(self.dut.first_api_level)
+        except ValueError as e:
+            first_api_level = 0
+        if (first_api_level > api.PLATFORM_API_LEVEL_O_MR1 or
+            first_api_level == 0):
+            self.supported_kernel_versions = [[4, 4, 0], [4, 9, 0], [4, 14, 0]]
+        else:
+            self.supported_kernel_versions = [[3, 18, 0], [4, 4, 0], [4, 9, 0]]
 
     def testKernelVersion(self):
         """Validate the kernel version of DUT is a valid kernel version.
@@ -62,7 +70,7 @@ class VtsKernelVersionTest(base_test.BaseTestClass):
         logging.info("Detected kernel version: %s.%s.%s" % (kernel_version,
             kernel_patchlevel, kernel_sublevel))
 
-        for v in self.SUPPORTED_KERNEL_VERSIONS:
+        for v in self.supported_kernel_versions:
             if (kernel_version == v[0] and kernel_patchlevel == v[1] and
                 kernel_sublevel >= v[2]):
                 logging.info("Compliant kernel version %s.%s.%s found." %

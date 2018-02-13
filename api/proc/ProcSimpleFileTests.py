@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+import math
+
 from vts.testcases.kernel.api.proc import KernelProcFileTestBase
 
 from vts.utils.python.file import target_file_utils
@@ -167,6 +169,114 @@ class ProcRandomizeVaSpaceTest(KernelProcFileTestBase.KernelProcFileTestBase):
     def get_permission_checker(self):
         """Get r/w file permission checker.
         """
+        return target_file_utils.IsReadWrite
+
+
+class ProcSchedChildRunsFirst(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/kernel/sched_child_runs_first causes newly forked tasks to
+    be favored in scheduling over their parents.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def get_path(self):
+        return "/proc/sys/kernel/sched_child_runs_first"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
+class ProcSchedLatencyNS(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/kernel/sched_latency_ns is the maximum latency in nanoseconds a
+    task may incur prior to being scheduled.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def result_correct(self, result):
+        return result >= 100000 and result <= 1000000000
+
+    def get_path(self):
+        return "/proc/sys/kernel/sched_latency_ns"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
+class ProcSchedRTPeriodUS(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/kernel/sched_rt_period_us defines the period length used by the
+    system-wide RT execution limit in microseconds.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def result_correct(self, result):
+        return result >= 1 and result <= math.pow(2,31)
+
+    def get_path(self):
+        return "/proc/sys/kernel/sched_rt_period_us"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
+class ProcSchedRTRuntimeUS(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/kernel/sched_rt_runtime_us defines the amount of time in
+    microseconds relative to sched_rt_period_us that the system may execute RT
+    tasks.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def result_correct(self, result):
+        return result >= -1 and result <= (math.pow(2,31) - 1)
+
+    def get_path(self):
+        return "/proc/sys/kernel/sched_rt_runtime_us"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
+class ProcSchedTunableScaling(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/kernel/sched_tunable_scaling determines whether
+    sched_latency_ns should be automatically adjusted by the scheduler based on
+    the number of CPUs.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def result_correct(self, result):
+        return result >= 0 and result <= 2
+
+    def get_path(self):
+        return "/proc/sys/kernel/sched_tunable_scaling"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
+class ProcSchedWakeupGranularityNS(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/kernel/sched_wakeup_granularity_ns defines how much more
+    virtual runtime task A must have than task B in nanoseconds in order for
+    task B to preempt it.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def result_correct(self, result):
+        return result >= 0 and result <= 1000000000
+
+    def get_path(self):
+        return "/proc/sys/kernel/sched_wakeup_granularity_ns"
+
+    def get_permission_checker(self):
         return target_file_utils.IsReadWrite
 
 

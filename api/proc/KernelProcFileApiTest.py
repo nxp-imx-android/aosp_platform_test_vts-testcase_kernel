@@ -90,6 +90,7 @@ TEST_OBJECTS = {
     ProcSimpleFileTests.ProcSchedWakeupGranularityNS(),
     ProcShowUidStatTest.ProcShowUidStatTest(),
     ProcSimpleFileTests.ProcSuidDumpable(),
+    ProcSimpleFileTests.ProcSysAbiSwapInstruction(),
     ProcSimpleFileTests.ProcUptime(),
     ProcStatTest.ProcStatTest(),
     ProcUidTimeInStateTest.ProcUidTimeInStateTest(),

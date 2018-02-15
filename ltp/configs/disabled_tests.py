@@ -33,7 +33,6 @@ DISABLED_TESTS = [
     'syscalls.lchown01_16',
     'syscalls.lchown02_16',
     'syscalls.lchown03_16',
-    'syscalls.rmdir02',
     'syscalls.mmap16',
     'syscalls.mprotect01',
     'syscalls.nftw01',

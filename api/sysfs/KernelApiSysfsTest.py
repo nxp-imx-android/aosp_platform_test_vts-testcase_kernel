@@ -124,6 +124,16 @@ class KernelApiSysfsTest(base_test.BaseTestClass):
         content = target_file_utils.ReadFileContent(filepath, self.shell)
         self.ConvertToInteger(content)
 
+    def testNetMTU(self):
+        '''Check for /sys/class/net/*/mtu.'''
+        dirlist = target_file_utils.FindFiles(self.shell, '/sys/class/net',
+                '*', '-maxdepth 1 -type l')
+        for entry in dirlist:
+            mtufile = entry + "/mtu"
+            self.IsReadWrite(mtufile)
+            content = target_file_utils.ReadFileContent(mtufile, self.shell)
+            self.ConvertToInteger(content)
+
     def testWakeLock(self):
         '''Check that locking and unlocking a wake lock works.'''
         _WAKE_LOCK_PATH = '/sys/power/wake_lock'

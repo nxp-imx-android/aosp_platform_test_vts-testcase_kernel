@@ -301,6 +301,23 @@ class ProcSchedWakeupGranularityNS(KernelProcFileTestBase.KernelProcFileTestBase
         return target_file_utils.IsReadWrite
 
 
+class ProcSysRqTest(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/kernel/sysrq controls the functions allowed to be invoked
+    via the SysRq key.'''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def result_correct(self, result):
+        return result >= 0 and result <= 511
+
+    def get_path(self):
+        return "/proc/sys/kernel/sysrq"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
 # Tests for /proc/sys/vm/*.
 
 class ProcDirtyBackgroundBytes(KernelProcFileTestBase.KernelProcFileTestBase):

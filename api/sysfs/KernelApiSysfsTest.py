@@ -134,6 +134,21 @@ class KernelApiSysfsTest(base_test.BaseTestClass):
             content = target_file_utils.ReadFileContent(mtufile, self.shell)
             self.ConvertToInteger(content)
 
+    def testRtcHctosys(self):
+        '''Check that at least one rtc exists with hctosys = 1.'''
+        rtclist = target_file_utils.FindFiles(self.shell, '/sys/class/rtc',
+                'rtc*', '-maxdepth 1 -type l')
+        for entry in rtclist:
+            content = target_file_utils.ReadFileContent(entry + "/hctosys",
+                    self.shell)
+            try:
+                hctosys = int(content)
+            except ValueError as e:
+                continue
+            if hctosys == 1:
+                return
+        asserts.fail("No RTC with hctosys=1 present")
+
     def testWakeLock(self):
         '''Check that locking and unlocking a wake lock works.'''
         _WAKE_LOCK_PATH = '/sys/power/wake_lock'

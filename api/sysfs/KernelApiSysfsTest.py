@@ -97,6 +97,18 @@ class KernelApiSysfsTest(base_test.BaseTestClass):
         asserts.assertTrue(target_file_utils.IsReadWrite(permission),
                 'path %s is not read write' % path)
 
+    def testAndroidUSB(self):
+        '''Check for the existence of required files in /sys/class/android_usb.
+        '''
+        f_midi = '/sys/class/android_usb/android0/f_midi/alsa'
+        state = '/sys/class/android_usb/android0/state'
+        self.IsReadOnly(f_midi)
+        self.IsReadOnly(state)
+        contents = target_file_utils.ReadFileContent(state, self.shell).strip()
+        asserts.assertTrue(contents in
+                ['DISCONNECTED', 'CONNECTED', 'CONFIGURED'],
+                '%s does not contain an expected string' % state)
+
     def testCpuOnlineFormat(self):
         '''Check the format of cpu online file.
 

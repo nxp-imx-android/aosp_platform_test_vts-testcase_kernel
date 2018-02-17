@@ -97,6 +97,18 @@ class KernelApiSysfsTest(base_test.BaseTestClass):
         asserts.assertTrue(target_file_utils.IsReadWrite(permission),
                 'path %s is not read write' % path)
 
+    def testAndroidUSB(self):
+        '''Check for the existence of required files in /sys/class/android_usb.
+        '''
+        f_midi = '/sys/class/android_usb/android0/f_midi/alsa'
+        state = '/sys/class/android_usb/android0/state'
+        self.IsReadOnly(f_midi)
+        self.IsReadOnly(state)
+        contents = target_file_utils.ReadFileContent(state, self.shell).strip()
+        asserts.assertTrue(contents in
+                ['DISCONNECTED', 'CONNECTED', 'CONFIGURED'],
+                '%s does not contain an expected string' % state)
+
     def testCpuOnlineFormat(self):
         '''Check the format of cpu online file.
 
@@ -111,6 +123,16 @@ class KernelApiSysfsTest(base_test.BaseTestClass):
         if content.endswith('\n'):
             content = content[:-1]
         self.MatchRegex(regex, content)
+
+    def testIpv4(self):
+        '''Check /sys/kernel/ipv4/*.'''
+        files = ['tcp_rmem_def', 'tcp_rmem_max', 'tcp_rmem_min',
+                 'tcp_wmem_def', 'tcp_wmem_max', 'tcp_wmem_min',]
+        for f in files:
+            path = '/sys/kernel/ipv4/' + f
+            self.IsReadWrite(path)
+            content = target_file_utils.ReadFileContent(path, self.shell)
+            self.ConvertToInteger(content)
 
     def testLastResumeReason(self):
         '''Check /sys/kernel/wakeup_reasons/last_resume_reason.'''

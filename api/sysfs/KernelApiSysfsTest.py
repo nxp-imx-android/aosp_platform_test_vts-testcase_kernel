@@ -203,6 +203,15 @@ class KernelApiSysfsTest(base_test.BaseTestClass):
         filepath = '/sys/power/wakeup_count'
         self.IsReadWrite(filepath)
 
+    def testSysPowerState(self):
+        '''/sys/power/state controls the system sleep states.'''
+        filepath = '/sys/power/state'
+        self.IsReadWrite(filepath)
+        content = target_file_utils.ReadFileContent(filepath, self.shell)
+        allowed_states = ['freeze', 'mem', 'disk', 'standby']
+        for state in content.split():
+            if state not in allowed_states:
+                asserts.fail("Invalid system power state: %s" % state)
 
 if __name__ == "__main__":
     test_runner.main()

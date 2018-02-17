@@ -36,6 +36,7 @@ from vts.testcases.kernel.api.proc import ProcRemoveUidRangeTest
 from vts.testcases.kernel.api.proc import ProcSimpleFileTests
 from vts.testcases.kernel.api.proc import ProcShowUidStatTest
 from vts.testcases.kernel.api.proc import ProcStatTest
+from vts.testcases.kernel.api.proc import ProcUidIoStatsTest
 from vts.testcases.kernel.api.proc import ProcUidTimeInStateTest
 from vts.testcases.kernel.api.proc import ProcVersionTest
 from vts.testcases.kernel.api.proc import ProcVmallocInfoTest
@@ -94,6 +95,7 @@ TEST_OBJECTS = {
     ProcSimpleFileTests.ProcSysRqTest(),
     ProcSimpleFileTests.ProcUptime(),
     ProcStatTest.ProcStatTest(),
+    ProcUidIoStatsTest.ProcUidIoStatsTest(),
     ProcUidTimeInStateTest.ProcUidTimeInStateTest(),
     ProcVersionTest.ProcVersionTest(),
     ProcVmallocInfoTest.ProcVmallocInfoTest(),

@@ -178,6 +178,14 @@ class KernelProcFileApiTest(base_test.BaseTestClass):
 
         return results[const.STDOUT][0]
 
+    def testProcPagetypeinfo(self):
+        filepath = "/proc/pagetypeinfo"
+        # Check that incident_helper can parse /proc/pagetypeinfo.
+        result = self.shell.Execute("cat %s | incident_helper -s 2001" % filepath)
+        asserts.assertEqual(
+            result[const.EXIT_CODE][0], 0,
+            "Failed to parse %s." % filepath)
+
 
 if __name__ == "__main__":
     test_runner.main()

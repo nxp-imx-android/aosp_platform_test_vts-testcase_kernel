@@ -16,8 +16,8 @@
 
 import math
 
+from parse import with_pattern
 from vts.testcases.kernel.api.proc import KernelProcFileTestBase
-
 from vts.utils.python.file import target_file_utils
 
 # Test for /proc/sys/abi/swp.
@@ -228,6 +228,25 @@ class ProcPidMax(KernelProcFileTestBase.KernelProcFileTestBase):
 
     def get_permission_checker(self):
         return target_file_utils.IsReadWrite
+
+
+@with_pattern(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+)
+def token_uuid(text):
+    return text
+
+class ProcSysKernelRandomBootId(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/kernel/random/boot_id generates a random ID each boot.'''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:uuid}", contents, dict(uuid=token_uuid))[0]
+
+    def get_path(self):
+        return "/proc/sys/kernel/random/boot_id"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadOnly
 
 
 class ProcRandomizeVaSpaceTest(KernelProcFileTestBase.KernelProcFileTestBase):

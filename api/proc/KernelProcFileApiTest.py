@@ -96,6 +96,7 @@ TEST_OBJECTS = {
     ProcShowUidStatTest.ProcShowUidStatTest(),
     ProcSimpleFileTests.ProcSuidDumpable(),
     ProcSimpleFileTests.ProcSysAbiSwapInstruction(),
+    ProcSimpleFileTests.ProcSysKernelRandomBootId(),
     ProcSimpleFileTests.ProcSysRqTest(),
     ProcSimpleFileTests.ProcUptime(),
     ProcStatTest.ProcStatTest(),

@@ -124,6 +124,26 @@ class KernelApiSysfsTest(base_test.BaseTestClass):
             content = content[:-1]
         self.MatchRegex(regex, content)
 
+    def testCpufreqAllTimeInState(self):
+        '''Check the format of cpufreq's all_time_in_state file.'''
+        f = '/sys/devices/system/cpu/cpufreq/all_time_in_state'
+        self.IsReadOnly(f)
+        content = target_file_utils.ReadFileContent(f, self.shell).splitlines()
+        header = content.pop(0).split()
+        asserts.assertTrue(header.pop(0) == 'freq',
+                'all_time_in_state header malformatted')
+        for h in header:
+            asserts.assertTrue(re.match(r'cpu\d+', h),
+                    'all_time_in_state malformatted header')
+        for line in content:
+            values = line.split()
+            for v in values:
+                try:
+                    unused = int(v)
+                except ValueError as e:
+                    asserts.assertTrue(v == "N/A",
+                            'all_time_in_state malformatted value')
+
     def testIpv4(self):
         '''Check /sys/kernel/ipv4/*.'''
         files = ['tcp_rmem_def', 'tcp_rmem_max', 'tcp_rmem_min',

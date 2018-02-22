@@ -38,6 +38,7 @@ from vts.testcases.kernel.api.proc import ProcShowUidStatTest
 from vts.testcases.kernel.api.proc import ProcStatTest
 from vts.testcases.kernel.api.proc import ProcUidIoStatsTest
 from vts.testcases.kernel.api.proc import ProcUidTimeInStateTest
+from vts.testcases.kernel.api.proc import ProcUidCpuPowerTests
 from vts.testcases.kernel.api.proc import ProcVersionTest
 from vts.testcases.kernel.api.proc import ProcVmallocInfoTest
 from vts.testcases.kernel.api.proc import ProcVmstatTest
@@ -102,6 +103,9 @@ TEST_OBJECTS = {
     ProcStatTest.ProcStatTest(),
     ProcUidIoStatsTest.ProcUidIoStatsTest(),
     ProcUidTimeInStateTest.ProcUidTimeInStateTest(),
+    ProcUidCpuPowerTests.ProcUidCpuPowerTimeInStateTest(),
+    ProcUidCpuPowerTests.ProcUidCpuPowerConcurrentActiveTimeTest(),
+    ProcUidCpuPowerTests.ProcUidCpuPowerConcurrentPolicyTimeTest(),
     ProcVersionTest.ProcVersionTest(),
     ProcVmallocInfoTest.ProcVmallocInfoTest(),
     ProcVmstatTest.ProcVmstat(),

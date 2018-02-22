@@ -165,6 +165,7 @@ class KernelLtpTest(base_test.BaseTestClass):
         src = os.path.join(self.data_file_path, 'DATA', test_bit, 'ltp', '.')
         logging.info('Pushing files from %s to %s', src, ltp_configs.LTPDIR)
         self.shell.Execute("mkdir %s -p" % ltp_configs.LTPDIR)
+        self.shell.Execute("restorecon -F -R %s" % ltp_configs.LTPDIR)
         self._dut.adb.push(src, ltp_configs.LTPDIR)
         logging.info('finished pushing files from %s to %s', src,
                      ltp_configs.LTPDIR)

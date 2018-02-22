@@ -10,7 +10,6 @@ DISABLED_TESTS = [
     'syscalls.chown02_16',
     'syscalls.chown03_16',
     'syscalls.chown05_16',
-    'syscalls.fchown03',
     'syscalls.fchown04',
     'syscalls.fchown01_16',
     'syscalls.fchown02_16',

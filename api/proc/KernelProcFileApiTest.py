@@ -96,6 +96,7 @@ TEST_OBJECTS = {
     ProcShowUidStatTest.ProcShowUidStatTest(),
     ProcSimpleFileTests.ProcSuidDumpable(),
     ProcSimpleFileTests.ProcSysAbiSwapInstruction(),
+    ProcSimpleFileTests.ProcSysKernelRandomBootId(),
     ProcSimpleFileTests.ProcSysRqTest(),
     ProcSimpleFileTests.ProcUptime(),
     ProcStatTest.ProcStatTest(),
@@ -177,6 +178,14 @@ class KernelProcFileApiTest(base_test.BaseTestClass):
             "%s: Error happened while reading the file." % filepath)
 
         return results[const.STDOUT][0]
+
+    def testProcPagetypeinfo(self):
+        filepath = "/proc/pagetypeinfo"
+        # Check that incident_helper can parse /proc/pagetypeinfo.
+        result = self.shell.Execute("cat %s | incident_helper -s 2001" % filepath)
+        asserts.assertEqual(
+            result[const.EXIT_CODE][0], 0,
+            "Failed to parse %s." % filepath)
 
 
 if __name__ == "__main__":

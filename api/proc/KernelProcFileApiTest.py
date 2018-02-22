@@ -191,6 +191,24 @@ class KernelProcFileApiTest(base_test.BaseTestClass):
             result[const.EXIT_CODE][0], 0,
             "Failed to parse %s." % filepath)
 
+    def testProcSysrqTrigger(self):
+        filepath = "/proc/sysrq-trigger"
+
+        # This command only performs a best effort attempt to remount all
+        # filesystems. Check that it doesn't throw an error.
+        self.dut.adb.shell("\"echo u > %s\"" % filepath)
+
+        # Reboot the device.
+        self.dut.adb.shell("\"echo b > %s\"" % filepath)
+        asserts.assertFalse(self.dut.hasBooted(), "Device is still alive.")
+        self.dut.waitForBootCompletion()
+        self.dut.rootAdb()
+
+        # Crash the system.
+        self.dut.adb.shell("\"echo c > %s\"" % filepath)
+        asserts.assertFalse(self.dut.hasBooted(), "Device is still alive.")
+        self.dut.waitForBootCompletion()
+        self.dut.rootAdb()
 
 if __name__ == "__main__":
     test_runner.main()

@@ -210,5 +210,47 @@ class KernelProcFileApiTest(base_test.BaseTestClass):
         self.dut.waitForBootCompletion()
         self.dut.rootAdb()
 
+    def testProcUidProcstatSet(self):
+        def UidIOStats(uid):
+            """Returns I/O stats for a given uid.
+
+            Args:
+                uid, uid number.
+
+            Returns:
+                list of I/O numbers.
+            """
+            stats_path = "/proc/uid_io/stats"
+            result = self.dut.adb.shell(
+                    "\"cat %s | grep '^%d'\"" % (stats_path, uid),
+                    no_except=True)
+            return result[const.STDOUT].split()
+
+        def CheckStatsInState(state):
+            """Sets VTS (root uid) into a given state and checks the stats.
+
+            Args:
+                state, boolean. Use False for foreground,
+                and True for background.
+            """
+            state = 1 if state else 0
+            filepath = "/proc/uid_procstat/set"
+            root_uid = 0
+
+            # fg write chars are at index 2, and bg write chars are at 6.
+            wchar_index = 6 if state else 2
+            old_wchar = UidIOStats(root_uid)[wchar_index]
+            self.dut.adb.shell("\"echo %d %s > %s\"" % (root_uid, state, filepath))
+            # This should increase the number of write syscalls.
+            self.dut.adb.shell("\"echo foo\"")
+            asserts.assertLess(
+                old_wchar,
+                UidIOStats(root_uid)[wchar_index],
+                "Number of write syscalls has not increased.")
+
+        CheckStatsInState(False)
+        CheckStatsInState(True)
+
+
 if __name__ == "__main__":
     test_runner.main()

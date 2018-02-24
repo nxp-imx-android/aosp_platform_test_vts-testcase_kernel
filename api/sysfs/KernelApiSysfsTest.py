@@ -144,6 +144,45 @@ class KernelApiSysfsTest(base_test.BaseTestClass):
                     asserts.assertTrue(v == "N/A",
                             'all_time_in_state malformatted value')
 
+    def testPerCpuCpufreq(self):
+        '''Check each cpu's scaling_cur_freq, scaling_min_freq, scaling_max_freq,
+        and scaling_available_frequencies.
+        '''
+        f = '/sys/devices/system/cpu/online'
+        self.IsReadOnly(f)
+        online_cpus = target_file_utils.ReadFileContent(f, self.shell)
+        cpu_ranges = online_cpus.split(',')
+        cpu_list = []
+        for r in cpu_ranges:
+            m = re.match(r'(\d+)(-\d+)?', r)
+            asserts.assertTrue(m is not None,
+                    'malformatted range in /sys/devices/system/cpu/online')
+            start_cpu = int(m.group(1))
+            if m.group(2) is None:
+                end_cpu = start_cpu
+            else:
+                end_cpu = int(m.group(2))
+            cpu_list += range(start_cpu, end_cpu+1)
+        for cpu in cpu_list:
+            f = '/sys/devices/system/cpu/cpu%s/cpufreq/scaling_cur_freq' % cpu
+            self.IsReadOnly(f)
+            content = target_file_utils.ReadFileContent(f, self.shell)
+            self.ConvertToInteger(content)
+            f = '/sys/devices/system/cpu/cpu%s/cpufreq/scaling_min_freq' % cpu
+            self.IsReadWrite(f)
+            content = target.file_utils.ReadFileContent(f, self.shell)
+            self.ConvertToInteger(content)
+            f = '/sys/devices/system/cpu/cpu%s/cpufreq/scaling_max_freq' % cpu
+            self.IsReadWrite(f)
+            content = target.file_utils.ReadFileContent(f, self.shell)
+            self.ConvertToInteger(content)
+            f = '/sys/devices/system/cpu/cpu%s/cpufreq/scaling_available_frequencies' % cpu
+            self.IsReadOnly(f)
+            content = target.file_utils.ReadFileContent(f, self.shell)
+            avail_freqs = content.split(' ')
+            for x in avail_freqs:
+                self.ConvertToInteger(x)
+
     def testIpv4(self):
         '''Check /sys/kernel/ipv4/*.'''
         files = ['tcp_rmem_def', 'tcp_rmem_max', 'tcp_rmem_min',

@@ -251,6 +251,22 @@ class KernelProcFileApiTest(base_test.BaseTestClass):
         CheckStatsInState(False)
         CheckStatsInState(True)
 
+    def testProcPerUidTimes(self):
+        # TODO: make these files mandatory once they're in AOSP
+        try:
+            filepaths = self.dut.adb.shell("find /proc/uid -name time_in_state")
+        except:
+            asserts.skip("/proc/uid/ directory does not exist and is optional")
+
+        asserts.skipIf(not filepaths,
+                       "per-UID time_in_state files do not exist and are optional")
+
+        filepaths = filepaths.splitlines()
+        for filepath in filepaths:
+            target_file_utils.assertPermissionsAndExistence(
+                self.shell, filepath, target_file_utils.IsReadOnly
+            )
+            file_content = self.ReadFileContent(filepath)
 
 if __name__ == "__main__":
     test_runner.main()

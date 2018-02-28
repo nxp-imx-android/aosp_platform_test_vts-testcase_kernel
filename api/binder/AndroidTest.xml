@@ -31,6 +31,8 @@
         <option name="binary-test-source" value="_IPC32_32bit::DATA/nativetest/binderDriverInterfaceTest_IPC_32/binderDriverInterfaceTest_IPC_32" />
         <option name="binary-test-source" value="_IPC64_32bit::DATA/nativetest/binderDriverInterfaceTest/binderDriverInterfaceTest" />
         <option name="binary-test-source" value="_IPC64_64bit::DATA/nativetest64/binderDriverInterfaceTest/binderDriverInterfaceTest" />
+        <option name="binary-test-source" value="_32bit::DATA/nativetest/memunreachable_binder_test/memunreachable_binder_test" />
+        <option name="binary-test-source" value="_64bit::DATA/nativetest64/memunreachable_binder_test/memunreachable_binder_test" />
         <option name="binary-test-type" value="gtest"/>
         <option name="test-timeout" value="10m"/>
     </test>

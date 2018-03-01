@@ -21,7 +21,6 @@
     <target_preparer class="com.android.tradefed.targetprep.DeviceSetup">
         <option name="airplane-mode" value="ON" />
     </target_preparer>
-    <multi_target_preparer class="com.android.tradefed.targetprep.VtsPythonVirtualenvPreparer" />
     <test class="com.android.tradefed.testtype.VtsMultiDeviceTest">
         <option name="test-module-name" value="VtsKernelNetTest" />
         <option name="test-case-path" value="vts/testcases/kernel/api/net/VtsKernelNetTest" />

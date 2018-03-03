@@ -15,11 +15,21 @@
 #
 
 import re
+from vts.utils.python.android import api
 from vts.testcases.kernel.api.proc import KernelProcFileTestBase
 
 
 class ProcModulesTest(KernelProcFileTestBase.KernelProcFileTestBase):
     '''/proc/modules contains information about loaded kernel modules.'''
+
+    def prepare_test(self, shell, dut):
+        try:
+            first_api_level = int(dut.first_api_level)
+        except ValueError as e:
+            first_api_level = 0
+        self.require_module = (first_api_level > api.PLATFORM_API_LEVEL_O_MR1 or
+                               first_api_level == 0)
+        return True
 
     def parse_contents(self, contents):
         module_present = False
@@ -40,7 +50,7 @@ class ProcModulesTest(KernelProcFileTestBase.KernelProcFileTestBase):
                 raise SyntaxError("Malformed entry in /proc/modules: %s" % line)
             else:
                 module_present = True
-        if not module_present:
+        if self.require_module and not module_present:
             raise SyntaxError("There must be at least one entry in /proc/modules")
 
         return ''

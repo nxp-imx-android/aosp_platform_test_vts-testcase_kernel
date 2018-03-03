@@ -144,7 +144,7 @@ class KernelProcFileApiTest(base_test.BaseTestClass):
         logging.info("Testing format of %s", filepath)
 
         asserts.assertTrue(
-            test_object.prepare_test(self.shell), "Setup failed!")
+            test_object.prepare_test(self.shell, self.dut), "Setup failed!")
 
         if not test_object.test_format():
             return

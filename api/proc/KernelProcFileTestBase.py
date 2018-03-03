@@ -175,7 +175,7 @@ class KernelProcFileTestBase(object):
         """Returns the full path of this proc file (string)."""
         pass
 
-    def prepare_test(self, shell):
+    def prepare_test(self, shell, dut):
         """Performs any actions necessary before testing the proc file.
 
         Args:

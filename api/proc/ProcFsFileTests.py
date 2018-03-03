@@ -59,7 +59,7 @@ class ProcMountsTest(KernelProcFileTestBase.KernelProcFileTestBase):
                 return False
         return True
 
-    def prepare_test(self, shell):
+    def prepare_test(self, shell, dut):
         # Follow the symlink
         results = shell.Execute('readlink /proc/mounts')
         if results[const.EXIT_CODE][0] != 0:

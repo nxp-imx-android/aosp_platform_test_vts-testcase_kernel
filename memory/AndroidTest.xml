@@ -20,8 +20,6 @@
         <option name="push" value="DATA/bin/stressapptest->/data/local/tmp/32/stressapptest" />
         <option name="cleanup" value="true" />
     </target_preparer>
-    <multi_target_preparer class="com.android.tradefed.targetprep.VtsPythonVirtualenvPreparer">
-    </multi_target_preparer>
     <test class="com.android.tradefed.testtype.VtsMultiDeviceTest">
         <option name="test-module-name" value="MemorySystemStressTest" />
         <option name="test-timeout" value="6m" />

@@ -30,6 +30,8 @@ from vts.runners.host import test_runner
 from vts.utils.python.controllers import android_device
 from vts.utils.python.file import target_file_utils
 
+from vts.testcases.kernel.lib import version
+
 
 class VtsKernelConfigTest(base_test.BaseTestClass):
     """Test case which check config options in /proc/config.gz.
@@ -40,7 +42,6 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
 
     PROC_FILE_PATH = "/proc/config.gz"
     KERNEL_CONFIG_FILE_PATH = "vts/testcases/kernel/config/data"
-    SUPPORTED_KERNEL_VERSIONS = ["4.4", "4.9", "4.14"]
 
     def setUpClass(self):
         required_params = [keys.ConfigKeys.IKEY_DATA_FILE_PATH]
@@ -50,6 +51,7 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
             "KernelConfigTest")  # creates a remote shell instance.
         self.shell = self.dut.shell.KernelConfigTest
         self._temp_dir = tempfile.mkdtemp()
+        self.supported_kernel_versions = version.getSupportedKernels(self.dut)
 
     def checkKernelVersion(self):
         """Validate the kernel version of DUT is a valid kernel version.
@@ -61,18 +63,19 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
         results = self.shell.Execute(cmd)
         logging.info("Shell command '%s' results: %s", cmd, results)
 
-        match = re.search(r"\d+\.\d+", results[const.STDOUT][0])
+        match = re.search(r"(\d+)\.(\d+)", results[const.STDOUT][0])
         if match is None:
             asserts.fail("Failed to detect kernel version of device.")
         else:
-            kernel_version = match.group(0)
-        logging.info("Detected kernel version: %s", kernel_version)
+            kernel_version = int(match.group(1))
+            kernel_patchlevel = int(match.group(2))
+        logging.info("Detected kernel version: %s", match.group(0))
 
-        asserts.assertTrue(kernel_version in self.SUPPORTED_KERNEL_VERSIONS,
-                           "Detected kernel version '%s' is not one of %s" %
-                           (kernel_version, self.SUPPORTED_KERNEL_VERSIONS))
-
-        return kernel_version
+        for v in self.supported_kernel_versions:
+            if (kernel_version == v[0] and kernel_patchlevel == v[1]):
+                return match.group(0)
+        asserts.fail("Detected kernel version is not one of %s" %
+                     self.supported_kernel_versions)
 
     def checkKernelArch(self, configs):
         """Find arch of the device kernel.

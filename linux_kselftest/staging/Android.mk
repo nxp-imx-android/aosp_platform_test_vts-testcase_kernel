@@ -21,3 +21,6 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := VtsKernelLinuxKselftestStaging
 VTS_CONFIG_SRC_DIR := testcases/kernel/linux_kselftest/staging
 -include test/vts/tools/build/Android.host_config.mk
+
+include test/vts/tools/build/tasks/vts_package.mk
+$(LOCAL_MODULE): $(call copy-many-files,$(target_native_kselftest_copy_pairs))

@@ -163,7 +163,6 @@ DISABLED_TESTS = [
     'fsx.fsx-linux',
     'dio.dio04',
     'numa.Numa-testcases',
-    'syscalls.connect01',
     'syscalls.prot_hsymlinks',
     'fs.ftest01',
     'fs.ftest03',

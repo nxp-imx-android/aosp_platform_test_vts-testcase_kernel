@@ -40,8 +40,6 @@ DISABLED_TESTS = [
     'syscalls.open08',
     'syscalls.open11',
     'syscalls.pathconf01',
-    'syscalls.preadv02',
-    'syscalls.pwritev02',
     'syscalls.rt_sigprocmask01',
     'syscalls.setfsgid01_16',
     'syscalls.setfsgid02_16',

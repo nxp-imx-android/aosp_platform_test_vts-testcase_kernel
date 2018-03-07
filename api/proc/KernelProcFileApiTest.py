@@ -67,6 +67,7 @@ TEST_OBJECTS = {
     ProcSimpleFileTests.ProcCorePipeLimit(),
     ProcSimpleFileTests.ProcDirtyBackgroundBytes(),
     ProcSimpleFileTests.ProcDirtyBackgroundRatio(),
+    ProcSimpleFileTests.ProcDirtyExpireCentisecs(),
     ProcSimpleFileTests.ProcDmesgRestrict(),
     ProcSimpleFileTests.ProcDomainname(),
     ProcSimpleFileTests.ProcDropCaches(),

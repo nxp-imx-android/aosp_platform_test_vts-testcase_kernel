@@ -431,6 +431,21 @@ class ProcDirtyBackgroundRatio(KernelProcFileTestBase.KernelProcFileTestBase):
         return target_file_utils.IsReadWrite
 
 
+class ProcDirtyExpireCentisecs(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/sys/vm/dirty_expire_centisecs is used to define when dirty data is
+    old enough to be eligible for writeout by the kernel flusher threads.
+    '''
+
+    def parse_contents(self, contents):
+        return self.parse_line("{:d}\n", contents)[0]
+
+    def get_path(self):
+        return "/proc/sys/vm/dirty_expire_centisecs"
+
+    def get_permission_checker(self):
+        return target_file_utils.IsReadWrite
+
+
 class ProcDropCaches(KernelProcFileTestBase.KernelProcFileTestBase):
     '''Writing to /proc/sys/vm/drop_caches will cause the kernel to drop clean
     caches.

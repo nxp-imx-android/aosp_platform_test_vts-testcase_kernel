@@ -41,6 +41,7 @@ KSFT_CASES_STABLE = map(lambda x: test_case.LinuxKselftestTestcase(*(x)), [
     ("futex/functional", "run.sh", ["arm", "x86"], [32, 64]),
     ("kcmp", "kcmp_test", ["arm", "x86"], [32, 64]),
     ("net", "psock_tpacket", ["arm", "x86"], [32, 64]),
+    ("net", "reuseaddr_conflict", ["arm", "x86"], [32, 64]),
     ("net", "socket", ["arm", "x86"], [32, 64]),
     ("ptrace", "peeksiginfo", ["arm", "x86"], [64]),
     ("seccomp", "seccomp_bpf", ["arm", "x86"], [32, 64]),
@@ -80,5 +81,4 @@ KSFT_CASES_STAGING = map(lambda x: test_case.LinuxKselftestTestcase(*(x)), [
 #    ("exec", "execveat.sh", ["arm", "x86"], [32, 64]),
 # b/69667484
 #    ("vm", "run_vmtests", ["arm", "x86"], [32, 64]),
-    ("net", "reuseaddr_conflict", ["arm", "x86"], [32, 64]),
 ])

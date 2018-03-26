@@ -34,6 +34,6 @@ include $(BUILD_NATIVE_TEST)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := VtsQtaguidTest
+LOCAL_MODULE := VtsKernelQtaguidTest
 VTS_CONFIG_SRC_DIR := testcases/kernel/api/qtaguid
 -include test/vts/tools/build/Android.host_config.mk

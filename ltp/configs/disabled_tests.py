@@ -56,8 +56,6 @@ DISABLED_TESTS = [
     'syscalls.setgroups03_16',
     'syscalls.setgroups04_16',
     'syscalls.setregid02',
-    'syscalls.setregid03',
-    'syscalls.setregid04',
     'syscalls.setregid01_16',
     'syscalls.setregid02_16',
     'syscalls.setregid03_16',

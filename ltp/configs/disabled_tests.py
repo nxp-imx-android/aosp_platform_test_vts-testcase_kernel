@@ -188,6 +188,8 @@ DISABLED_TESTS = [
     'input.input02_64bit',
     'input.input04_64bit',
     'input.input05_64bit',
+    'input.input06_64bit',
+    'input.input06_32bit',
     # The following tests are failing on 64bit version
     'mm.overcommit_memory01_64bit',
     'mm.overcommit_memory02_64bit',

@@ -150,10 +150,6 @@ int SockInfo::setup(int tag) {
 
 /* Check if the socket is properly tagged by read through the proc file.*/
 bool SockInfo::checkTag(uint64_t acct_tag, uid_t uid) {
-  uint64_t k_tag;
-  uint32_t k_uid;
-  long dummy_count;
-  pid_t dummy_pid;
 
   std::ifstream fctrl("/proc/net/xt_qtaguid/ctrl", std::fstream::in);
   if (!fctrl.is_open()) {
@@ -179,9 +175,6 @@ bool SockInfo::checkTag(uint64_t acct_tag, uid_t uid) {
  */
 bool SockInfo::checkStats(uint64_t acct_tag, uid_t uid, int counterSet,
                           uint32_t *stats_result) {
-  FILE *stats_fd;
-  ssize_t read_size;
-  size_t line_size;
   uint64_t kTag = (uint64_t)acct_tag << 32;
 
   std::ifstream fstats("/proc/net/xt_qtaguid/stats", std::fstream::in);

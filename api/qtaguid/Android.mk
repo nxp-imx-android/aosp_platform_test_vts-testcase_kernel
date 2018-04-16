@@ -20,8 +20,8 @@ include $(CLEAR_VARS)
 LOCAL_MODULE_TAGS := tests
 LOCAL_MODULE := vts_test_binary_qtaguid_module
 LOCAL_SRC_FILES := SocketTagUserSpace.cpp
-LOCAL_SHARED_LIBRARIES += libcutils libutils liblog libbase
-LOCAL_STATIC_LIBRARIES += libtestUtil
+LOCAL_SHARED_LIBRARIES += libutils liblog libbase
+LOCAL_STATIC_LIBRARIES += libqtaguid
 LOCAL_C_INCLUDES += system/extras/tests/include \
                     test/vts/testcases/system/qtaguid/sample
 LOCAL_CFLAGS += \

@@ -124,29 +124,9 @@ class KernelApiSysfsTest(base_test.BaseTestClass):
             content = content[:-1]
         self.MatchRegex(regex, content)
 
-    def testCpufreqAllTimeInState(self):
-        '''Check the format of cpufreq's all_time_in_state file.'''
-        f = '/sys/devices/system/cpu/cpufreq/all_time_in_state'
-        self.IsReadOnly(f)
-        content = target_file_utils.ReadFileContent(f, self.shell).splitlines()
-        header = content.pop(0).split()
-        asserts.assertTrue(header.pop(0) == 'freq',
-                'all_time_in_state header malformatted')
-        for h in header:
-            asserts.assertTrue(re.match(r'cpu\d+', h),
-                    'all_time_in_state malformatted header')
-        for line in content:
-            values = line.split()
-            for v in values:
-                try:
-                    unused = int(v)
-                except ValueError as e:
-                    asserts.assertTrue(v == "N/A",
-                            'all_time_in_state malformatted value')
-
     def testPerCpuCpufreq(self):
         '''Check each cpu's scaling_cur_freq, scaling_min_freq, scaling_max_freq,
-        and scaling_available_frequencies.
+        scaling_available_frequencies, and time_in_state files.
         '''
         f = '/sys/devices/system/cpu/online'
         self.IsReadOnly(f)
@@ -182,6 +162,16 @@ class KernelApiSysfsTest(base_test.BaseTestClass):
             avail_freqs = content.split(' ')
             for x in avail_freqs:
                 self.ConvertToInteger(x)
+            f = '/sys/devices/system/cpu/cpu%s/cpufreq/stats/time_in_state' % cpu
+            self.IsReadOnly(f)
+            content = target.file_utils.ReadFileContent(f, shelf.shell)
+            for line in content:
+                values = line.split()
+                for v in values:
+                    try:
+                        unused = int(v)
+                    except ValueError as e:
+                        asserts.fail("Malformatted time_in_state file at %s" % f)
 
     def testIpv4(self):
         '''Check /sys/kernel/ipv4/*.'''

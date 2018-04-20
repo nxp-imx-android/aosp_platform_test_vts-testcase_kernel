@@ -253,6 +253,8 @@ class SocketTagUsrSpaceTest : public ::testing::Test {
 
 /* Tag to a invalid socket fd, should fail */
 TEST_F(SocketTagUsrSpaceTest, invalidSockfdFail) {
+  SKIP_IF_QTAGUID_NOT_SUPPORTED();
+
   EXPECT_LT(legacy_tagSocket(-1, valid_tag1, my_uid), 0)
       << "Invalid socketfd case 1, should fail.";
 }
@@ -268,6 +270,8 @@ TEST_F(SocketTagUsrSpaceTest, CheckStatsInvalidSocketFail) {
 
 /* Untag invalid socket fd, should fail */
 TEST_F(SocketTagUsrSpaceTest, UntagInvalidSocketFail) {
+  SKIP_IF_QTAGUID_NOT_SUPPORTED();
+
   EXPECT_LT(legacy_untagSocket(-1), 0) << "invalid socket fd, should fail";
   EXPECT_LT(legacy_untagSocket(sock_0.fd), 0)
       << "no tags on sock0, should fail";
@@ -278,6 +282,8 @@ TEST_F(SocketTagUsrSpaceTest, UntagInvalidSocketFail) {
  * should fail
  */
 TEST_F(SocketTagUsrSpaceTest, CounterSetNumExceedFail) {
+  SKIP_IF_QTAGUID_NOT_SUPPORTED();
+
   int wrongCounterNum = kMaxCounterSet + 1;
   EXPECT_LT(legacy_setCounterSet(wrongCounterNum, my_uid), 0)
       << "Invalid counter set number, should fail.";
@@ -350,6 +356,8 @@ TEST_F(SocketTagUsrSpaceTest, ValidReTagWithAcctTagChange) {
  * Should keep both
  */
 TEST_F(SocketTagUsrSpaceTest, ReTagWithUidChange) {
+  SKIP_IF_QTAGUID_NOT_SUPPORTED();
+
   EXPECT_GE(legacy_tagSocket(sock_0.fd, valid_tag2, fake_uid), 0);
   EXPECT_GE(legacy_tagSocket(sock_0.fd, valid_tag1, fake_uid2), 0);
 }

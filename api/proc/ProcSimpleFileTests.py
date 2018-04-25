@@ -111,6 +111,8 @@ class ProcHungTaskTimeoutSecs(KernelProcFileTestBase.KernelProcFileTestBase):
     def get_permission_checker(self):
         return target_file_utils.IsReadWrite
 
+    def file_optional(self):
+        return True
 
 class ProcKptrRestrictTest(KernelProcFileTestBase.KernelProcFileTestBase):
     '''/proc/sys/kernel/kptr_restrict determines whether kernel pointers are printed

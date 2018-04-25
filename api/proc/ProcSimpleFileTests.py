@@ -20,27 +20,6 @@ from parse import with_pattern
 from vts.testcases.kernel.api.proc import KernelProcFileTestBase
 from vts.utils.python.file import target_file_utils
 
-# Test for /proc/sys/abi/swp.
-
-class ProcSysAbiSwapInstruction(KernelProcFileTestBase.KernelProcFileTestBase):
-    '''/proc/sys/abi/swp sets the execution behaviour for the obsoleted ARM instruction
-    SWP. As per the setting in /proc/sys/abi/swp, the usage of SWP{B}
-    can either generate an undefined instruction abort or use software emulation
-    or hardware execution.
-    '''
-
-    def parse_contents(self, contents):
-        return self.parse_line("{:d}\n", contents)[0]
-
-    def result_correct(self, result):
-        return result >= 0 and result <= 2
-
-    def get_path(self):
-        return "/proc/sys/abi/swp"
-
-    def get_permission_checker(self):
-        return target_file_utils.IsReadWrite
-
 # Test for /proc/sys/kernel/*.
 
 class ProcCorePattern(KernelProcFileTestBase.KernelProcFileTestBase):

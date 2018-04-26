@@ -96,7 +96,6 @@ TEST_OBJECTS = {
     ProcSimpleFileTests.ProcSchedWakeupGranularityNS(),
     ProcShowUidStatTest.ProcShowUidStatTest(),
     ProcSimpleFileTests.ProcSuidDumpable(),
-    ProcSimpleFileTests.ProcSysAbiSwapInstruction(),
     ProcSimpleFileTests.ProcSysKernelRandomBootId(),
     ProcSimpleFileTests.ProcSysRqTest(),
     ProcSimpleFileTests.ProcUptime(),
@@ -118,7 +117,13 @@ TEST_OBJECTS_64 = {
 
 
 class KernelProcFileApiTest(base_test.BaseTestClass):
-    """Test cases which check content of proc files."""
+    """Test cases which check content of proc files.
+
+    Attributes:
+        _PROC_SYS_ABI_SWP_FILE_PATH: the path of a file which decides behaviour of SWP instruction.
+    """
+
+    _PROC_SYS_ABI_SWP_FILE_PATH = "/proc/sys/abi/swp"
 
     def setUpClass(self):
         self.dut = self.registerController(android_device)[0]
@@ -267,6 +272,28 @@ class KernelProcFileApiTest(base_test.BaseTestClass):
                 self.shell, filepath, target_file_utils.IsReadOnly
             )
             file_content = self.ReadFileContent(filepath)
+
+    def testProcSysAbiSwpInstruction(self):
+        """Tests /proc/sys/abi/swp.
+
+        /proc/sys/abi/swp sets the execution behaviour for the obsoleted ARM instruction
+        SWP. As per the setting in /proc/sys/abi/swp, the usage of SWP{B}
+        can either generate an undefined instruction abort or use software emulation
+        or hardware execution.
+        """
+
+        asserts.skipIf(not ("arm" in self.dut.cpu_abi and self.dut.is64Bit),
+                       "file not present on non-ARM64 device")
+        target_file_utils.assertPermissionsAndExistence(
+            self.shell, self._PROC_SYS_ABI_SWP_FILE_PATH, target_file_utils.IsReadWrite)
+        file_content = self.ReadFileContent(self._PROC_SYS_ABI_SWP_FILE_PATH)
+        try:
+            swp_state = int(file_content)
+        except ValueError as e:
+            asserts.fail("Failed to parse %s" % self._PROC_SYS_ABI_SWP_FILE_PATH)
+        asserts.assertTrue(swp_state >= 0 and swp_state <= 2,
+                           "%s contains incorrect value: %d" % (self._PROC_SYS_ABI_SWP_FILE_PATH,
+                                                                swp_state))
 
 if __name__ == "__main__":
     test_runner.main()

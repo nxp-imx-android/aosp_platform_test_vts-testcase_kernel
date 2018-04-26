@@ -278,6 +278,4 @@ DISABLED_TESTS = [
     'syscalls.fcntl36',
     # b/71416822: fails in VTS
     'tracing.dynamic_debug01',
-    # (TODO): b/73784987
-    'syscalls.mount03',
 ]

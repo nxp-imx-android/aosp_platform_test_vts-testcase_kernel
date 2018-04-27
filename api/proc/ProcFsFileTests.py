@@ -109,3 +109,7 @@ class ProcSwapsTest(KernelProcFileTestBase.KernelProcFileTestBase):
 
     def get_path(self):
         return "/proc/swaps"
+
+    def file_optional(self):
+        # It is not mandatory to have this file present
+        return True

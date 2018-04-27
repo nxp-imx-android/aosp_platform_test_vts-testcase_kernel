@@ -159,7 +159,6 @@ DISABLED_TESTS = [
     'fs.ftest05',
     'fs.ftest07',
     'fs.ftest08',
-    'ipc.signal_test_01',
     'mm.mmapstress10',
     'syscalls.fcntl14',
     'syscalls.fcntl14',
@@ -281,6 +280,4 @@ DISABLED_TESTS = [
     'syscalls.fcntl36',
     # b/71416822: fails in VTS
     'tracing.dynamic_debug01',
-    # (TODO): b/73784987
-    'syscalls.mount03',
 ]

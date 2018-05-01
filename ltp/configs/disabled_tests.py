@@ -80,7 +80,6 @@ DISABLED_TESTS = [
     'syscalls.setuid03_16',
     'syscalls.setuid04_16',
     'syscalls.splice02',
-    'syscalls.sysconf01',
     'syscalls.utimensat01',
     'fs.gf01',
     'fs.gf02',

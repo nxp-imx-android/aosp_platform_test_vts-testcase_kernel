@@ -27,6 +27,7 @@ from vts.runners.host import base_test
 from vts.runners.host import const
 from vts.runners.host import keys
 from vts.runners.host import test_runner
+from vts.utils.python.android import api
 from vts.utils.python.controllers import android_device
 from vts.utils.python.file import target_file_utils
 
@@ -52,6 +53,30 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
         self.shell = self.dut.shell.KernelConfigTest
         self._temp_dir = tempfile.mkdtemp()
         self.supported_kernel_versions = version.getSupportedKernels(self.dut)
+        self.release_dir = self.getReleaseDir()
+
+    def getReleaseDir(self):
+        """Return the appropriate subdirectory in kernel/configs.
+
+        Returns the directory in kernel/configs corresponding to
+        the device's first_api_level.
+
+        Returns:
+            string: a directory in kernel configs
+        """
+        api_level = self.dut.getLaunchApiLevel(strict=False)
+
+        if (api_level == 0):
+            logging.info("Cound not detect api level, using last release")
+            return "p"
+        elif api_level == api.PLATFORM_API_LEVEL_P:
+            return "p"
+        elif api_level == api.PLATFORM_API_LEVEL_O_MR1:
+            return "o-mr1"
+        elif api_level <= api.PLATFORM_API_LEVEL_O:
+            return "o"
+        else:
+            return "."
 
     def checkKernelVersion(self):
         """Validate the kernel version of DUT is a valid kernel version.
@@ -154,7 +179,8 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
         configs = dict()
         config_file_path = os.path.join(
             self.data_file_path, self.KERNEL_CONFIG_FILE_PATH,
-            "android-" + kernel_version, "android-base.cfg")
+            self.release_dir, "android-" + kernel_version, "android-base.cfg")
+        logging.info("Pulling base cfg from %s", config_file_path)
         with open(config_file_path, 'r') as config_file:
             configs = self.parseConfigFileToDict(config_file, configs)
 
@@ -173,9 +199,11 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
         if kernelArch is not "":
             config_file_path = os.path.join(self.data_file_path,
                                             self.KERNEL_CONFIG_FILE_PATH,
+                                            self.release_dir,
                                             "android-" + kernel_version,
                                             "android-base-%s.cfg" % kernelArch)
             if os.path.isfile(config_file_path):
+                logging.info("Pulling arch cfg from %s", config_file_path)
                 with open(config_file_path, 'r') as config_file:
                     configs = self.parseConfigFileToDict(config_file, configs)
 

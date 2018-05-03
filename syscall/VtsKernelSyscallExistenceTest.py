@@ -26,10 +26,9 @@ from vts.utils.python.controllers import android_device
 
 class VtsKernelSyscallExistenceTest(base_test.BaseTestClass):
     """Tests to verify kernel syscall interface."""
-    TEST_SHELL_NAME = "my_shell1"
 
     def setUpClass(self):
-        self.dut = self.registerController(android_device)[0]
+        self.dut = self.android_devices[0]
         if "arm" in self.dut.cpu_abi:
             self.ARCH64__NR_name_to_handle_at = 264
             self.ARCH64__NR_open_by_handle_at = 265
@@ -40,11 +39,9 @@ class VtsKernelSyscallExistenceTest(base_test.BaseTestClass):
             self.ARCH64__NR_uselib = 134
         else:
             asserts.fail("Unknown CPU ABI: %s" % self.dut.cpu_abi)
-        self.dut.shell.InvokeTerminal(self.TEST_SHELL_NAME)
 
     def tearDown(self):
-        self.dut.shell.InvokeTerminal(self.TEST_SHELL_NAME)
-        results = getattr(self.dut.shell, self.TEST_SHELL_NAME).Execute("which ls")
+        results = self.dut.shell.Execute("which ls")
         logging.info(str(results[const.STDOUT]))
         asserts.assertEqual(len(results[const.STDOUT]), 1)
         asserts.assertEqual(results[const.STDOUT][0].strip(), "/system/bin/ls")
@@ -83,7 +80,7 @@ class VtsKernelSyscallExistenceTest(base_test.BaseTestClass):
     def SyscallDisabled(self, syscallid):
         """Helper function to check if a syscall is disabled."""
         target = "/data/local/tmp/64/vts_test_binary_syscall_exists"
-        results = getattr(self.dut.shell, self.TEST_SHELL_NAME).Execute([
+        results = self.dut.shell.Execute([
             "chmod 755 %s" % target,
             "%s %d" % (target, syscallid)
         ])

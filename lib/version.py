@@ -26,12 +26,8 @@ def getSupportedKernels(dut):
     Returns:
         A list of supported kernel versions.
     """
-    try:
-        first_api_level = int(dut.first_api_level)
-    except ValueError as e:
-        first_api_level = 0
-    if (first_api_level > api.PLATFORM_API_LEVEL_O_MR1 or
-        first_api_level == 0):
+    api_level = dut.getLaunchApiLevel(strict=False)
+    if api_level > api.PLATFORM_API_LEVEL_O_MR1 or api_level == 0:
         return [[4, 4, 0], [4, 9, 0], [4, 14, 0]]
     else:
         return [[3, 18, 0], [4, 4, 0], [4, 9, 0]]

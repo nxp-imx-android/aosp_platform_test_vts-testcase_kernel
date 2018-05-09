@@ -15,7 +15,6 @@
 //
 
 cc_test {
-    tags: ["tests"],
     name: "vts_test_binary_bpf_module",
     srcs: ["BpfTest.cpp"],
     shared_libs: [

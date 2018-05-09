@@ -39,7 +39,7 @@ include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := SyscallExistenceTest
+LOCAL_MODULE := VtsKernelSyscallExistence
 
 VTS_CONFIG_SRC_DIR := testcases/kernel/syscall
 -include test/vts/tools/build/Android.host_config.mk

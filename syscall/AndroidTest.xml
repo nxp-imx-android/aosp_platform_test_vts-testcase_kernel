@@ -21,7 +21,7 @@
         <option name="push" value="DATA/bin/vts_test_binary_syscall_exists->/data/local/tmp/64/vts_test_binary_syscall_exists" />
     </target_preparer>
     <test class="com.android.tradefed.testtype.VtsMultiDeviceTest">
-        <option name="test-module-name" value="SyscallExistenceTest" />
+        <option name="test-module-name" value="VtsKernelSyscallExistence" />
         <option name="test-case-path" value="vts/testcases/kernel/syscall/SyscallExistenceTest" />
     </test>
 </configuration>

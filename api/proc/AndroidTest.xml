@@ -23,7 +23,7 @@
         <option name="dep-module" value="ply" />
     </multi_target_preparer>
     <test class="com.android.tradefed.testtype.VtsMultiDeviceTest">
-        <option name="test-module-name" value="KernelProcFileApiTest" />
-        <option name="test-case-path" value="vts/testcases/kernel/api/proc/KernelProcFileApiTest" />
+        <option name="test-module-name" value="VtsKernelProcFileApi" />
+        <option name="test-case-path" value="vts/testcases/kernel/api/proc/VtsKernelProcFileApiTest" />
     </test>
 </configuration>

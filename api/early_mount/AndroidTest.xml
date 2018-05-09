@@ -20,7 +20,7 @@
         <option name="push-group" value="VtsDriverShell.push"/>
     </target_preparer>
     <test class="com.android.tradefed.testtype.VtsMultiDeviceTest">
-        <option name="test-module-name" value="VtsDeviceTreeEarlyMountTest"/>
+        <option name="test-module-name" value="VtsKernelDeviceTreeEarlyMount"/>
         <option name="binary-test-source" value="_32bit::DATA/nativetest/dt_early_mount_test/dt_early_mount_test" />
         <option name="binary-test-source" value="_64bit::DATA/nativetest64/dt_early_mount_test/dt_early_mount_test" />
         <option name="binary-test-type" value="binary_test"/>

@@ -24,7 +24,7 @@ from vts.runners.host import test_runner
 from vts.utils.python.controllers import android_device
 
 
-class SyscallExistenceTest(base_test.BaseTestClass):
+class VtsKernelSyscallExistenceTest(base_test.BaseTestClass):
     """Tests to verify kernel syscall interface."""
     TEST_SHELL_NAME = "my_shell1"
 

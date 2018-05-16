@@ -100,9 +100,7 @@ class KernelApiSysfsTest(base_test.BaseTestClass):
     def testAndroidUSB(self):
         '''Check for the existence of required files in /sys/class/android_usb.
         '''
-        f_midi = '/sys/class/android_usb/android0/f_midi/alsa'
         state = '/sys/class/android_usb/android0/state'
-        self.IsReadOnly(f_midi)
         self.IsReadOnly(state)
         contents = target_file_utils.ReadFileContent(state, self.shell).strip()
         asserts.assertTrue(contents in

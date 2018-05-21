@@ -20,6 +20,20 @@ from vts.testcases.kernel.api.proc import KernelProcFileTestBase
 from vts.testcases.kernel.api.proc.KernelProcFileTestBase import repeat_rule, literal_token
 
 
+class ProcDiskstatsTest(KernelProcFileTestBase.KernelProcFileTestBase):
+    '''/proc/diskstats displays I/O statistics of block devices.'''
+
+    t_ignore = ' '
+    start = 'lines'
+    p_lines = repeat_rule('line')
+
+    def p_line(self, p):
+        '''line : NUMBER NUMBER STRING NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER NEWLINE'''
+        p[0] = p[1:]
+
+    def get_path(self):
+        return "/proc/diskstats"
+
 class ProcMountsTest(KernelProcFileTestBase.KernelProcFileTestBase):
     '''/proc/self/mounts lists the mounted filesystems.
 
@@ -45,7 +59,7 @@ class ProcMountsTest(KernelProcFileTestBase.KernelProcFileTestBase):
                 return False
         return True
 
-    def prepare_test(self, shell):
+    def prepare_test(self, shell, dut):
         # Follow the symlink
         results = shell.Execute('readlink /proc/mounts')
         if results[const.EXIT_CODE][0] != 0:
@@ -95,3 +109,7 @@ class ProcSwapsTest(KernelProcFileTestBase.KernelProcFileTestBase):
 
     def get_path(self):
         return "/proc/swaps"
+
+    def file_optional(self):
+        # It is not mandatory to have this file present
+        return True

@@ -139,7 +139,9 @@ TEST_SUITES = [
     'mm',
     'modules',
     'nptl',
-    'numa',
+    # numa tests require userspace numa support that is not
+    # present in Android
+    # 'numa',
     'pipes',
     'power_management_tests',
     'pty',
@@ -179,7 +181,9 @@ TEST_SUITES_LOW_MEM = [
     'mm',
     'modules',
     'nptl',
-    'numa',
+    # numa tests require userspace numa support that is not
+    # present in Android
+    # 'numa',
     'pipes',
     'power_management_tests',
     'pty',

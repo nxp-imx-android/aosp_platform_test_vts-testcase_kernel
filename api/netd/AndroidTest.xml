@@ -20,6 +20,7 @@
         <option name="abort-on-push-failure" value="false"/>
         <option name="push" value="DATA/nativetest/netd_integration_test/netd_integration_test->/data/nativetest/CtsOnGsiKernelNetdTest"/>
         <option name="push" value="DATA/nativetest64/netd_integration_test/netd_integration_test->/data/nativetest/CtsOnGsiKernelNetdTest"/>
+        <option name="append-bitness" value="true" />
     </target_preparer>
     <test class="com.android.tradefed.testtype.GTest" >
         <option name="module-name" value="CtsOnGsiKernelNetdTest" />

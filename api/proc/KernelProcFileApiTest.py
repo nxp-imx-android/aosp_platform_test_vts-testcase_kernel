@@ -188,6 +188,12 @@ class KernelProcFileApiTest(base_test.BaseTestClass):
         return results[const.STDOUT][0]
 
     def testProcPagetypeinfo(self):
+        # TODO(b/109884074): make mandatory once incident_helper is in AOSP.
+        try:
+            self.dut.adb.shell("which incident_helper")
+        except:
+            asserts.skip("incident_helper not present")
+
         filepath = "/proc/pagetypeinfo"
         # Check that incident_helper can parse /proc/pagetypeinfo.
         result = self.shell.Execute("cat %s | incident_helper -s 2001" % filepath)

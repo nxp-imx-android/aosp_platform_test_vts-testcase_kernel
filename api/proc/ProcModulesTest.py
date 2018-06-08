@@ -24,8 +24,7 @@ class ProcModulesTest(KernelProcFileTestBase.KernelProcFileTestBase):
 
     def prepare_test(self, shell, dut):
         api_level = dut.getLaunchApiLevel(strict=False)
-        self.require_module = (api_level > api.PLATFORM_API_LEVEL_O_MR1 or
-                               api_level == 0)
+        self.require_module = False
         return True
 
     def parse_contents(self, contents):

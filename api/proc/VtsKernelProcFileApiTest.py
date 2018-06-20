@@ -126,10 +126,8 @@ class VtsKernelProcFileApiTest(base_test.BaseTestClass):
     _PROC_SYS_ABI_SWP_FILE_PATH = "/proc/sys/abi/swp"
 
     def setUpClass(self):
-        self.dut = self.registerController(android_device)[0]
-        self.dut.shell.InvokeTerminal(
-            "KernelApiTest")  # creates a remote shell instance.
-        self.shell = self.dut.shell.KernelApiTest
+        self.dut = self.android_devices[0]
+        self.shell = self.dut.shell
 
     def runProcFileTest(self, test_object):
         """Reads from the file and checks that it parses and the content is valid.

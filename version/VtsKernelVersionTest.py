@@ -37,10 +37,8 @@ class VtsKernelVersionTest(base_test.BaseTestClass):
     def setUpClass(self):
         required_params = [keys.ConfigKeys.IKEY_DATA_FILE_PATH]
         self.getUserParams(required_params)
-        self.dut = self.registerController(android_device)[0]
-        self.dut.shell.InvokeTerminal(
-            "KernelVersionTest")  # creates a remote shell instance.
-        self.shell = self.dut.shell.KernelVersionTest
+        self.dut = self.android_devices[0]
+        self.shell = self.dut.shell
         self.supported_kernel_versions = version.getSupportedKernels(self.dut)
 
     def testKernelVersion(self):

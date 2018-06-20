@@ -31,10 +31,8 @@ class KernelApiSysfsTest(base_test.BaseTestClass):
     '''Test cases which check sysfs files.'''
 
     def setUpClass(self):
-        self.dut = self.registerController(android_device)[0]
-        self.dut.shell.InvokeTerminal(
-            'default')  # creates a remote shell instance.
-        self.shell = self.dut.shell.default
+        self.dut = self.android_devices[0]
+        self.shell = self.dut.shell
 
     def ConvertToInteger(self, text):
         '''Check whether a given text is interger.

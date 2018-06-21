@@ -47,10 +47,8 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
     def setUpClass(self):
         required_params = [keys.ConfigKeys.IKEY_DATA_FILE_PATH]
         self.getUserParams(required_params)
-        self.dut = self.registerController(android_device)[0]
-        self.dut.shell.InvokeTerminal(
-            "KernelConfigTest")  # creates a remote shell instance.
-        self.shell = self.dut.shell.KernelConfigTest
+        self.dut = self.android_devices[0]
+        self.shell = self.dut.shell
         self._temp_dir = tempfile.mkdtemp()
         self.supported_kernel_versions = version.getSupportedKernels(self.dut)
         self.release_dir = self.getReleaseDir()

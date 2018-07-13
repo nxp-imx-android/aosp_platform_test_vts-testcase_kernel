@@ -20,7 +20,6 @@ DISABLED_TESTS = [
     'syscalls.open08',
     'syscalls.open11',
     'syscalls.pathconf01',
-    'syscalls.rt_sigprocmask01',
     'syscalls.setregid02',
     'syscalls.setregid02_16',
     'syscalls.splice02',
@@ -232,4 +231,6 @@ DISABLED_TESTS = [
     'syscalls.fcntl36',
     # b/71416822: fails in VTS
     'tracing.dynamic_debug01',
+    # b/31152672: 32-bit test fails because sigset_t is too small
+    'syscalls.rt_sigprocmask01_32bit',
 ]

@@ -19,7 +19,6 @@ DISABLED_TESTS = [
     'syscalls.nice04',
     'syscalls.open08',
     'syscalls.open11',
-    'syscalls.pathconf01',
     'syscalls.setregid02',
     'syscalls.setregid02_16',
     'syscalls.splice02',

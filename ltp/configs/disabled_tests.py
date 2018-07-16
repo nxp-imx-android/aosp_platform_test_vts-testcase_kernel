@@ -77,8 +77,6 @@ DISABLED_TESTS = [
     'hugetlb.hugemmap05_1',
     'hugetlb.hugemmap05_2',
     'hugetlb.hugemmap05_3',
-    'hyperthreading.smt_smp_enabled',
-    'hyperthreading.smt_smp_affinity',
     'kernel_misc.zram03',
     'fs_ext4.ext4-uninit-groups',
     'fs_ext4.ext4-persist-prealloc',

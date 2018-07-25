@@ -38,9 +38,14 @@ class ProcAsoundCardsTest(KernelProcFileTestBase.KernelProcFileTestBase):
         p[0] = [p[1], p[2], p[4], p[6], p[8]]
 
     def p_description(self, p):
-        '''description : description STRING
-                       | STRING'''
+        '''description : description word
+                       | word'''
         p[0] = [p[1]] if len(p) == 2 else p[1].append(p[2])
+
+    def p_word(self, p):
+        '''word : NUMBER
+                | STRING'''
+        p[0] = p[1]
 
     def p_id(self, p):
         'id : LBRACKET STRING RBRACKET'

@@ -133,7 +133,7 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
         """Parse kernel config file to a dictionary.
 
         Args:
-            file: file object, android-base.cfg or unzipped /proc/config.gz
+            file: file object, android-base.config or unzipped /proc/config.gz
             configs: dict to which config options in file will be added
 
         Returns:
@@ -163,7 +163,7 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
         """Ensures all kernel configs conform to Android requirements.
 
         Detects kernel version of device and validates against appropriate
-        Common Android Kernel android-base.cfg and Android Treble
+        Common Android Kernel android-base.config and Android Treble
         requirements.
         """
         logging.info("Testing existence of %s" % self.PROC_FILE_PATH)
@@ -177,8 +177,8 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
         configs = dict()
         config_file_path = os.path.join(
             self.data_file_path, self.KERNEL_CONFIG_FILE_PATH,
-            self.release_dir, "android-" + kernel_version, "android-base.cfg")
-        logging.info("Pulling base cfg from %s", config_file_path)
+            self.release_dir, "android-" + kernel_version, "android-base.config")
+        logging.info("Pulling base config from %s", config_file_path)
         with open(config_file_path, 'r') as config_file:
             configs = self.parseConfigFileToDict(config_file, configs)
 
@@ -199,9 +199,9 @@ class VtsKernelConfigTest(base_test.BaseTestClass):
                                             self.KERNEL_CONFIG_FILE_PATH,
                                             self.release_dir,
                                             "android-" + kernel_version,
-                                            "android-base-%s.cfg" % kernelArch)
+                                            "android-base-%s.config" % kernelArch)
             if os.path.isfile(config_file_path):
-                logging.info("Pulling arch cfg from %s", config_file_path)
+                logging.info("Pulling arch config from %s", config_file_path)
                 with open(config_file_path, 'r') as config_file:
                     configs = self.parseConfigFileToDict(config_file, configs)
 

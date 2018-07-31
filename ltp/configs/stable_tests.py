@@ -1,4 +1,10 @@
 STABLE_TESTS = [
+    'commands.cp01_32bit',
+    'commands.cp01_64bit',
+    'commands.cpio01_32bit',
+    'commands.cpio01_64bit',
+    'commands.mkdir01_32bit',
+    'commands.mkdir01_64bit',
     'commands.ldd_32bit',
     'commands.ldd_64bit',
     'commands.ln01_32bit',

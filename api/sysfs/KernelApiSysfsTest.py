@@ -152,22 +152,26 @@ class KernelApiSysfsTest(base_test.BaseTestClass):
             self.IsReadWrite(f)
             content = target_file_utils.ReadFileContent(f, self.shell)
             self.ConvertToInteger(content)
+            # scaling_available_frequencies and time_in_state may not be
+            # present depending on driver support, check them if they exist
             f = '/sys/devices/system/cpu/cpu%s/cpufreq/scaling_available_frequencies' % cpu
-            self.IsReadOnly(f)
-            content = target_file_utils.ReadFileContent(f, self.shell).rstrip()
-            avail_freqs = content.split(' ')
-            for x in avail_freqs:
-                self.ConvertToInteger(x)
+            if target_file_utils.Exists(f, self.shell):
+              self.IsReadOnly(f)
+              content = target_file_utils.ReadFileContent(f, self.shell).rstrip()
+              avail_freqs = content.split(' ')
+              for x in avail_freqs:
+                  self.ConvertToInteger(x)
             f = '/sys/devices/system/cpu/cpu%s/cpufreq/stats/time_in_state' % cpu
-            self.IsReadOnly(f)
-            content = target_file_utils.ReadFileContent(f, self.shell)
-            for line in content:
-                values = line.split()
-                for v in values:
-                    try:
-                        unused = int(v)
-                    except ValueError as e:
-                        asserts.fail("Malformatted time_in_state file at %s" % f)
+            if target_file_utils.Exists(f, self.shell):
+              self.IsReadOnly(f)
+              content = target_file_utils.ReadFileContent(f, self.shell)
+              for line in content:
+                  values = line.split()
+                  for v in values:
+                      try:
+                          unused = int(v)
+                      except ValueError as e:
+                          asserts.fail("Malformatted time_in_state file at %s" % f)
 
     def testIpv4(self):
         '''Check /sys/kernel/ipv4/*.'''

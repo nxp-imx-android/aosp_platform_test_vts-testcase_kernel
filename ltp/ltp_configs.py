@@ -119,7 +119,6 @@ TEST_SUITES = [
     'commands',
     'connectors',
     'containers',
-#     'controllers',
     'cpuhotplug',
     'dio',
     'fcntl-locktests_android',
@@ -139,17 +138,13 @@ TEST_SUITES = [
     'mm',
     'modules',
     'nptl',
-    # numa tests require userspace numa support that is not
-    # present in Android
-    # 'numa',
     'pipes',
     'power_management_tests',
     'pty',
     'sched',
+    'securebits',
     'syscalls',
     'timers',
-    # The following are not included in default LTP scenario group
-    'securebits',
     'tracing',
 ]
 
@@ -161,7 +156,6 @@ TEST_SUITES_LOW_MEM = [
     'commands',
     'connectors',
     'containers',
-#     'controllers',
     'cpuhotplug',
     'dio',
     'fcntl-locktests_android',
@@ -181,17 +175,13 @@ TEST_SUITES_LOW_MEM = [
     'mm',
     'modules',
     'nptl',
-    # numa tests require userspace numa support that is not
-    # present in Android
-    # 'numa',
     'pipes',
     'power_management_tests',
     'pty',
     'sched_low_mem',
+    'securebits',
     'syscalls',
     'timers',
-    # The following are not included in default LTP scenario group
-    'securebits',
     'tracing',
 ]
 

@@ -232,4 +232,13 @@ DISABLED_TESTS = [
     'tracing.dynamic_debug01',
     # b/31152672: 32-bit test fails because sigset_t is too small
     'syscalls.rt_sigprocmask01_32bit',
+    # b/112354289: The tests are not built at all
+    'cve.cve-2016-4470',
+    'cve.cve-2017-5669',
+    # b/112350736: Flaky tests result in LTP timeout
+    'cve.cve-2014-0196',
+    'cve.cve-2017-1000364',
+    # b/112350398: Test fails, the bug is created to decide if we
+    # need to fix the test or fix bionic.
+    'cve.cve-2015-0235',
 ]

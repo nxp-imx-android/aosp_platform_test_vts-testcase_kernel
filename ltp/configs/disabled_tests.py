@@ -1,28 +1,37 @@
 # Tests disabled
-# Based on external/ltp commit 5f01077afe994f4107b147222f3956716d4a8fde
 DISABLED_TESTS = [
-    # b/32386191 getrusage04 result is flaky
-    'syscalls.getrusage04',
-    # b/31154962
-    'cpuhotplug.cpuhotplug02',
-    # The following test cases are uncategorized
-    'syscalls.fchown04',
-    'syscalls.fchown04_16',
-    'syscalls.gethostbyname_r01',
-    'syscalls.ioctl03',
-    'syscalls.inotify03',
-    'syscalls.lchown03',
-    'syscalls.lchown03_16',
-    'syscalls.mmap16',
-    'syscalls.nftw01',
-    'syscalls.nftw6401',
-    'syscalls.nice04',
-    'syscalls.open08',
-    'syscalls.open11',
-    'syscalls.setregid02',
-    'syscalls.setregid02_16',
-    'syscalls.splice02',
-    'syscalls.utimensat01',
+    'cap_bounds.Cap_bounds',
+    'commands.file01', # b/71414136
+    'cpuhotplug.cpuhotplug02', # b/31154962
+    'cpuhotplug.cpuhotplug03',
+    'cpuhotplug.cpuhotplug04', # b/30688056
+    'cpuhotplug.cpuhotplug06',
+    'cve.cve-2014-0196', # b/112350736
+    'cve.cve-2015-0235', # b/112350398
+    'cve.cve-2016-4470', # b/112354289
+    'cve.cve-2017-1000364', # b/112350736
+    'cve.cve-2017-5669', # b/112354289
+    'dio.dio04',
+    'dio.dio10',
+    'dio.dio29', # takes too long
+    'dio.dio30', # takes too long
+    'dma_thread_diotest.dma_thread_diotest1', # b/32100169
+    'dma_thread_diotest.dma_thread_diotest2',
+    'dma_thread_diotest.dma_thread_diotest3',
+    'dma_thread_diotest.dma_thread_diotest4',
+    'dma_thread_diotest.dma_thread_diotest5',
+    'dma_thread_diotest.dma_thread_diotest6',
+    'dma_thread_diotest.dma_thread_diotest7',
+    'fcntl-locktests_android.FCNTL_LOCKTESTS',
+    'filecaps.Filecaps',
+    'fs.fs_racer_32bit', # b/71780005
+    'fs.fs_racer_64bit', # b/71780005
+    'fs.ftest01',
+    'fs.ftest03',
+    'fs.ftest04',
+    'fs.ftest05',
+    'fs.ftest07',
+    'fs.ftest08',
     'fs.gf01',
     'fs.gf02',
     'fs.gf03',
@@ -51,18 +60,61 @@ DISABLED_TESTS = [
     'fs.gf28',
     'fs.gf29',
     'fs.gf30',
+    'fs.iogen01',
+    'fs.isofs',
+    'fs.proc01', # b/71415362
+    'fs.quota_remount_test01', # b/33008689
     'fs.rwtest01',
     'fs.rwtest02',
     'fs.rwtest03',
     'fs.rwtest04',
     'fs.rwtest05',
-    'fs.iogen01',
-    'fs.isofs',
+    'fs_bind.BindMounts',
+    'fs_ext4.ext4-persist-prealloc',
+    'fs_ext4.ext4-uninit-groups',
     'fsx.fsx-linux',
-    'mm.shm_test01',
+    'fsx.fsx-linux',
+    'hugetlb.hugemmap05_1',
+    'hugetlb.hugemmap05_2',
+    'hugetlb.hugemmap05_3',
+    'input.input01_64bit', # unstable 64-bits tests
+    'input.input02_64bit',
+    'input.input04_64bit',
+    'input.input05_64bit',
+    'input.input06_32bit',
+    'input.input06_64bit',
+    'kernel_misc.kmsg01', # b/32343072
+    'kernel_misc.zram03',
+    'mm.ksm01',
+    'mm.ksm01_1', # b/71416672
+    'mm.ksm03',
+    'mm.ksm03_1',
     'mm.mallocstress01',
-    'mm.vma03',
+    'mm.max_map_count_32bit', # b/67981135
+    'mm.max_map_count_64bit', # b/67981135
     'mm.min_free_kbytes',
+    'mm.mmapstress10',
+    'mm.mtest01',
+    'mm.mtest01w', # b/30699880
+    'mm.oom01_64bit', # b/31181781
+    'mm.oom02_64bit',
+    'mm.oom03_64bit',
+    'mm.oom04_64bit',
+    'mm.oom05_64bit',
+    'mm.overcommit_memory01_64bit', # failing 64-bit only tests
+    'mm.overcommit_memory02_64bit',
+    'mm.overcommit_memory03_64bit',
+    'mm.overcommit_memory04_64bit',
+    'mm.overcommit_memory05_64bit',
+    'mm.overcommit_memory06_64bit',
+    'mm.shm_test01',
+    'mm.swapping01_64bit',  # b/31181781
+    'mm.thp01_32bit', # b/65636203
+    'mm.thp01_64bit',
+    'mm.thp02_64bit',
+    'mm.thp03_64bit',
+    'mm.vma01_64bit', # b/31181781
+    'mm.vma03',
     'pipes.pipeio_1',
     'pipes.pipeio_3',
     'pipes.pipeio_4',
@@ -70,27 +122,37 @@ DISABLED_TESTS = [
     'pipes.pipeio_6',
     'pipes.pipeio_8',
     'sched.trace_sched01',
-    'fs_bind.BindMounts',
-    'filecaps.Filecaps',
-    'cap_bounds.Cap_bounds',
-    'fcntl-locktests_android.FCNTL_LOCKTESTS',
-    'hugetlb.hugemmap05_1',
-    'hugetlb.hugemmap05_2',
-    'hugetlb.hugemmap05_3',
-    'kernel_misc.zram03',
-    'fs_ext4.ext4-uninit-groups',
-    'fs_ext4.ext4-persist-prealloc',
-    'cpuhotplug.cpuhotplug03',
-    'cpuhotplug.cpuhotplug06',
-    'dio.dio10',
-    # dio29 and dio30 take too long to finish
-    'dio.dio29',
-    'dio.dio30',
-    'fsx.fsx-linux',
-    'dio.dio04',
-    # the move_pages syscall relies on userspace
-    # numa support that is not in Android
-    'syscalls.move_pages01',
+    'syscalls.accept4_01', # b/30688574
+    'syscalls.access04',
+    'syscalls.alarm02', # b/112423802
+    'syscalls.cve-2017-5669', # b/71416706
+    'syscalls.fchown04',
+    'syscalls.fchown04_16',
+    'syscalls.fcntl14',
+    'syscalls.fcntl14',
+    'syscalls.fcntl14_64',
+    'syscalls.fcntl17',
+    'syscalls.fcntl17_64',
+    'syscalls.fcntl35',
+    'syscalls.fcntl35_64', # b/71416738
+    'syscalls.fcntl36',
+    'syscalls.fcntl36_64', # b/71416760
+    'syscalls.fork13', # takes too long: ~45mins
+    'syscalls.gethostbyname_r01',
+    'syscalls.getrusage04', # b/32386191
+    'syscalls.getxattr04', # b/65053723#comment20
+    'syscalls.inotify03',
+    'syscalls.ioctl03',
+    'syscalls.ioctl04',
+    'syscalls.ioctl06',
+    'syscalls.kcmp03',
+    'syscalls.kill12',
+    'syscalls.lchown03',
+    'syscalls.lchown03_16',
+    'syscalls.lstat03',
+    'syscalls.lstat03_64', # b/30688551
+    'syscalls.mmap16',
+    'syscalls.move_pages01', # move_pages syscalls requires userspace numa.
     'syscalls.move_pages02',
     'syscalls.move_pages03',
     'syscalls.move_pages04',
@@ -102,143 +164,25 @@ DISABLED_TESTS = [
     'syscalls.move_pages10',
     'syscalls.move_pages11',
     'syscalls.move_pages12',
+    'syscalls.nftw01',
+    'syscalls.nftw6401',
+    'syscalls.nice04',
+    'syscalls.open08',
+    'syscalls.open11',
+    'syscalls.open13', # https://android-review.googlesource.com/#/c/127908/
+    'syscalls.perf_event_open02', # b/30675443
     'syscalls.prot_hsymlinks',
-    'fs.ftest01',
-    'fs.ftest03',
-    'fs.ftest04',
-    'fs.ftest05',
-    'fs.ftest07',
-    'fs.ftest08',
-    'mm.mmapstress10',
-    'syscalls.fcntl14',
-    'syscalls.fcntl14',
-    'syscalls.fcntl14_64',
-    'syscalls.fcntl17',
-    'syscalls.fcntl17_64',
-    'syscalls.kill12',
+    'syscalls.pselect01', # b/65053723#comment19
+    'syscalls.readdir02', # b/112422073
+    'syscalls.rt_sigprocmask01_32bit', # b/31152672
+    'syscalls.setpriority02', # b/73137289
+    'syscalls.setregid02',
+    'syscalls.setregid02_16',
     'syscalls.sigpending02',
     'syscalls.sigrelse01',
+    'syscalls.splice02',
+    'syscalls.utimensat01',
     'syscalls.vfork02',
-    # The following tests are not stable on 64bit version
-    'input.input01_64bit',
-    'input.input02_64bit',
-    'input.input04_64bit',
-    'input.input05_64bit',
-    'input.input06_64bit',
-    'input.input06_32bit',
-    # The following tests are failing on 64bit version
-    'mm.overcommit_memory01_64bit',
-    'mm.overcommit_memory02_64bit',
-    'mm.overcommit_memory03_64bit',
-    'mm.overcommit_memory04_64bit',
-    'mm.overcommit_memory05_64bit',
-    'mm.overcommit_memory06_64bit',
-    # tests that are currently killing some lab devices 64bit on (pixel and bullhead)
-    # b/31181781
-    'mm.oom01_64bit',
-    'mm.oom02_64bit',
-    'mm.oom03_64bit',
-    'mm.oom04_64bit',
-    'mm.oom05_64bit',
-    'mm.swapping01_64bit',
-    'mm.thp01_64bit',
-    'mm.thp02_64bit',
-    'mm.thp03_64bit',
-    'mm.vma01_64bit',
-    # b/65636203
-    'mm.thp01_32bit',
-    # kmsg01 would pass but it occasionally causes socket timeout and misalignment
-    # of request and response
-    # b/32343072
-    'kernel_misc.kmsg01',
-    # alarm02 tests for a boundary condition which is impractical to implement
-    # correctly on 32-bit Linux.  bionic deliberately breaks with POSIX by reporting
-    # that it failed to set up the alarm.  (Other libc implementations fail to
-    # set up the alarm too, but then return 0 anyway.)
-    'syscalls.alarm02',
-    # readdir02 calls opendir() -> closedir() -> readdir() and checks if readdir()
-    # returns EBADF.  POSIX doesn't require this, and bionic is likely to instead
-    # deadlock trying to acquire a destroyed mutex.
-    'syscalls.readdir02',
-    # Android sets RLIMIT_NICE to 40, so setpriority02 succeeds unexpectedly
-    'syscalls.setpriority02',
-    # fork13 takes ~45 minutes to run
-    'syscalls.fork13',
-    # open13 tests that fchmod() fails on fds opened with O_PATH.  bionic
-    # deliberately masks the EBADF returned by the kernel.
-    #
-    # https://android-review.googlesource.com/#/c/127908/
-    'syscalls.open13',
-    # Bug#30675453
-    'syscalls.perf_event_open02',
-    # Bug#30688551
-    'syscalls.lstat03_64',
-    'syscalls.lstat03',
-    # Bug#30688056
-    'cpuhotplug.cpuhotplug04',
-    # Bug#30699880
-    'mm.mtest01w',
-    'mm.mtest01',
-    # Bug#30688574
-    'syscalls.accept4_01',
-    # Bug #32100169
-    'dma_thread_diotest.dma_thread_diotest1',
-    'dma_thread_diotest.dma_thread_diotest2',
-    'dma_thread_diotest.dma_thread_diotest3',
-    'dma_thread_diotest.dma_thread_diotest4',
-    'dma_thread_diotest.dma_thread_diotest5',
-    'dma_thread_diotest.dma_thread_diotest6',
-    'dma_thread_diotest.dma_thread_diotest7',
-    # b/33008689 (closed) requires mkfs.ext4 and loop device support.
-    'fs.quota_remount_test01',
-    # https://b/65053723#comment19 (Flaky due to timeout dependency)
-    'syscalls.pselect01',
-    # https://b/65053723#comment20 (seems to test for "xfs" specific bug)
-    'syscalls.getxattr04',
-    # Following tests added in LTP20170516 release are disabled because
-    # they currently fail with VTS
-    'syscalls.access04',
-    'syscalls.ioctl04',
-    'syscalls.ioctl06',
-    'syscalls.kcmp03',
-    # TODO(b/67981135): Following tests added in LTP20170929 release are
-    # disabled because they currently fail with VTS
-    'mm.max_map_count_64bit',
-    'mm.max_map_count_32bit',
-    # TODO(b/69117476): Following test needs to be checked to see it
-    # it correctly skips running
-    'tracing.ftrace_regression01',
-    # b/71780005: causes /data to get filled repeatedly
-    'fs.fs_racer_32bit',
-    'fs.fs_racer_64bit',
-    # b/71414136: fails in VTS
-    'commands.file01',
-    # b/71415362: fails in VTS
-    'fs.proc01',
-    # b/71416672: fails in VTS
-    'mm.ksm01_1',
-    'mm.ksm01',
-    'mm.ksm03_1',
-    'mm.ksm03',
-    # b/71416706: fails in VTS
-    'syscalls.cve-2017-5669',
-    # b/71416738: fails in VTS
-    'syscalls.fcntl35_64',
-    'syscalls.fcntl35',
-    # b/71416760: fails in VTS
-    'syscalls.fcntl36_64',
-    'syscalls.fcntl36',
-    # b/71416822: fails in VTS
-    'tracing.dynamic_debug01',
-    # b/31152672: 32-bit test fails because sigset_t is too small
-    'syscalls.rt_sigprocmask01_32bit',
-    # b/112354289: The tests are not built at all
-    'cve.cve-2016-4470',
-    'cve.cve-2017-5669',
-    # b/112350736: Flaky tests result in LTP timeout
-    'cve.cve-2014-0196',
-    'cve.cve-2017-1000364',
-    # b/112350398: Test fails, the bug is created to decide if we
-    # need to fix the test or fix bionic.
-    'cve.cve-2015-0235',
+    'tracing.dynamic_debug01', # b/71416822
+    'tracing.ftrace_regression01', # b/69117476
 ]

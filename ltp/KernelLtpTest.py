@@ -196,8 +196,13 @@ class KernelLtpTest(base_test.BaseTestClass):
 
         # For LTP test cases, we run one shell command for each test case
         # So the result should also contains only one execution output
-        stdout = results[const.STDOUT][0]
-        ret_code = results[const.EXIT_CODE][0]
+        try:
+            stdout = results[const.STDOUT][0]
+            ret_code = results[const.EXIT_CODE][0]
+        except IndexError as e:
+            logging.exception(e)
+            return (self._FAIL, "Command result is malformed.")
+
         # Test case is not for the current configuration, SKIP
         if ((ret_code == ltp_enums.TestExitCode.TCONF and
              'TPASS' not in stdout) or

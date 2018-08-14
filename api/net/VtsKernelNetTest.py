@@ -49,13 +49,11 @@ class VtsKernelNetTest(base_test.BaseTestClass):
 
         # 32-bit version of the test should only run against 32-bit kernel;
         # same for 64 bit.
-        bin_path = os.path.join(
-            'nativetest64' if self.dut.is64Bit else 'nativetest',
-            'kernel_net_tests',
-            'kernel_net_tests')
+        bin_path = ('nativetest64' if self.dut.is64Bit else 'nativetest',
+                    'kernel_net_tests', 'kernel_net_tests')
 
-        self.host_bin_path = os.path.join(self.data_file_path, 'DATA', bin_path)
-        self.target_bin_path = path_utils.JoinTargetPath('data', bin_path)
+        self.host_bin_path = os.path.join(self.data_file_path, 'DATA', *bin_path)
+        self.target_bin_path = path_utils.JoinTargetPath('data', *bin_path)
 
     def tearDownClass(self):
         self.shell('rm -rf %s' % path_utils.TargetDirName(self.target_bin_path))

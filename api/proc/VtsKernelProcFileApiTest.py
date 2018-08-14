@@ -117,7 +117,7 @@ TEST_OBJECTS_64 = {
 }
 
 
-class KernelProcFileApiTest(base_test.BaseTestClass):
+class VtsKernelProcFileApiTest(base_test.BaseTestClass):
     """Test cases which check content of proc files.
 
     Attributes:

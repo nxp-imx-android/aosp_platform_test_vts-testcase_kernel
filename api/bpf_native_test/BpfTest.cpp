@@ -53,7 +53,7 @@ TEST(BpfTest, bpfMapPinTest) {
                                            sizeof(uint32_t), 10,
                                            BPF_F_NO_PREALLOC));
   ASSERT_LT(0, mapfd) << "create map failed with error: " << strerror(errno);
-  ASSERT_EQ(0, mapPin(mapfd, bpfMapPath))
+  ASSERT_EQ(0, bpfFdPin(mapfd, bpfMapPath))
       << "pin map failed with error: " << strerror(errno);
   ASSERT_EQ(0, access(bpfMapPath, F_OK));
   ASSERT_EQ(0, remove(bpfMapPath));

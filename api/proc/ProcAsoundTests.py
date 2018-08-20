@@ -53,6 +53,8 @@ class ProcAsoundCardsTest(KernelProcFileTestBase.KernelProcFileTestBase):
     def p_word(self, p):
         '''word : NUMBER
                 | STRING
+                | COMMA
+                | PERIOD
                 | HEX_LITERAL'''
         p[0] = p[1]
 

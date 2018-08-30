@@ -204,9 +204,7 @@ class KernelLtpTest(base_test.BaseTestClass):
             return (self._FAIL, "Command result is malformed.")
 
         # Test case is not for the current configuration, SKIP
-        if ((ret_code == ltp_enums.TestExitCode.TCONF and
-             'TPASS' not in stdout) or
-            (ret_code == ltp_enums.TestExitCode.TPASS and 'CONF' in stdout)):
+        if (ret_code == ltp_enums.TestExitCode.TCONF):
             return (self._SKIP, "Incompatible test skipped: TCONF")
         elif ret_code not in (ltp_enums.TestExitCode.TCONF,
                               ltp_enums.TestExitCode.TPASS):

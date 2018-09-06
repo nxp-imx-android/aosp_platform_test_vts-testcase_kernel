@@ -167,7 +167,6 @@ DISABLED_TESTS = [
     'syscalls.nftw6401',
     'syscalls.nice04',
     'syscalls.open08',
-    'syscalls.open11',
     'syscalls.open13', # https://android-review.googlesource.com/#/c/127908/
     'syscalls.perf_event_open02', # b/30675443
     'syscalls.prot_hsymlinks',

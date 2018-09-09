@@ -121,7 +121,7 @@ int checkKernelSupport(bool *qtaguidSupport) {
   // b/30950746
   if (ret >= 2 && ((kernel_version_major == 4 && kernel_version_minor >= 9) ||
                    (kernel_version_major > 4))) {
-    *qtaguidSupport = (access("/dev/xt_qtaguid", F_OK) != -1);
+    *qtaguidSupport = false;
   } else {
     *qtaguidSupport = true;
   }

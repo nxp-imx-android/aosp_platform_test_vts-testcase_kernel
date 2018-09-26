@@ -137,7 +137,7 @@ class KernelApiSysfsTest(base_test.BaseTestClass):
             if m.group(2) is None:
                 end_cpu = start_cpu
             else:
-                end_cpu = int(m.group(2))
+                end_cpu = int(m.group(2)[1:])
             cpu_list += range(start_cpu, end_cpu+1)
         for cpu in cpu_list:
             f = '/sys/devices/system/cpu/cpu%s/cpufreq/scaling_cur_freq' % cpu
@@ -146,21 +146,21 @@ class KernelApiSysfsTest(base_test.BaseTestClass):
             self.ConvertToInteger(content)
             f = '/sys/devices/system/cpu/cpu%s/cpufreq/scaling_min_freq' % cpu
             self.IsReadWrite(f)
-            content = target.file_utils.ReadFileContent(f, self.shell)
+            content = target_file_utils.ReadFileContent(f, self.shell)
             self.ConvertToInteger(content)
             f = '/sys/devices/system/cpu/cpu%s/cpufreq/scaling_max_freq' % cpu
             self.IsReadWrite(f)
-            content = target.file_utils.ReadFileContent(f, self.shell)
+            content = target_file_utils.ReadFileContent(f, self.shell)
             self.ConvertToInteger(content)
             f = '/sys/devices/system/cpu/cpu%s/cpufreq/scaling_available_frequencies' % cpu
             self.IsReadOnly(f)
-            content = target.file_utils.ReadFileContent(f, self.shell)
+            content = target_file_utils.ReadFileContent(f, self.shell).rstrip()
             avail_freqs = content.split(' ')
             for x in avail_freqs:
                 self.ConvertToInteger(x)
             f = '/sys/devices/system/cpu/cpu%s/cpufreq/stats/time_in_state' % cpu
             self.IsReadOnly(f)
-            content = target.file_utils.ReadFileContent(f, shelf.shell)
+            content = target_file_utils.ReadFileContent(f, self.shell)
             for line in content:
                 values = line.split()
                 for v in values:

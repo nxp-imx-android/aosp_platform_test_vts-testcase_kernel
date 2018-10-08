@@ -213,6 +213,8 @@ class SocketTagUsrSpaceTest : public ::testing::Test {
   uint64_t max_uint_tag;
 
   virtual void SetUp() {
+    SKIP_IF_QTAGUID_NOT_SUPPORTED();
+
     my_uid = getuid();
     my_pid = getpid();
     srand48(my_pid * my_uid);

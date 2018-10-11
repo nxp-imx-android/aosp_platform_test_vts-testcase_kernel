@@ -37,7 +37,7 @@ from vts.runners.host import test_runner
 
 # The property to indicate the system image is also root image.
 _SYSTEM_ROOT_IMAGE_PROP = "ro.build.system_root_image"
-
+_SYSTEM_DEBUGGABLE = "ro.debuggable"
 
 class VtsKernelSystemAsRootTest(base_test.BaseTestClass):
     """A test class to verify system-as-root is enabled."""
@@ -57,8 +57,10 @@ class VtsKernelSystemAsRootTest(base_test.BaseTestClass):
         """Checks there is no /system mount point."""
         # The format of /proc/mounts is:
         # <partition> <mount point> <file system> <mount options> ...
-        results = self._shell.Execute(
-            "cat /proc/mounts | cut -d\" \" -f2")
+        command = "cat /proc/mounts | cut -d\" \" -f2"
+        if self._dut.getProp(_SYSTEM_DEBUGGABLE) == "1":
+            command = "grep -v \"^overlay /system \" /proc/mounts | cut -d\" \" -f2"
+        results = self._shell.Execute(command)
         mount_points = results[const.STDOUT][0].split()
         logging.info('Mount points on the device: %s', mount_points)
         asserts.assertFalse("/system" in mount_points,

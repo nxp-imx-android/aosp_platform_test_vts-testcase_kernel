@@ -140,7 +140,7 @@ class VtsKernelProcFileApiTest(base_test.BaseTestClass):
                        "Skip test for 64-bit kernel.")
         filepath = test_object.get_path()
         asserts.skipIf(not target_file_utils.Exists(filepath, self.shell) and
-                       test_object.file_optional(),
+                       test_object.file_optional(shell=self.shell, dut=self.dut),
                        "%s does not exist and is optional." % filepath)
         target_file_utils.assertPermissionsAndExistence(
             self.shell, filepath, test_object.get_permission_checker())

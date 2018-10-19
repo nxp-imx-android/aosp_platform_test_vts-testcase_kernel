@@ -187,8 +187,16 @@ class KernelProcFileTestBase(object):
         """
         return True
 
-    def file_optional(self):
-        """Returns: True if file is allowed to be absent (boolean)."""
+    def file_optional(self, shell=None, dut=None):
+        """Performs any actions necessary to return if file is allowed to be absent
+
+        Args:
+            shell: shell object, to run commands on the device side
+            dut: AndroidDevice object to access functions and properties of that object
+
+        Returns:
+            boolean, True if file is allowed to be absent.
+        """
         return False
 
     def result_correct(self, parse_result):

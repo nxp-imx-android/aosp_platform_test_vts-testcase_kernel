@@ -24,7 +24,7 @@ cc_test {
         "libbase",
     ],
     static_libs: [
-        "libbpf",
+        "libbpf_android",
         "libnetdutils",
         "libtestUtil",
     ],

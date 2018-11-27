@@ -743,6 +743,8 @@ STABLE_TESTS = [
     'syscalls.fdatasync02_64bit',
     'syscalls.fgetxattr01_32bit',
     'syscalls.fgetxattr01_64bit',
+    'syscalls.fgetxattr02_32bit',
+    'syscalls.fgetxattr02_64bit',
     'syscalls.fgetxattr03_32bit',
     'syscalls.fgetxattr03_64bit',
     'syscalls.flistxattr01_32bit',

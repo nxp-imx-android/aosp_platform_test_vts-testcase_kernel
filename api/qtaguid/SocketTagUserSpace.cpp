@@ -225,8 +225,8 @@ class SocketTagUsrSpaceTest : public ::testing::Test {
     inet_uid = 1024;
     valid_tag1 = (my_pid << 12) | (rand());
     valid_tag2 = (my_pid << 12) | (rand());
-    max_uint_tag = 0xffffffff00000000llu;
-    max_uint_tag = 1llu << 63 | (((uint64_t)my_pid << 48) ^ max_uint_tag);
+    max_uint_tag = 0xffffffff00000000LLU;
+    max_uint_tag = 1LLU << 63 | (((uint64_t)my_pid << 48) ^ max_uint_tag);
     // Check the node /dev/xt_qtaguid exist before start.
     struct stat nodeStat;
     EXPECT_GE(stat("/dev/xt_qtaguid", &nodeStat), 0)

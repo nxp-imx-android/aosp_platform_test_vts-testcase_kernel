@@ -119,6 +119,7 @@ TEST_SUITES = [
     'commands',
     'connectors',
     'containers',
+    'controllers',
     'cpuhotplug',
     'cve',
     'dio',

@@ -304,6 +304,7 @@ DISABLED_TESTS = [
     'fs.gf28',
     'fs.gf29',
     'fs.gf30',
+    'fs.inode02', # b/122260771
     'fs.iogen01',
     'fs.isofs',
     'fs.proc01', # b/71415362

@@ -43,7 +43,7 @@ PATH = '/system/bin:%s' % LTPBINPATH
 
 # Default number of threads to run LTP tests. Zero means matching to number
 # of CPU threads
-DEFAULT_NUMBER_OF_THREADS = 0
+DEFAULT_NUMBER_OF_THREADS = 1
 
 # File system type for loop device
 LTP_DEV_FS_TYPE = 'ext4'

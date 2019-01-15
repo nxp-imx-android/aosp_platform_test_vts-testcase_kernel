@@ -121,7 +121,7 @@ int checkKernelSupport(bool *qtaguidSupport) {
   // b/30950746
   if (ret >= 2 && ((kernel_version_major == 4 && kernel_version_minor >= 9) ||
                    (kernel_version_major > 4))) {
-    *qtaguidSupport = (access("/dev/xt_qtaguid", F_OK) != -1);
+    *qtaguidSupport = false;
   } else {
     *qtaguidSupport = true;
   }
@@ -213,6 +213,8 @@ class SocketTagUsrSpaceTest : public ::testing::Test {
   uint64_t max_uint_tag;
 
   virtual void SetUp() {
+    SKIP_IF_QTAGUID_NOT_SUPPORTED();
+
     my_uid = getuid();
     my_pid = getpid();
     srand48(my_pid * my_uid);
@@ -223,8 +225,8 @@ class SocketTagUsrSpaceTest : public ::testing::Test {
     inet_uid = 1024;
     valid_tag1 = (my_pid << 12) | (rand());
     valid_tag2 = (my_pid << 12) | (rand());
-    max_uint_tag = 0xffffffff00000000llu;
-    max_uint_tag = 1llu << 63 | (((uint64_t)my_pid << 48) ^ max_uint_tag);
+    max_uint_tag = 0xffffffff00000000LLU;
+    max_uint_tag = 1LLU << 63 | (((uint64_t)my_pid << 48) ^ max_uint_tag);
     // Check the node /dev/xt_qtaguid exist before start.
     struct stat nodeStat;
     EXPECT_GE(stat("/dev/xt_qtaguid", &nodeStat), 0)

@@ -13,13 +13,16 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<configuration description="Config for VTS KernelVersionTest">
+<configuration description="Config for VTS CheckpointTest test cases">
     <option name="config-descriptor:metadata" key="plan" value="vts-kernel" />
     <target_preparer class="com.android.compatibility.common.tradefed.targetprep.VtsFilePusher">
         <option name="push-group" value="HostDrivenTest.push" />
+        <option name="cleanup" value="true" />
     </target_preparer>
     <test class="com.android.tradefed.testtype.VtsMultiDeviceTest">
-        <option name="test-module-name" value="VtsKernelVersion" />
-        <option name="test-case-path" value="vts/testcases/kernel/version/VtsKernelVersionTest" />
+        <option name="test-module-name" value="VtsKernelCheckpointTest" />
+        <option name="test-timeout" value="6m" />
+        <option name="runtime-hint" value="5m" />
+        <option name="test-case-path" value="vts/testcases/kernel/checkpoint/CheckpointTest" />
     </test>
 </configuration>

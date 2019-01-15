@@ -140,7 +140,7 @@ class VtsKernelProcFileApiTest(base_test.BaseTestClass):
                        "Skip test for 64-bit kernel.")
         filepath = test_object.get_path()
         asserts.skipIf(not target_file_utils.Exists(filepath, self.shell) and
-                       test_object.file_optional(),
+                       test_object.file_optional(shell=self.shell, dut=self.dut),
                        "%s does not exist and is optional." % filepath)
         target_file_utils.assertPermissionsAndExistence(
             self.shell, filepath, test_object.get_permission_checker())
@@ -206,16 +206,16 @@ class VtsKernelProcFileApiTest(base_test.BaseTestClass):
 
         # This command only performs a best effort attempt to remount all
         # filesystems. Check that it doesn't throw an error.
-        self.dut.adb.shell("\"echo u > %s\"" % filepath)
+        self.dut.adb.shell("echo u > %s" % filepath)
 
         # Reboot the device.
-        self.dut.adb.shell("\"echo b > %s\"" % filepath)
+        self.dut.adb.shell("echo b > %s" % filepath)
         asserts.assertFalse(self.dut.hasBooted(), "Device is still alive.")
         self.dut.waitForBootCompletion()
         self.dut.rootAdb()
 
         # Crash the system.
-        self.dut.adb.shell("\"echo c > %s\"" % filepath)
+        self.dut.adb.shell("echo c > %s" % filepath)
         asserts.assertFalse(self.dut.hasBooted(), "Device is still alive.")
         self.dut.waitForBootCompletion()
         self.dut.rootAdb()
@@ -232,7 +232,7 @@ class VtsKernelProcFileApiTest(base_test.BaseTestClass):
             """
             stats_path = "/proc/uid_io/stats"
             result = self.dut.adb.shell(
-                    "\"cat %s | grep '^%d'\"" % (stats_path, uid),
+                    "cat %s | grep '^%d'" % (stats_path, uid),
                     no_except=True)
             return result[const.STDOUT].split()
 
@@ -250,9 +250,9 @@ class VtsKernelProcFileApiTest(base_test.BaseTestClass):
             # fg write chars are at index 2, and bg write chars are at 6.
             wchar_index = 6 if state else 2
             old_wchar = UidIOStats(root_uid)[wchar_index]
-            self.dut.adb.shell("\"echo %d %s > %s\"" % (root_uid, state, filepath))
+            self.dut.adb.shell("echo %d %s > %s" % (root_uid, state, filepath))
             # This should increase the number of write syscalls.
-            self.dut.adb.shell("\"echo foo\"")
+            self.dut.adb.shell("echo foo")
             asserts.assertLess(
                 old_wchar,
                 UidIOStats(root_uid)[wchar_index],

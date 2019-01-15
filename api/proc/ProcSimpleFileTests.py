@@ -111,7 +111,7 @@ class ProcHungTaskTimeoutSecs(KernelProcFileTestBase.KernelProcFileTestBase):
     def get_permission_checker(self):
         return target_file_utils.IsReadWrite
 
-    def file_optional(self):
+    def file_optional(self, shell=None, dut=None):
         return True
 
 class ProcKptrRestrictTest(KernelProcFileTestBase.KernelProcFileTestBase):
@@ -458,7 +458,7 @@ class ProcExtraFreeKbytes(KernelProcFileTestBase.KernelProcFileTestBase):
     def get_permission_checker(self):
         return target_file_utils.IsReadWrite
 
-    def file_optional(self):
+    def file_optional(self, shell=None, dut=None):
         # This file isn't in Android common kernel.
         return True
 

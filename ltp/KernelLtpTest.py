@@ -60,8 +60,8 @@ class KernelLtpTest(base_test.BaseTestClass):
                            the number is greater than 0, that number of threads
                            will be created to run the tests.
     """
-    _32BIT = "32"
-    _64BIT = "64"
+    _32BIT = 32
+    _64BIT = 64
     _PASS = 0
     _SKIP = 1
     _FAIL = -1
@@ -180,7 +180,7 @@ class KernelLtpTest(base_test.BaseTestClass):
         self.shell.Execute("rm -rf %s" % ltp_configs.LTPDIR)
         self._requirement.Cleanup()
 
-    def Verify(self, results):
+    def Verify(self, test_case, results):
         """Interpret the test result of each test case.
 
         Returns:
@@ -203,25 +203,23 @@ class KernelLtpTest(base_test.BaseTestClass):
             logging.exception(e)
             return (self._FAIL, "Command result is malformed.")
 
-        # Test case is not for the current configuration, SKIP
-        if ((ret_code == ltp_enums.TestExitCode.TCONF and
-             'TPASS' not in stdout) or
-            (ret_code == ltp_enums.TestExitCode.TPASS and 'CONF' in stdout)):
+        if (ret_code == ltp_enums.TestExitCode.TCONF and
+            not test_case.is_mandatory):
             return (self._SKIP, "Incompatible test skipped: TCONF")
-        elif ret_code not in (ltp_enums.TestExitCode.TCONF,
-                              ltp_enums.TestExitCode.TPASS):
+        elif (ret_code != ltp_enums.TestExitCode.TPASS):
             return (self._FAIL,
                     "Got return code %s, test did not pass." % ret_code)
         else:
             return (self._PASS, None)
 
-    def CheckResult(self, cmd_results, result=None, note=None):
+    def CheckResult(self, test_case, cmd_results, result=None, note=None):
         """Check a test result and emit exceptions if test failed or skipped.
 
         If the shell command result is not yet interpreted, self.Verify will
         be called to interpret the results.
 
         Args:
+            test_case: test case object for test that gave the result
             cmd_results: dict([str],[str],[int]), command results from shell.
             result: int, which is one of the values of _PASS, _SKIP, and _FAIL
             note: string, reason why a test failed or get skipped
@@ -233,7 +231,7 @@ class KernelLtpTest(base_test.BaseTestClass):
         logging.info("exit_code: %s", cmd_results[const.EXIT_CODE])
 
         if result is None:
-            result, note = self.Verify(cmd_results)
+            result, note = self.Verify(test_case, cmd_results)
         logging.info("verify result: %s", result)
         logging.info("note: %s", note)
 
@@ -247,7 +245,7 @@ class KernelLtpTest(base_test.BaseTestClass):
             n_bit: int, bitness
         """
         test_bit = 'nativetest'
-        if n_bit == 64:
+        if n_bit == self._64BIT:
             test_bit += '64'
         self.PreTestSetup(test_bit)
         self.PushFiles(test_bit)
@@ -426,7 +424,7 @@ class KernelLtpTest(base_test.BaseTestClass):
             logging.info("Worker {} starts verifying results "
                          "for '{}'.".format(id, test_case))
 
-            result, note = self.Verify(cmd_results)
+            result, note = self.Verify(test_case, cmd_results)
             if result == self._FAIL:
                 # Hide failed tests from the runner and put into rerun list
                 logging.info("Worker {} reports '{}' failed. Adding to "
@@ -435,7 +433,8 @@ class KernelLtpTest(base_test.BaseTestClass):
             else:
                 # Report skipped or passed tests to runner
                 self.InternalResultReportMultiThread(
-                    test_name, self.CheckResult, (cmd_results, result, note))
+                    test_name, self.CheckResult,
+                    (test_case, cmd_results, result, note))
 
     def InternalResultReportMultiThread(self, test_name, function, args,
                                         **kwargs):
@@ -475,7 +474,7 @@ class KernelLtpTest(base_test.BaseTestClass):
             cwd=ltp_configs.LTPBINPATH,
             commands=test_case.command)
         logging.info("Executing %s", cmd)
-        self.CheckResult(self.shell.Execute(cmd))
+        self.CheckResult(test_case, self.shell.Execute(cmd))
 
     def generate64BitTests(self):
         """Runs all 64-bit LTP test cases."""

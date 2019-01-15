@@ -73,8 +73,12 @@ class ProcZoneInfoTest(KernelProcFileTestBase.KernelProcFileTestBase):
         p[0] = p[1]
 
     def p_line(self, p):
-        'line : STRING NUMBER NEWLINE'
-        p[0] = p[1:3]
+        '''line : STRING NUMBER NEWLINE
+                | NUMBER NEWLINE'''
+        if len(p) == 4:
+            p[0] = p[1:3]
+        else:
+            p[0] = p[1]
 
     def p_cpu(self, p):
         'cpu : CPU COLON NUMBER NEWLINE colonline colonline colonline \

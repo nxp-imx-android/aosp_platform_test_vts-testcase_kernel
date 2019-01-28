@@ -1211,6 +1211,10 @@ STABLE_TESTS = [
     ('syscalls.mlock03_64bit', True),
     ('syscalls.mlock04_32bit', True),
     ('syscalls.mlock04_64bit', True),
+    ('syscalls.mlock201_32bit', False), # b/112477378
+    ('syscalls.mlock201_64bit', False), # b/112477378
+    ('syscalls.mlock202_32bit', False), # b/112477378
+    ('syscalls.mlock202_64bit', False), # b/112477378
     ('syscalls.mlockall01_32bit', True),
     ('syscalls.mlockall01_64bit', True),
     ('syscalls.mlockall02_32bit', True),

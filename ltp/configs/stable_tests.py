@@ -454,8 +454,8 @@ STABLE_TESTS = [
     ('syscalls.clone07_64bit', True),
     ('syscalls.clone08_32bit', True),
     ('syscalls.clone08_64bit', True),
-    ('syscalls.clone09_32bit', True),
-    ('syscalls.clone09_64bit', True),
+    ('syscalls.clone09_32bit', False), # b/123587295
+    ('syscalls.clone09_64bit', False), # b/123587295
     ('syscalls.close01_32bit', True),
     ('syscalls.close01_64bit', True),
     ('syscalls.close02_32bit', True),

@@ -1149,8 +1149,8 @@ STABLE_TESTS = [
     ('syscalls.madvise08_64bit', True),
     ('syscalls.madvise10_32bit', True),
     ('syscalls.madvise10_64bit', True),
-    ('syscalls.membarrier01_32bit', True),
-    ('syscalls.membarrier01_64bit', True),
+    ('syscalls.membarrier01_32bit', False), # b/123658872
+    ('syscalls.membarrier01_64bit', False), # b/123658872
     ('syscalls.memcmp01_32bit', False),
     ('syscalls.memcmp01_64bit', False),
     ('syscalls.memcpy01_32bit', False),

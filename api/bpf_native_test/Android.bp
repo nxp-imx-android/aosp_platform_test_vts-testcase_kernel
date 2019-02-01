@@ -34,4 +34,17 @@ cc_test {
         "-Werror",
         "-Wno-unused-variable",
     ],
+    required: [
+        "bpf_vts_kern.o",
+    ],
+
+}
+
+bpf {
+    name: "bpf_vts_kern.o",
+    srcs: ["bpf_test.c"],
+    cflags: [
+        "-Wall",
+        "-Werror",
+    ],
 }

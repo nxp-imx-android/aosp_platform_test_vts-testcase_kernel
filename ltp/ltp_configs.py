@@ -113,7 +113,6 @@ REQUIREMENT_TO_TESTSUITE = {}
 
 # List of LTP test suites to run
 TEST_SUITES = [
-    'admin_tools',
     'can',
     'cap_bounds',
     'commands',
@@ -138,9 +137,7 @@ TEST_SUITES = [
     'kernel_misc',
     'math',
     'mm',
-    'modules',
     'nptl',
-    'pipes',
     'power_management_tests',
     'pty',
     'sched',

@@ -26,6 +26,7 @@ cc_test {
     static_libs: [
         "libbpf_android",
         "libnetdutils",
+        "libprocessgroup",
         "libtestUtil",
     ],
     cflags: [

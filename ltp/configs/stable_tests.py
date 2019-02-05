@@ -2117,6 +2117,10 @@ STABLE_TESTS = [
     ('syscalls.unshare01_64bit', True),
     ('syscalls.unshare02_32bit', True),
     ('syscalls.unshare02_64bit', True),
+    ('syscalls.ustat01_32bit', True),
+    ('syscalls.ustat01_64bit', False), # b/112484619
+    ('syscalls.ustat02_32bit', True),
+    ('syscalls.ustat02_64bit', False), # b/112484619
     ('syscalls.utime01A_32bit', True),
     ('syscalls.utime01A_64bit', True),
     ('syscalls.utime01_32bit', True),

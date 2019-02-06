@@ -543,10 +543,10 @@ STABLE_TESTS = [
     ('syscalls.execve04_64bit', True),
     ('syscalls.execve05_32bit', True),
     ('syscalls.execve05_64bit', True),
-    ('syscalls.execveat01_32bit', True),
-    ('syscalls.execveat01_64bit', True),
-    ('syscalls.execveat02_32bit', True),
-    ('syscalls.execveat02_64bit', True),
+    ('syscalls.execveat01_32bit', False), # b/122888513
+    ('syscalls.execveat01_64bit', False), # b/122888513
+    ('syscalls.execveat02_32bit', False), # b/122888513
+    ('syscalls.execveat02_64bit', False), # b/122888513
     ('syscalls.execvp01_32bit', False),
     ('syscalls.execvp01_64bit', False),
     ('syscalls.exit01_32bit', True),

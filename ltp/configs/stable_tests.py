@@ -1211,6 +1211,10 @@ STABLE_TESTS = [
     ('syscalls.mlock03_64bit', True),
     ('syscalls.mlock04_32bit', True),
     ('syscalls.mlock04_64bit', True),
+    ('syscalls.mlock201_32bit', False), # b/112477378
+    ('syscalls.mlock201_64bit', False), # b/112477378
+    ('syscalls.mlock202_32bit', False), # b/112477378
+    ('syscalls.mlock202_64bit', False), # b/112477378
     ('syscalls.mlockall01_32bit', True),
     ('syscalls.mlockall01_64bit', True),
     ('syscalls.mlockall02_32bit', True),
@@ -1965,6 +1969,16 @@ STABLE_TESTS = [
     ('syscalls.stat06_64_32bit', True),
     ('syscalls.stat06_64_64bit', True),
     ('syscalls.stat06_64bit', True),
+    ('syscalls.statx01_32bit', False), # b/123523766
+    ('syscalls.statx01_64bit', False), # b/123523766
+    ('syscalls.statx02_32bit', False), # b/123523766
+    ('syscalls.statx02_64bit', False), # b/123523766
+    ('syscalls.statx03_32bit', False), # b/123523766
+    ('syscalls.statx03_64bit', False), # b/123523766
+    ('syscalls.statx04_32bit', False), # b/123523766
+    ('syscalls.statx04_64bit', False), # b/123523766
+    ('syscalls.statx06_32bit', False), # b/123523766
+    ('syscalls.statx06_64bit', False), # b/123523766
     ('syscalls.statfs01_32bit', True),
     ('syscalls.statfs01_64_32bit', True),
     ('syscalls.statfs01_64_64bit', True),
@@ -2103,6 +2117,10 @@ STABLE_TESTS = [
     ('syscalls.unshare01_64bit', True),
     ('syscalls.unshare02_32bit', True),
     ('syscalls.unshare02_64bit', True),
+    ('syscalls.ustat01_32bit', True),
+    ('syscalls.ustat01_64bit', False), # b/112484619
+    ('syscalls.ustat02_32bit', True),
+    ('syscalls.ustat02_64bit', False), # b/112484619
     ('syscalls.utime01A_32bit', True),
     ('syscalls.utime01A_64bit', True),
     ('syscalls.utime01_32bit', True),
@@ -2121,6 +2139,10 @@ STABLE_TESTS = [
     ('syscalls.utimes01_64bit', True),
     ('syscalls.vfork01_32bit', True),
     ('syscalls.vfork01_64bit', True),
+    ('syscalls.vhangup01_32bit', True),
+    ('syscalls.vhangup01_64bit', True),
+    ('syscalls.vhangup02_32bit', True),
+    ('syscalls.vhangup02_64bit', True),
     ('syscalls.vmsplice01_32bit', True),
     ('syscalls.vmsplice01_64bit', True),
     ('syscalls.vmsplice02_32bit', True),

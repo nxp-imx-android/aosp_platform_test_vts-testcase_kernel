@@ -418,6 +418,7 @@ DISABLED_TESTS = [
     'syscalls.pselect01', # b/65053723#comment19
     'syscalls.readdir02', # b/112422073
     'syscalls.rt_sigprocmask01_32bit', # b/31152672
+    'syscalls.set_thread_area01_64bit', #b/112474139
     'syscalls.setpriority02', # b/73137289
     'syscalls.setregid02',
     'syscalls.setregid02_16',

@@ -1709,6 +1709,7 @@ STABLE_TESTS = [
     ('syscalls.sendto01_64bit', True),
     ('syscalls.set_robust_list01_32bit', True),
     ('syscalls.set_robust_list01_64bit', True),
+    ('syscalls.set_thread_area01_32bit', False),
     ('syscalls.set_tid_address01_32bit', True),
     ('syscalls.set_tid_address01_64bit', True),
     ('syscalls.setdomainname01_32bit', True),

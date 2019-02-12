@@ -543,10 +543,10 @@ STABLE_TESTS = [
     ('syscalls.execve04_64bit', True),
     ('syscalls.execve05_32bit', True),
     ('syscalls.execve05_64bit', True),
-    ('syscalls.execveat01_32bit', True),
-    ('syscalls.execveat01_64bit', True),
-    ('syscalls.execveat02_32bit', True),
-    ('syscalls.execveat02_64bit', True),
+    ('syscalls.execveat01_32bit', False), # b/122888513
+    ('syscalls.execveat01_64bit', False), # b/122888513
+    ('syscalls.execveat02_32bit', False), # b/122888513
+    ('syscalls.execveat02_64bit', False), # b/122888513
     ('syscalls.execvp01_32bit', False),
     ('syscalls.execvp01_64bit', False),
     ('syscalls.exit01_32bit', True),
@@ -1211,6 +1211,10 @@ STABLE_TESTS = [
     ('syscalls.mlock03_64bit', True),
     ('syscalls.mlock04_32bit', True),
     ('syscalls.mlock04_64bit', True),
+    ('syscalls.mlock201_32bit', False), # b/112477378
+    ('syscalls.mlock201_64bit', False), # b/112477378
+    ('syscalls.mlock202_32bit', False), # b/112477378
+    ('syscalls.mlock202_64bit', False), # b/112477378
     ('syscalls.mlockall01_32bit', True),
     ('syscalls.mlockall01_64bit', True),
     ('syscalls.mlockall02_32bit', True),
@@ -1433,6 +1437,14 @@ STABLE_TESTS = [
     ('syscalls.preadv03_64_32bit', True),
     ('syscalls.preadv03_64_64bit', True),
     ('syscalls.preadv03_64bit', True),
+    ('syscalls.preadv201_32bit', False),
+    ('syscalls.preadv201_64_32bit', False),
+    ('syscalls.preadv201_64_64bit', False),
+    ('syscalls.preadv201_64bit', False),
+    ('syscalls.preadv202_32bit', False),
+    ('syscalls.preadv202_64_32bit', False),
+    ('syscalls.preadv202_64_64bit', False),
+    ('syscalls.preadv202_64bit', False),
     ('syscalls.process_vm_readv01_32bit', True),
     ('syscalls.process_vm_readv01_64bit', True),
     ('syscalls.process_vm_readv02_32bit', True),
@@ -1705,6 +1717,7 @@ STABLE_TESTS = [
     ('syscalls.sendto01_64bit', True),
     ('syscalls.set_robust_list01_32bit', True),
     ('syscalls.set_robust_list01_64bit', True),
+    ('syscalls.set_thread_area01_32bit', False),
     ('syscalls.set_tid_address01_32bit', True),
     ('syscalls.set_tid_address01_64bit', True),
     ('syscalls.setdomainname01_32bit', True),
@@ -1965,6 +1978,16 @@ STABLE_TESTS = [
     ('syscalls.stat06_64_32bit', True),
     ('syscalls.stat06_64_64bit', True),
     ('syscalls.stat06_64bit', True),
+    ('syscalls.statx01_32bit', False), # b/123523766
+    ('syscalls.statx01_64bit', False), # b/123523766
+    ('syscalls.statx02_32bit', False), # b/123523766
+    ('syscalls.statx02_64bit', False), # b/123523766
+    ('syscalls.statx03_32bit', False), # b/123523766
+    ('syscalls.statx03_64bit', False), # b/123523766
+    ('syscalls.statx04_32bit', False), # b/123523766
+    ('syscalls.statx04_64bit', False), # b/123523766
+    ('syscalls.statx06_32bit', False), # b/123523766
+    ('syscalls.statx06_64bit', False), # b/123523766
     ('syscalls.statfs01_32bit', True),
     ('syscalls.statfs01_64_32bit', True),
     ('syscalls.statfs01_64_64bit', True),
@@ -2103,6 +2126,10 @@ STABLE_TESTS = [
     ('syscalls.unshare01_64bit', True),
     ('syscalls.unshare02_32bit', True),
     ('syscalls.unshare02_64bit', True),
+    ('syscalls.ustat01_32bit', True),
+    ('syscalls.ustat01_64bit', False), # b/112484619
+    ('syscalls.ustat02_32bit', True),
+    ('syscalls.ustat02_64bit', False), # b/112484619
     ('syscalls.utime01A_32bit', True),
     ('syscalls.utime01A_64bit', True),
     ('syscalls.utime01_32bit', True),
@@ -2121,6 +2148,10 @@ STABLE_TESTS = [
     ('syscalls.utimes01_64bit', True),
     ('syscalls.vfork01_32bit', True),
     ('syscalls.vfork01_64bit', True),
+    ('syscalls.vhangup01_32bit', True),
+    ('syscalls.vhangup01_64bit', True),
+    ('syscalls.vhangup02_32bit', True),
+    ('syscalls.vhangup02_64bit', True),
     ('syscalls.vmsplice01_32bit', True),
     ('syscalls.vmsplice01_64bit', True),
     ('syscalls.vmsplice02_32bit', True),

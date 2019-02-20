@@ -255,6 +255,7 @@ DISABLED_TESTS = [
     'cve.cve-2016-4470', # b/112354289
     'cve.cve-2017-1000364', # b/112350736
     'cve.cve-2017-5669', # b/112354289
+    'cve.cve-2017-5754', # b/123862031
     'dio.dio04',
     'dio.dio10',
     'dio.dio29', # takes too long

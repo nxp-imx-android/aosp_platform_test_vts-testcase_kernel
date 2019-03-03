@@ -17,6 +17,8 @@ STABLE_TESTS = [
     ('containers.mountns03_64bit', False),
     ('containers.mountns04_32bit', False),
     ('containers.mountns04_64bit', False),
+    ('controllers.memcg_regression_32bit', True),
+    ('controllers.memcg_regression_64bit', True),
     ('cve.cve-2011-0999_32bit', False),
     ('cve.cve-2011-0999_64bit', False),
     ('cve.cve-2011-2496_32bit', False),

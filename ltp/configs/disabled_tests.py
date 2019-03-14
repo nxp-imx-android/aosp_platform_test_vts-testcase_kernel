@@ -423,7 +423,6 @@ DISABLED_TESTS = [
     'syscalls.setpriority02', # b/73137289
     'syscalls.setregid02',
     'syscalls.setregid02_16',
-    'syscalls.sigpending02',
     'syscalls.sigrelse01',
     'syscalls.splice02',
     'syscalls.utimensat01',

@@ -20,6 +20,7 @@ from vts.runners.host import base_test
 from vts.runners.host import const
 from vts.runners.host import test_runner
 
+import time
 
 class VtsKernelCheckpointTest(base_test.BaseTestClass):
 
@@ -66,8 +67,27 @@ class VtsKernelCheckpointTest(base_test.BaseTestClass):
         self.isCheckpoint_ = self.isCheckpoint()
 
     def reboot(self):
-        self.dut.reboot()
-        self.dut.adb.root()
+        self.dut.adb.reboot()
+        try:
+          self.dut.adb.wait_for_device(timeout=900)
+        except self.dut.adb.AdbError as e:
+          fail("Exception thrown waiting for device:" + e.msg())
+
+        # Should not be necessary, but without these retries, test fails
+        # regularly on taimen with Android Q
+        for i in range(1, 30):
+          try:
+            self.dut.adb.root()
+            break
+          except:
+            time.sleep(1)
+
+        for i in range(1, 30):
+          try:
+            self.dut.adb.shell("ls");
+            break
+          except:
+            time.sleep(1)
 
     def testRollback(self):
         if not self.isCheckpoint_:
@@ -75,9 +95,11 @@ class VtsKernelCheckpointTest(base_test.BaseTestClass):
 
         # Create a file and initiate checkpoint
         self.dut.adb.root()
+        self.dut.adb.shell("setprop persist.init.dont_start_class.main 1")
+        self.dut.adb.shell("setprop persist.init.dont_start_class.late_start 1")
         self.dut.adb.shell("echo " + self._ORIGINALVALUE + " > " + self._CHECKPOINTTESTFILE)
         result = self.dut.adb.shell("vdc checkpoint startCheckpoint 1", no_except = True)
-        asserts.assertEqual(result[const.EXIT_CODE], 1)
+        asserts.assertEqual(result[const.EXIT_CODE], 0)
         self.reboot()
 
         # Modify the file but do not commit
@@ -90,7 +112,9 @@ class VtsKernelCheckpointTest(base_test.BaseTestClass):
 
         # Clean up
         result = self.dut.adb.shell("vdc checkpoint commitChanges", no_except = True)
-        asserts.assertEqual(result[const.EXIT_CODE], 1)
+        asserts.assertEqual(result[const.EXIT_CODE], 0)
+        self.dut.adb.shell("setprop persist.init.dont_start_class.main 0")
+        self.dut.adb.shell("setprop persist.init.dont_start_class.late_start 0")
         self.reboot()
         self.dut.adb.shell("rm " + self._CHECKPOINTTESTFILE)
 
@@ -100,15 +124,19 @@ class VtsKernelCheckpointTest(base_test.BaseTestClass):
 
         # Create a file and initiate checkpoint
         self.dut.adb.root()
+        self.dut.adb.shell("setprop persist.init.dont_start_class.main 1")
+        self.dut.adb.shell("setprop persist.init.dont_start_class.late_start 1")
         self.dut.adb.shell("echo " + self._ORIGINALVALUE + " > " + self._CHECKPOINTTESTFILE)
         result = self.dut.adb.shell("vdc checkpoint startCheckpoint 1", no_except = True)
-        asserts.assertEqual(result[const.EXIT_CODE], 1)
+        asserts.assertEqual(result[const.EXIT_CODE], 0)
         self.reboot()
 
         # Modify the file and commit the checkpoint
         self.dut.adb.shell("echo " + self._MODIFIEDVALUE + " > " + self._CHECKPOINTTESTFILE)
         result = self.dut.adb.shell("vdc checkpoint commitChanges", no_except = True)
-        asserts.assertEqual(result[const.EXIT_CODE], 1)
+        asserts.assertEqual(result[const.EXIT_CODE], 0)
+        self.dut.adb.shell("setprop persist.init.dont_start_class.main 0")
+        self.dut.adb.shell("setprop persist.init.dont_start_class.late_start 0")
         self.reboot()
 
         # Check file has changed

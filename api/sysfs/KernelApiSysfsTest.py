@@ -198,16 +198,6 @@ class KernelApiSysfsTest(base_test.BaseTestClass):
                         except ValueError as e:
                             asserts.fail("Malformatted time_in_state file at %s" % f)
 
-    def testIpv4(self):
-        '''Check /sys/kernel/ipv4/*.'''
-        files = ['tcp_rmem_def', 'tcp_rmem_max', 'tcp_rmem_min',
-                 'tcp_wmem_def', 'tcp_wmem_max', 'tcp_wmem_min',]
-        for f in files:
-            path = '/sys/kernel/ipv4/' + f
-            self.IsReadWrite(path)
-            content = target_file_utils.ReadFileContent(path, self.shell)
-            self.ConvertToInteger(content)
-
     def testLastResumeReason(self):
         '''Check /sys/kernel/wakeup_reasons/last_resume_reason.'''
         filepath = '/sys/kernel/wakeup_reasons/last_resume_reason'

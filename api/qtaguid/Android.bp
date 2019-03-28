@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2018 The Android Open Source Project
+// Copyright (C) 2017 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,41 +15,23 @@
 //
 
 cc_test {
-    name: "vts_test_binary_bpf_module",
-    srcs: ["BpfTest.cpp"],
+    name: "vts_test_binary_qtaguid_module",
+    srcs: ["SocketTagUserSpace.cpp"],
     shared_libs: [
-        "libcutils",
         "libutils",
         "liblog",
         "libbase",
     ],
-    static_libs: [
-        "libbpf_android",
-        "libnetdutils",
-        "libprocessgroup",
-        "libtestUtil",
-    ],
+    static_libs: ["libqtaguid"],
     cflags: [
         "-fno-strict-aliasing",
         "-Wall",
         "-Werror",
         "-Wno-unused-variable",
     ],
-    required: [
-        "bpf_vts_kern.o",
-    ],
 
-}
-
-bpf {
-    name: "bpf_vts_kern.o",
-    srcs: ["bpf_test.c"],
-    cflags: [
-        "-Wall",
-        "-Werror",
-    ],
 }
 
 vts_config {
-    name: "VtsKernelNetBpfTest",
+    name: "VtsKernelQtaguidTest",
 }

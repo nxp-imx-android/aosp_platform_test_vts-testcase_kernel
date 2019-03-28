@@ -14,42 +14,6 @@
 // limitations under the License.
 //
 
-cc_test {
-    name: "vts_test_binary_bpf_module",
-    srcs: ["BpfTest.cpp"],
-    shared_libs: [
-        "libcutils",
-        "libutils",
-        "liblog",
-        "libbase",
-    ],
-    static_libs: [
-        "libbpf_android",
-        "libnetdutils",
-        "libprocessgroup",
-        "libtestUtil",
-    ],
-    cflags: [
-        "-fno-strict-aliasing",
-        "-Wall",
-        "-Werror",
-        "-Wno-unused-variable",
-    ],
-    required: [
-        "bpf_vts_kern.o",
-    ],
-
-}
-
-bpf {
-    name: "bpf_vts_kern.o",
-    srcs: ["bpf_test.c"],
-    cflags: [
-        "-Wall",
-        "-Werror",
-    ],
-}
-
 vts_config {
-    name: "VtsKernelNetBpfTest",
+    name: "CheckpointTest",
 }

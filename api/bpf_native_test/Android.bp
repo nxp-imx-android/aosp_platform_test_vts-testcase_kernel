@@ -18,6 +18,7 @@ cc_test {
     name: "vts_test_binary_bpf_module",
     srcs: ["BpfTest.cpp"],
     shared_libs: [
+        "libcgrouprc",
         "libcutils",
         "libutils",
         "liblog",
@@ -48,4 +49,8 @@ bpf {
         "-Wall",
         "-Werror",
     ],
+}
+
+vts_config {
+    name: "VtsKernelNetBpfTest",
 }

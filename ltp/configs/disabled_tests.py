@@ -255,6 +255,7 @@ DISABLED_TESTS = [
     'cve.cve-2016-4470', # b/112354289
     'cve.cve-2017-1000364', # b/112350736
     'cve.cve-2017-5669', # b/112354289
+    'cve.cve-2017-5754', # b/123862031
     'dio.dio04',
     'dio.dio10',
     'dio.dio29', # takes too long
@@ -422,7 +423,6 @@ DISABLED_TESTS = [
     'syscalls.setpriority02', # b/73137289
     'syscalls.setregid02',
     'syscalls.setregid02_16',
-    'syscalls.sigpending02',
     'syscalls.sigrelse01',
     'syscalls.splice02',
     'syscalls.utimensat01',

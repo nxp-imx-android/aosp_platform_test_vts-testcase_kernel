@@ -25,6 +25,7 @@ cc_test {
         "libbase",
     ],
     static_libs: [
+        "libbpf",
         "libbpf_android",
         "libnetdutils",
         "libprocessgroup",
@@ -44,7 +45,7 @@ cc_test {
 
 bpf {
     name: "bpf_vts_kern.o",
-    srcs: ["bpf_test.c"],
+    srcs: ["kern.c"],
     cflags: [
         "-Wall",
         "-Werror",

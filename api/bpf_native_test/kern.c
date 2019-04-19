@@ -14,21 +14,34 @@
  * limitations under the License.
  */
 
-#include "bpf_test.h"
+#include "kern.h"
 #include <linux/bpf.h>
 #include <stdint.h>
+#include "bpf_helpers.h"
 
-/* helper functions called from eBPF programs written in C */
-static void* (*bpf_map_lookup_elem)(uint64_t map, void* key) = (void*)
-    BPF_FUNC_map_lookup_elem;
-static int (*bpf_map_update_elem)(uint64_t map, void* key, void* value,
-                                  uint64_t flags) = (void*)
-    BPF_FUNC_map_update_elem;
-static uint64_t (*get_socket_cookie)(struct __sk_buff* skb) = (void*)
-    BPF_FUNC_get_socket_cookie;
+struct bpf_map_def SEC("maps") test_configuration_map = {
+    .type = BPF_MAP_TYPE_HASH,
+    .key_size = sizeof(uint32_t),
+    .value_size = sizeof(uint32_t),
+    .max_entries = 1,
+};
 
-static inline void bpf_update_stats(struct __sk_buff* skb, uint64_t map) {
-  uint64_t sock_cookie = get_socket_cookie(skb);
+struct bpf_map_def SEC("maps") test_stats_map_A = {
+    .type = BPF_MAP_TYPE_HASH,
+    .key_size = sizeof(uint64_t),
+    .value_size = sizeof(struct stats_value),
+    .max_entries = NUM_SOCKETS,
+};
+
+struct bpf_map_def SEC("maps") test_stats_map_B = {
+    .type = BPF_MAP_TYPE_HASH,
+    .key_size = sizeof(uint64_t),
+    .value_size = sizeof(struct stats_value),
+    .max_entries = NUM_SOCKETS,
+};
+
+static inline void bpf_update_stats(struct __sk_buff* skb, void* map) {
+  uint64_t sock_cookie = bpf_get_socket_cookie(skb);
   struct stats_value* value;
   value = bpf_map_lookup_elem(map, &sock_cookie);
   if (!value) {
@@ -42,16 +55,18 @@ static inline void bpf_update_stats(struct __sk_buff* skb, uint64_t map) {
   }
 }
 
-ELF_SEC(TEST_PROG_NAME)
+SEC("skfilter/test")
 int ingress_prog(struct __sk_buff* skb) {
   uint32_t key = 1;
-  uint32_t* config = bpf_map_lookup_elem(CONFIGURATION_MAP, &key);
+  uint32_t* config = bpf_map_lookup_elem(&test_configuration_map, &key);
   if (config) {
     if (*config) {
-      bpf_update_stats(skb, COOKIE_STATS_MAP_A);
+      bpf_update_stats(skb, &test_stats_map_A);
     } else {
-      bpf_update_stats(skb, COOKIE_STATS_MAP_B);
+      bpf_update_stats(skb, &test_stats_map_B);
     }
   }
   return skb->len;
 }
+
+char _license[] SEC("license") = "Apache 2.0";

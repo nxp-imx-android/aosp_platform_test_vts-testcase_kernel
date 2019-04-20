@@ -17,9 +17,9 @@
 
 const int NUM_SOCKETS = 8;  // At least one thread per core on device.
 
-struct stats_value {
+typedef struct {
   uint64_t rxPackets;
   uint64_t rxBytes;
   uint64_t txPackets;
   uint64_t txBytes;
-};
+} stats_value;

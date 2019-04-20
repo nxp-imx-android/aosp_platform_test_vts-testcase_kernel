@@ -13,16 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <linux/bpf.h>
 #include <stdint.h>
 
-#define ELF_SEC(NAME) __attribute__((section(NAME), used))
-
-#define TEST_PROG_NAME "test_prog"
-
-#define COOKIE_STATS_MAP_A 0xc001eaaaffffffff
-#define COOKIE_STATS_MAP_B 0xc001eaabffffffff
-#define CONFIGURATION_MAP 0xc0f1a10affffffff
+const int NUM_SOCKETS = 8;  // At least one thread per core on device.
 
 struct stats_value {
   uint64_t rxPackets;

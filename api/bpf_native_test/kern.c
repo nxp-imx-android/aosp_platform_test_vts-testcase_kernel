@@ -19,51 +19,37 @@
 #include <stdint.h>
 #include "bpf_helpers.h"
 
-struct bpf_map_def SEC("maps") test_configuration_map = {
-    .type = BPF_MAP_TYPE_HASH,
-    .key_size = sizeof(uint32_t),
-    .value_size = sizeof(uint32_t),
-    .max_entries = 1,
-};
+DEFINE_BPF_MAP(test_configuration_map, HASH, uint32_t, uint32_t, 1)
+DEFINE_BPF_MAP(test_stats_map_A, HASH, uint64_t, stats_value, NUM_SOCKETS)
+DEFINE_BPF_MAP(test_stats_map_B, HASH, uint64_t, stats_value, NUM_SOCKETS)
 
-struct bpf_map_def SEC("maps") test_stats_map_A = {
-    .type = BPF_MAP_TYPE_HASH,
-    .key_size = sizeof(uint64_t),
-    .value_size = sizeof(struct stats_value),
-    .max_entries = NUM_SOCKETS,
-};
-
-struct bpf_map_def SEC("maps") test_stats_map_B = {
-    .type = BPF_MAP_TYPE_HASH,
-    .key_size = sizeof(uint64_t),
-    .value_size = sizeof(struct stats_value),
-    .max_entries = NUM_SOCKETS,
-};
-
-static inline void bpf_update_stats(struct __sk_buff* skb, void* map) {
-  uint64_t sock_cookie = bpf_get_socket_cookie(skb);
-  struct stats_value* value;
-  value = bpf_map_lookup_elem(map, &sock_cookie);
-  if (!value) {
-    struct stats_value newValue = {};
-    bpf_map_update_elem(map, &sock_cookie, &newValue, BPF_NOEXIST);
-    value = bpf_map_lookup_elem(map, &sock_cookie);
+#define DEFINE_UPDATE_INGRESS_STATS(the_map)                               \
+  static inline void update_ingress_##the_map(struct __sk_buff* skb) {     \
+    uint64_t sock_cookie = bpf_get_socket_cookie(skb);                     \
+    stats_value* value = bpf_##the_map##_lookup_elem(&sock_cookie);        \
+    if (!value) {                                                          \
+      stats_value newValue = {};                                           \
+      bpf_##the_map##_update_elem(&sock_cookie, &newValue, BPF_NOEXIST);   \
+      value = bpf_##the_map##_lookup_elem(&sock_cookie);                   \
+    }                                                                      \
+    if (value) {                                                           \
+      __sync_fetch_and_add(&value->rxPackets, 1);                          \
+      __sync_fetch_and_add(&value->rxBytes, skb->len);                     \
+    }                                                                      \
   }
-  if (value) {
-    __sync_fetch_and_add(&value->rxPackets, 1);
-    __sync_fetch_and_add(&value->rxBytes, skb->len);
-  }
-}
+
+DEFINE_UPDATE_INGRESS_STATS(test_stats_map_A)
+DEFINE_UPDATE_INGRESS_STATS(test_stats_map_B)
 
 SEC("skfilter/test")
 int ingress_prog(struct __sk_buff* skb) {
   uint32_t key = 1;
-  uint32_t* config = bpf_map_lookup_elem(&test_configuration_map, &key);
+  uint32_t* config = bpf_test_configuration_map_lookup_elem(&key);
   if (config) {
     if (*config) {
-      bpf_update_stats(skb, &test_stats_map_A);
+      update_ingress_test_stats_map_A(skb);
     } else {
-      bpf_update_stats(skb, &test_stats_map_B);
+      update_ingress_test_stats_map_B(skb);
     }
   }
   return skb->len;

@@ -143,12 +143,6 @@ class BpfRaceTest : public ::testing::Test {
     int prog_fd = bpfFdGet(TEST_PROG_PATH, 0);
     EXPECT_OK(configurationMap.writeValue(ACTIVE_MAP_KEY, 0, BPF_ANY));
 
-    // Clean up the pinned program and maps after setup.
-    EXPECT_EQ(0, remove(TEST_PROG_PATH));
-    EXPECT_EQ(0, remove(TEST_STATS_MAP_A_PATH));
-    EXPECT_EQ(0, remove(TEST_STATS_MAP_B_PATH));
-    EXPECT_EQ(0, remove(TEST_CONFIGURATION_MAP_PATH));
-
     for (int i = 0; i < NUM_SOCKETS; i++) {
       tds[i] = std::thread(workerThread, prog_fd, &stop);
     }
@@ -162,7 +156,6 @@ class BpfRaceTest : public ::testing::Test {
     for (int i = 0; i < NUM_SOCKETS; i++) {
       tds[i].join();
     }
-    remove(TEST_PROG_PATH);
     remove(TEST_PROG_PATH);
     remove(TEST_STATS_MAP_A_PATH);
     remove(TEST_STATS_MAP_B_PATH);

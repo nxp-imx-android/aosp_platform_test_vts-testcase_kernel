@@ -29,6 +29,7 @@
 
 #include <thread>
 
+#include <android-base/file.h>
 #include <android-base/stringprintf.h>
 #include <android-base/unique_fd.h>
 #include <gtest/gtest.h>
@@ -64,9 +65,8 @@ TEST(BpfTest, bpfMapPinTest) {
   ASSERT_EQ(0, remove(bpfMapPath));
 }
 
-#define BPF_PROG_PATH "/system/etc/bpf"
-#define BPF_PROG_SRC BPF_PROG_PATH "/bpf_test.o"
 #define PROGRAM_PATH "/sys/fs/bpf/BpfTest"
+#define BPF_SRC_NAME "/bpf_test.o"
 
 constexpr int NUM_SOCKETS = 8;  // At least one thread per core on device.
 constexpr int ACTIVE_MAP_KEY = 1;
@@ -144,8 +144,10 @@ class BpfRaceTest : public ::testing::Test {
     if (ret == 0) {
       remove(PROGRAM_PATH);
     }
-    ASSERT_EQ(0, android::bpf::parseProgramsFromFile(BPF_PROG_SRC, &program, 1,
-                                                     mapPatterns));
+    std::string progSrcPath =
+        android::base::GetExecutableDirectory() + BPF_SRC_NAME;
+    ASSERT_EQ(0, android::bpf::parseProgramsFromFile(progSrcPath.c_str(),
+                                                     &program, 1, mapPatterns));
     remove(PROGRAM_PATH);
     // Start several threads to send and receive packets with an eBPF program
     // attached to the socket.

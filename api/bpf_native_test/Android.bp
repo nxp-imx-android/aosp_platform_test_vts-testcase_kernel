@@ -38,13 +38,13 @@ cc_test {
         "-Wno-unused-variable",
     ],
     data: [
-        ":bpf_vts_kern.o",
+        ":kern.o",
     ],
 
 }
 
 bpf {
-    name: "bpf_vts_kern.o",
+    name: "kern.o",
     srcs: ["kern.c"],
     cflags: [
         "-Wall",

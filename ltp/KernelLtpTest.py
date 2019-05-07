@@ -60,8 +60,8 @@ class KernelLtpTest(base_test.BaseTestClass):
                            the number is greater than 0, that number of threads
                            will be created to run the tests.
     """
-    _32BIT = "32"
-    _64BIT = "64"
+    _32BIT = 32
+    _64BIT = 64
     _PASS = 0
     _SKIP = 1
     _FAIL = -1
@@ -242,7 +242,7 @@ class KernelLtpTest(base_test.BaseTestClass):
             n_bit: int, bitness
         """
         test_bit = 'nativetest'
-        if n_bit == 64:
+        if n_bit == self._64BIT:
             test_bit += '64'
         self.PreTestSetup(test_bit)
         self.PushFiles(test_bit)

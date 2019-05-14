@@ -21,8 +21,8 @@
     </target_preparer>
     <test class="com.android.tradefed.testtype.VtsMultiDeviceTest">
         <option name="test-module-name" value="VtsKernelCheckpointTest" />
+        <option name="test-case-path" value="vts/testcases/kernel/checkpoint/VtsKernelCheckpointTest" />
         <option name="test-timeout" value="6m" />
         <option name="runtime-hint" value="5m" />
-        <option name="test-case-path" value="vts/testcases/kernel/checkpoint/CheckpointTest" />
     </test>
 </configuration>

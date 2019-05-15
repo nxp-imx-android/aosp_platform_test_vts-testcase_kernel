@@ -15,5 +15,5 @@
 //
 
 vts_config {
-    name: "CheckpointTest",
+    name: "VtsKernelCheckpointTest",
 }

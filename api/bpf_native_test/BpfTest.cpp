@@ -29,6 +29,7 @@
 
 #include <thread>
 
+#include <android-base/file.h>
 #include <android-base/stringprintf.h>
 #include <android-base/unique_fd.h>
 #include <gtest/gtest.h>
@@ -36,7 +37,8 @@
 
 #include "bpf/BpfMap.h"
 #include "bpf/BpfUtils.h"
-#include "bpf_test.h"
+#include "kern.h"
+#include "libbpf_android.h"
 
 using android::base::unique_fd;
 using namespace android::bpf;
@@ -64,11 +66,14 @@ TEST(BpfTest, bpfMapPinTest) {
   ASSERT_EQ(0, remove(bpfMapPath));
 }
 
-#define BPF_PROG_PATH "/system/etc/bpf"
-#define BPF_PROG_SRC BPF_PROG_PATH "/bpf_test.o"
-#define PROGRAM_PATH "/sys/fs/bpf/BpfTest"
+#define BPF_SRC_NAME "/kern.o"
 
-constexpr int NUM_SOCKETS = 8;  // At least one thread per core on device.
+#define BPF_PATH "/sys/fs/bpf"
+#define TEST_PROG_PATH BPF_PATH "/prog_kern_skfilter_test"
+#define TEST_STATS_MAP_A_PATH BPF_PATH "/map_kern_test_stats_map_A"
+#define TEST_STATS_MAP_B_PATH BPF_PATH "/map_kern_test_stats_map_B"
+#define TEST_CONFIGURATION_MAP_PATH BPF_PATH "/map_kern_test_configuration_map"
+
 constexpr int ACTIVE_MAP_KEY = 1;
 
 class BpfRaceTest : public ::testing::Test {
@@ -116,42 +121,28 @@ class BpfRaceTest : public ::testing::Test {
 
   void SetUp() {
     SKIP_IF_BPF_NOT_SUPPORTED;
-
-    // Create all the maps and load the program.
-    cookieStatsMap[0].reset(createMap(BPF_MAP_TYPE_HASH, sizeof(uint64_t),
-                                      sizeof(struct stats_value), NUM_SOCKETS,
-                                      0));
-    cookieStatsMap[1].reset(createMap(BPF_MAP_TYPE_HASH, sizeof(uint64_t),
-                                      sizeof(struct stats_value), NUM_SOCKETS,
-                                      0));
-    configurationMap.reset(
-        createMap(BPF_MAP_TYPE_HASH, sizeof(uint32_t), sizeof(uint32_t), 1, 0));
-    EXPECT_TRUE(cookieStatsMap[0].isValid());
-    EXPECT_TRUE(cookieStatsMap[1].isValid());
-    EXPECT_TRUE(configurationMap.isValid());
-    const std::vector<BpfMapInfo> mapPatterns = {
-        BpfMapInfo(COOKIE_STATS_MAP_A, cookieStatsMap[0].getMap().get()),
-        BpfMapInfo(COOKIE_STATS_MAP_B, cookieStatsMap[1].getMap().get()),
-        BpfMapInfo(CONFIGURATION_MAP, configurationMap.getMap().get()),
-    };
-    program = {.attachType = MAX_BPF_ATTACH_TYPE,
-               .path = PROGRAM_PATH,
-               .name = TEST_PROG_NAME,
-               .loadType = BPF_PROG_TYPE_SOCKET_FILTER};
-    int ret = access(PROGRAM_PATH, R_OK);
+    int ret = access(TEST_PROG_PATH, R_OK);
     // Always create a new program and remove the pinned program after program
     // loading is done.
     if (ret == 0) {
-      remove(PROGRAM_PATH);
+      remove(TEST_PROG_PATH);
     }
-    ASSERT_EQ(0, android::bpf::parseProgramsFromFile(BPF_PROG_SRC, &program, 1,
-                                                     mapPatterns));
-    remove(PROGRAM_PATH);
+    std::string progSrcPath =
+        android::base::GetExecutableDirectory() + BPF_SRC_NAME;
+    ASSERT_EQ(0, android::bpf::loadProg(progSrcPath.c_str()));
+
+    EXPECT_TRUE(isOk(cookieStatsMap[0].init(TEST_STATS_MAP_A_PATH)));
+    EXPECT_TRUE(isOk(cookieStatsMap[1].init(TEST_STATS_MAP_B_PATH)));
+    EXPECT_TRUE(isOk(configurationMap.init(TEST_CONFIGURATION_MAP_PATH)));
+    EXPECT_TRUE(cookieStatsMap[0].isValid());
+    EXPECT_TRUE(cookieStatsMap[1].isValid());
+    EXPECT_TRUE(configurationMap.isValid());
     // Start several threads to send and receive packets with an eBPF program
     // attached to the socket.
     stop = false;
-    int prog_fd = program.fd.get();
+    int prog_fd = bpfFdGet(TEST_PROG_PATH, 0);
     EXPECT_OK(configurationMap.writeValue(ACTIVE_MAP_KEY, 0, BPF_ANY));
+
     for (int i = 0; i < NUM_SOCKETS; i++) {
       tds[i] = std::thread(workerThread, prog_fd, &stop);
     }
@@ -165,7 +156,10 @@ class BpfRaceTest : public ::testing::Test {
     for (int i = 0; i < NUM_SOCKETS; i++) {
       tds[i].join();
     }
-    remove(PROGRAM_PATH);
+    remove(TEST_PROG_PATH);
+    remove(TEST_STATS_MAP_A_PATH);
+    remove(TEST_STATS_MAP_B_PATH);
+    remove(TEST_CONFIGURATION_MAP_PATH);
   }
 
   void swapAndCleanStatsMap(bool expectSynchronized, int seconds) {

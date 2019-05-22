@@ -30,4 +30,4 @@ def getSupportedKernels(dut):
     if api_level > api.PLATFORM_API_LEVEL_O_MR1 or api_level == 0:
         return [[4, 4, 107], [4, 9, 84], [4, 14, 42]]
     else:
-        return [[3, 18, 0], [4, 4, 0], [4, 9, 0]]
+        return [[3, 18, 0], [4, 4, 0], [4, 9, 0], [4, 14, 42]]

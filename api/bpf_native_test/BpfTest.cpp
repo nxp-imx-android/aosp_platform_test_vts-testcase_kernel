@@ -66,7 +66,13 @@ TEST(BpfTest, bpfMapPinTest) {
   ASSERT_EQ(0, remove(bpfMapPath));
 }
 
-#define BPF_SRC_NAME "/kern.o"
+#define BPF_SRC_PATH "/data/local/tmp"
+
+#if defined(__aarch64__) || defined(__x86_64__)
+#define BPF_SRC_NAME "/64/kern.o"
+#else
+#define BPF_SRC_NAME "/32/kern.o"
+#endif
 
 #define BPF_PATH "/sys/fs/bpf"
 #define TEST_PROG_PATH BPF_PATH "/prog_kern_skfilter_test"
@@ -127,8 +133,7 @@ class BpfRaceTest : public ::testing::Test {
     if (ret == 0) {
       remove(TEST_PROG_PATH);
     }
-    std::string progSrcPath =
-        android::base::GetExecutableDirectory() + BPF_SRC_NAME;
+    std::string progSrcPath = BPF_SRC_PATH BPF_SRC_NAME;
     ASSERT_EQ(0, android::bpf::loadProg(progSrcPath.c_str()));
 
     EXPECT_TRUE(isOk(cookieStatsMap[0].init(TEST_STATS_MAP_A_PATH)));

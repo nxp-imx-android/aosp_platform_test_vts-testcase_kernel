@@ -17,3 +17,7 @@
 vts_config {
     name: "VtsKernelCheckpointTest",
 }
+
+vts_config {
+    name: "VtsKernelCheckpointDTFstabTest",
+}

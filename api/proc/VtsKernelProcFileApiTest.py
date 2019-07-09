@@ -207,12 +207,6 @@ class VtsKernelProcFileApiTest(base_test.BaseTestClass):
         self.dut.waitForBootCompletion()
         self.dut.rootAdb()
 
-        # Crash the system.
-        self.dut.adb.shell("\"echo c > %s\"" % filepath)
-        asserts.assertFalse(self.dut.hasBooted(), "Device is still alive.")
-        self.dut.waitForBootCompletion()
-        self.dut.rootAdb()
-
     def testProcUidProcstatSet(self):
         def UidIOStats(uid):
             """Returns I/O stats for a given uid.

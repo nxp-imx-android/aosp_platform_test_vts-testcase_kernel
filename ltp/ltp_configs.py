@@ -149,7 +149,6 @@ TEST_SUITES = [
 
 # List of LTP test suites to run
 TEST_SUITES_LOW_MEM = [
-    'admin_tools',
     'can',
     'cap_bounds',
     'commands',
@@ -173,9 +172,7 @@ TEST_SUITES_LOW_MEM = [
     'kernel_misc',
     'math',
     'mm',
-    'modules',
     'nptl',
-    'pipes',
     'power_management_tests',
     'pty',
     'sched_low_mem',

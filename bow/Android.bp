@@ -25,6 +25,7 @@ cc_test {
     ],
     static_libs: [
         "libdm",
+        "libext2_uuid",
         "libtestUtil",
     ],
     cflags: [

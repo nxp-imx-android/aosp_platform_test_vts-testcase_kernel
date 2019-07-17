@@ -14,6 +14,24 @@
 // limitations under the License.
 //
 
-vts_config {
-    name: "VtsKernelCheckpointTest",
+cc_test {
+    name: "vts_test_binary_bow_module",
+    srcs: ["BowTest.cpp"],
+    shared_libs: [
+        "libcutils",
+        "libutils",
+        "liblog",
+        "libbase",
+    ],
+    static_libs: [
+        "libdm",
+        "libext2_uuid",
+        "libtestUtil",
+    ],
+    cflags: [
+        "-fno-strict-aliasing",
+        "-Wall",
+        "-Werror",
+        "-Wno-unused-variable",
+    ],
 }

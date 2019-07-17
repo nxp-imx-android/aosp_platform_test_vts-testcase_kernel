@@ -430,3 +430,25 @@ DISABLED_TESTS = [
     'tracing.dynamic_debug01', # b/71416822
     'tracing.ftrace_regression01', # b/69117476
 ]
+
+# These tests fail under hwasan.
+# mlock/mlockall tests activate lowmemorykiller and cause other unrelated tests to fail as well.
+DISABLED_TESTS_HWASAN = [ # b/134613162
+    'clone02',
+    'clone03',
+    'clone05',
+    'clone06',
+    'clone08',
+    'clone09',
+    'getcwd01',
+    'mem01',
+    'mlock01',
+    'mlock03',
+    'mlockall01',
+    'mlockall02',
+    'mlockall03',
+    'munlock01',
+    'sendmmsg01',
+    'sigaltstack01',
+    'time-schedule01',
+]

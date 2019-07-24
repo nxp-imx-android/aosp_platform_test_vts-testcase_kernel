@@ -251,8 +251,8 @@ class VtsKernelProcFileApiTest(base_test.BaseTestClass):
             # This should increase the number of write syscalls.
             self.dut.adb.shell("echo foo")
             asserts.assertLess(
-                old_wchar,
-                UidIOStats(root_uid)[wchar_index],
+                int(old_wchar),
+                int(UidIOStats(root_uid)[wchar_index]),
                 "Number of write syscalls has not increased.")
 
         CheckStatsInState(False)

@@ -24,6 +24,7 @@ from vts.runners.host import base_test
 from vts.runners.host import test_runner
 from vts.utils.python.file import target_file_utils
 
+
 class VtsKernelCheckpointDTFstabTest(base_test.BaseTestClass):
     """A test class to verify dynamic partitions are enabled."""
 
@@ -39,10 +40,12 @@ class VtsKernelCheckpointDTFstabTest(base_test.BaseTestClass):
         """
         fstab = "/proc/device-tree/firmware/android/fstab"
         if target_file_utils.Exists(fstab, self.shell):
-            asserts.assertTrue(target_file_utils.Exists(fstab + "/metadata",
-                                                        self.shell))
+            asserts.assertTrue(
+                target_file_utils.Exists(fstab + "/metadata", self.shell),
+                "No metadata found in fstab!")
         else:
             logging.info("device is not using device tree fstab")
+
 
 if __name__ == "__main__":
     test_runner.main()

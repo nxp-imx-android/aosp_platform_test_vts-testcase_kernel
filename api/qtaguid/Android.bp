@@ -17,6 +17,9 @@
 cc_test {
     name: "vts_test_binary_qtaguid_module",
     srcs: ["SocketTagUserSpace.cpp"],
+    //Use test_config for vts-core suite.
+    test_config: "vts_test_binary_qtaguid_module.xml",
+    test_suites: ["vts-core"],
     shared_libs: [
         "libutils",
         "liblog",

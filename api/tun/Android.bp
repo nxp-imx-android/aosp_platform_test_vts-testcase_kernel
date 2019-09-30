@@ -12,13 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-vts_config {
-    name: "VtsKernelTunTest",
+cc_test {
+    name: "vts_kernel_tun_test",
+    srcs: ["vts_kernel_tun_test.cpp"],
+    cflags: ["-Wall", "-Werror"],
+    shared_libs: [
+        "libbase",
+    ],
+    test_suites: ["vts-core"],
+    auto_gen_config: true,
+    require_root: true,
 }
 
-filegroup {
-    name: "vts_kernel_tun_test_srcs",
-    srcs: [
-        "vts_kernel_tun_test.cpp",
-    ]
+vts_config {
+    name: "VtsKernelTunTest",
 }

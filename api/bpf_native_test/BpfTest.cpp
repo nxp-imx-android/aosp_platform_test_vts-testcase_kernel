@@ -159,7 +159,7 @@ class BpfRaceTest : public ::testing::Test {
     // Stop the threads and clean up the program.
     stop = true;
     for (int i = 0; i < NUM_SOCKETS; i++) {
-      tds[i].join();
+      if (tds[i].joinable()) tds[i].join();
     }
     remove(TEST_PROG_PATH);
     remove(TEST_STATS_MAP_A_PATH);

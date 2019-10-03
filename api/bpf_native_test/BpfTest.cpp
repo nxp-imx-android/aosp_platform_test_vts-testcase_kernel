@@ -134,6 +134,8 @@ class BpfRaceTest : public ::testing::Test {
       remove(TEST_PROG_PATH);
     }
     std::string progSrcPath = BPF_SRC_PATH BPF_SRC_NAME;
+    // 0 != 2 means ENOENT - ie. missing bpf program.
+    ASSERT_EQ(0, access(progSrcPath.c_str(), R_OK) ? errno : 0);
     ASSERT_EQ(0, android::bpf::loadProg(progSrcPath.c_str()));
 
     EXPECT_TRUE(isOk(cookieStatsMap[0].init(TEST_STATS_MAP_A_PATH)));

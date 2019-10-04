@@ -171,8 +171,11 @@ class BpfRaceTest : public ::testing::Test {
 
   void swapAndCleanStatsMap(bool expectSynchronized, int seconds) {
     uint64_t i = 0;
-    auto start = std::clock();
-    while (((double)(std::clock() - start) / CLOCKS_PER_SEC) < seconds) {
+    auto test_start = std::chrono::system_clock::now();
+    while ((std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now() - test_start)
+                .count() /
+            1000) < seconds) {
       // Check if the vacant map is empty based on the current configuration.
       auto isEmpty = cookieStatsMap[i].isEmpty();
       EXPECT_TRUE(isOk(isEmpty));
@@ -200,7 +203,11 @@ class BpfRaceTest : public ::testing::Test {
       EXPECT_OK(cookieStatsMap[i].clear());
     }
     if (!expectSynchronized) {
-      EXPECT_GE(seconds, (double)(std::clock() - start) / CLOCKS_PER_SEC)
+      auto test_end = std::chrono::system_clock::now();
+      auto diffSec = test_end - test_start;
+      auto msec =
+          std::chrono::duration_cast<std::chrono::milliseconds>(diffSec);
+      EXPECT_GE(seconds, (double)(msec.count() / 1000.0))
           << "Race problem didn't happen before time out";
     }
   }

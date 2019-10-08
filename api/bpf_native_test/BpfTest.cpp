@@ -134,6 +134,8 @@ class BpfRaceTest : public ::testing::Test {
       remove(TEST_PROG_PATH);
     }
     std::string progSrcPath = BPF_SRC_PATH BPF_SRC_NAME;
+    // 0 != 2 means ENOENT - ie. missing bpf program.
+    ASSERT_EQ(0, access(progSrcPath.c_str(), R_OK) ? errno : 0);
     ASSERT_EQ(0, android::bpf::loadProg(progSrcPath.c_str()));
 
     EXPECT_TRUE(isOk(cookieStatsMap[0].init(TEST_STATS_MAP_A_PATH)));
@@ -159,7 +161,7 @@ class BpfRaceTest : public ::testing::Test {
     // Stop the threads and clean up the program.
     stop = true;
     for (int i = 0; i < NUM_SOCKETS; i++) {
-      tds[i].join();
+      if (tds[i].joinable()) tds[i].join();
     }
     remove(TEST_PROG_PATH);
     remove(TEST_STATS_MAP_A_PATH);
@@ -169,8 +171,11 @@ class BpfRaceTest : public ::testing::Test {
 
   void swapAndCleanStatsMap(bool expectSynchronized, int seconds) {
     uint64_t i = 0;
-    auto start = std::clock();
-    while (((double)(std::clock() - start) / CLOCKS_PER_SEC) < seconds) {
+    auto test_start = std::chrono::system_clock::now();
+    while ((std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now() - test_start)
+                .count() /
+            1000) < seconds) {
       // Check if the vacant map is empty based on the current configuration.
       auto isEmpty = cookieStatsMap[i].isEmpty();
       EXPECT_TRUE(isOk(isEmpty));
@@ -198,7 +203,11 @@ class BpfRaceTest : public ::testing::Test {
       EXPECT_OK(cookieStatsMap[i].clear());
     }
     if (!expectSynchronized) {
-      EXPECT_GE(seconds, (double)(std::clock() - start) / CLOCKS_PER_SEC)
+      auto test_end = std::chrono::system_clock::now();
+      auto diffSec = test_end - test_start;
+      auto msec =
+          std::chrono::duration_cast<std::chrono::milliseconds>(diffSec);
+      EXPECT_GE(seconds, (double)(msec.count() / 1000.0))
           << "Race problem didn't happen before time out";
     }
   }

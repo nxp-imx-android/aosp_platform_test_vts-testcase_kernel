@@ -14,16 +14,14 @@
 
 cc_test {
     name: "vts_kernel_tun_test",
-    //Use test_config for vts-core suite.
-    test_config: "vts_kernel_tun_test.xml",
-    test_suites: ["vts-core"],
-    srcs: [
-        "vts_kernel_tun_test.cpp",
-    ],
+    srcs: ["vts_kernel_tun_test.cpp"],
     cflags: ["-Wall", "-Werror"],
     shared_libs: [
         "libbase",
     ],
+    test_suites: ["vts-core"],
+    auto_gen_config: true,
+    require_root: true,
 }
 
 vts_config {

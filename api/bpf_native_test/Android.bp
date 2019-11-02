@@ -45,6 +45,8 @@ cc_defaults {
 
 bpf {
     name: "kern.o",
+    // header_libs: ["netd_bpf_progs_headers"],
+    include_dirs: ["system/netd/bpf_progs"],
     srcs: ["kern.c"],
     cflags: [
         "-Wall",

@@ -1127,8 +1127,8 @@ STABLE_TESTS = [
     ('syscalls.lseek02_64bit', True),
     ('syscalls.lseek07_32bit', True),
     ('syscalls.lseek07_64bit', True),
-    ('syscalls.lseek11_32bit', True),
-    ('syscalls.lseek11_64bit', True),
+    ('syscalls.lseek11_32bit', False), #b/145105382
+    ('syscalls.lseek11_64bit', False), #b/145105382
     ('syscalls.lstat01A_32bit', True),
     ('syscalls.lstat01A_64_32bit', True),
     ('syscalls.lstat01A_64_64bit', True),

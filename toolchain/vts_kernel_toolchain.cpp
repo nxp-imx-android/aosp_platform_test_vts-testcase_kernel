@@ -38,7 +38,8 @@ class KernelVersionTest : public ::testing::Test {
     std::getline(proc_version, version_);
   }
   bool should_run() const {
-    return arch_ == "arm64" && first_api_level_ >= __ANDROID_API_Q__;
+    return first_api_level_ >= __ANDROID_API_R__ ||
+           (arch_ == "arm64" && first_api_level_ >= __ANDROID_API_Q__);
   }
 };
 

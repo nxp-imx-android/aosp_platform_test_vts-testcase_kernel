@@ -18,16 +18,13 @@
 #include <string>
 
 #include <android-base/properties.h>
+#include <android/api-level.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/utsname.h>
 #include <unistd.h>
-
-namespace {
-const int Q_API_LEVEL = 29;
-}
 
 namespace android {
 namespace kernel {
@@ -54,7 +51,7 @@ class KernelHeadersTest : public ::testing::Test {
     else if (kernel_version_major > 4 || (kernel_version_major == 4 && kernel_version_minor >= 14))
       kver_pass = true;
 
-    return ((first_api_level_ > Q_API_LEVEL) && (kver_pass == true));
+    return ((first_api_level_ > __ANDROID_API_Q__) && (kver_pass == true));
   }
 };
 

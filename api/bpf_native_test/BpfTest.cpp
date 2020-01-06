@@ -87,7 +87,6 @@ class BpfRaceTest : public ::testing::Test {
   BpfRaceTest() {}
   BpfMap<uint64_t, stats_value> cookieStatsMap[2];
   BpfMap<uint32_t, uint32_t> configurationMap;
-  BpfProgInfo program;
   bool stop;
   std::thread tds[NUM_SOCKETS];
 

@@ -440,11 +440,15 @@ class ProcDropCaches(KernelProcFileTestBase.KernelProcFileTestBase):
     def get_path(self):
         return "/proc/sys/vm/drop_caches"
 
+    def IsReadWriteOrWriteOnly(self, permission_bits):
+        return (target_file_utils.IsReadWrite(permission_bits) or
+                target_file_utils.IsWriteOnly(permission_bits))
+
     def get_permission_checker(self):
         if self.api_level > api.PLATFORM_API_LEVEL_Q:
             return target_file_utils.IsWriteOnly
         else:
-            return target_file_utils.IsReadWrite or target_file_utils.IsWriteOnly
+            return self.IsReadWriteOrWriteOnly
 
     def test_format(self):
         return False

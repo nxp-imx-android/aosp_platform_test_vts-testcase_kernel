@@ -18,6 +18,7 @@ import math
 
 from parse import with_pattern
 from vts.testcases.kernel.api.proc import KernelProcFileTestBase
+from vts.utils.python.android import api
 from vts.utils.python.file import target_file_utils
 
 # Test for /proc/sys/kernel/*.
@@ -440,8 +441,13 @@ class ProcDropCaches(KernelProcFileTestBase.KernelProcFileTestBase):
         return "/proc/sys/vm/drop_caches"
 
     def get_permission_checker(self):
-        return target_file_utils.IsReadWrite
+        if self.api_level > api.PLATFORM_API_LEVEL_Q:
+            return target_file_utils.IsWriteOnly
+        else:
+            return target_file_utils.IsReadWrite or target_file_utils.IsWriteOnly
 
+    def test_format(self):
+        return False
 
 class ProcExtraFreeKbytes(KernelProcFileTestBase.KernelProcFileTestBase):
     '''/proc/sys/vm/extra_free_kbytes tells the VM to keep extra free memory

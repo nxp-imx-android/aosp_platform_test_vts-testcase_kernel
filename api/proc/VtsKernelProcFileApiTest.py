@@ -137,6 +137,7 @@ class VtsKernelProcFileApiTest(base_test.BaseTestClass):
         """
         asserts.skipIf(test_object in TEST_OBJECTS_64 and not self.dut.is64Bit,
                        "Skip test for 64-bit kernel.")
+        test_object.set_api_level(self.dut)
         filepath = test_object.get_path()
         asserts.skipIf(not target_file_utils.Exists(filepath, self.shell) and
                        test_object.file_optional(),

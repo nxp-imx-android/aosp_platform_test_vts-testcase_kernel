@@ -225,7 +225,7 @@ TEST_F(BpfRaceTest, testRaceWithBarrier) {
 TEST_F(BpfRaceTest, testRaceWithoutBarrier) {
   SKIP_IF_BPF_NOT_SUPPORTED;
 
-  swapAndCleanStatsMap(false, 20);
+  swapAndCleanStatsMap(false, 60);
 }
 
 }  // namespace android

@@ -16,4 +16,5 @@
 
 vts_config {
     name: "VtsKernelLinuxKselftest",
+    test_suites: ["vts-core"],
 }

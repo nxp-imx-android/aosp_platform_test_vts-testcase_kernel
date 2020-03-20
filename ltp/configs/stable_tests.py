@@ -1157,8 +1157,6 @@ STABLE_TESTS = [
     ('syscalls.memcmp01_64bit', False),
     ('syscalls.memcpy01_32bit', False),
     ('syscalls.memcpy01_64bit', False),
-    ('syscalls.memfd_create01_32bit', True),
-    ('syscalls.memfd_create01_64bit', True),
     ('syscalls.memfd_create02_32bit', True),
     ('syscalls.memfd_create02_64bit', True),
     ('syscalls.memset01_32bit', False),

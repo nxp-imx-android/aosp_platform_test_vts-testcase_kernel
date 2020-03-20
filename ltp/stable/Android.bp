@@ -16,4 +16,5 @@
 
 vts_config {
     name: "VtsKernelLtp",
+    test_suites: ["vts-core"],
 }

@@ -87,7 +87,6 @@ class BpfRaceTest : public ::testing::Test {
   BpfRaceTest() {}
   BpfMap<uint64_t, stats_value> cookieStatsMap[2];
   BpfMap<uint32_t, uint32_t> configurationMap;
-  BpfProgInfo program;
   bool stop;
   std::thread tds[NUM_SOCKETS];
 
@@ -138,9 +137,9 @@ class BpfRaceTest : public ::testing::Test {
     ASSERT_EQ(0, access(progSrcPath.c_str(), R_OK) ? errno : 0);
     ASSERT_EQ(0, android::bpf::loadProg(progSrcPath.c_str()));
 
-    EXPECT_TRUE(isOk(cookieStatsMap[0].init(TEST_STATS_MAP_A_PATH)));
-    EXPECT_TRUE(isOk(cookieStatsMap[1].init(TEST_STATS_MAP_B_PATH)));
-    EXPECT_TRUE(isOk(configurationMap.init(TEST_CONFIGURATION_MAP_PATH)));
+    EXPECT_RESULT_OK(cookieStatsMap[0].init(TEST_STATS_MAP_A_PATH));
+    EXPECT_RESULT_OK(cookieStatsMap[1].init(TEST_STATS_MAP_B_PATH));
+    EXPECT_RESULT_OK(configurationMap.init(TEST_CONFIGURATION_MAP_PATH));
     EXPECT_TRUE(cookieStatsMap[0].isValid());
     EXPECT_TRUE(cookieStatsMap[1].isValid());
     EXPECT_TRUE(configurationMap.isValid());
@@ -148,7 +147,7 @@ class BpfRaceTest : public ::testing::Test {
     // attached to the socket.
     stop = false;
     int prog_fd = bpfFdGet(TEST_PROG_PATH, 0);
-    EXPECT_OK(configurationMap.writeValue(ACTIVE_MAP_KEY, 0, BPF_ANY));
+    EXPECT_RESULT_OK(configurationMap.writeValue(ACTIVE_MAP_KEY, 0, BPF_ANY));
 
     for (int i = 0; i < NUM_SOCKETS; i++) {
       tds[i] = std::thread(workerThread, prog_fd, &stop);
@@ -178,7 +177,7 @@ class BpfRaceTest : public ::testing::Test {
             1000) < seconds) {
       // Check if the vacant map is empty based on the current configuration.
       auto isEmpty = cookieStatsMap[i].isEmpty();
-      EXPECT_TRUE(isOk(isEmpty));
+      ASSERT_RESULT_OK(isEmpty);
       if (expectSynchronized) {
         // The map should always be empty because synchronizeKernelRCU should
         // ensure that the BPF programs running on all cores have seen the write
@@ -194,13 +193,13 @@ class BpfRaceTest : public ::testing::Test {
 
       // Change the configuration and wait for rcu grace period.
       i ^= 1;
-      EXPECT_OK(configurationMap.writeValue(ACTIVE_MAP_KEY, i, BPF_ANY));
+      ASSERT_RESULT_OK(configurationMap.writeValue(ACTIVE_MAP_KEY, i, BPF_ANY));
       if (expectSynchronized) {
         EXPECT_EQ(0, synchronizeKernelRCU());
       }
 
       // Clean up the previous map after map swap.
-      EXPECT_OK(cookieStatsMap[i].clear());
+      EXPECT_RESULT_OK(cookieStatsMap[i].clear());
     }
     if (!expectSynchronized) {
       auto test_end = std::chrono::system_clock::now();
@@ -226,7 +225,7 @@ TEST_F(BpfRaceTest, testRaceWithBarrier) {
 TEST_F(BpfRaceTest, testRaceWithoutBarrier) {
   SKIP_IF_BPF_NOT_SUPPORTED;
 
-  swapAndCleanStatsMap(false, 20);
+  swapAndCleanStatsMap(false, 60);
 }
 
 }  // namespace android

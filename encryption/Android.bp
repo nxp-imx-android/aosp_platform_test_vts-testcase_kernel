@@ -1,4 +1,5 @@
-// Copyright (C) 2019 The Android Open Source Project
+//
+// Copyright (C) 2020 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,19 +12,28 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+//
 
 cc_test {
-    name: "vts_kernel_loopconfig_test",
-    srcs: ["vts_kernel_loopconfig_test.cpp"],
+    name: "vts_kernel_encryption_test",
+    srcs: [
+        "adiantum.cpp",
+        "aes_256_xts.cpp",
+        "vts_kernel_encryption.cpp",
+    ],
     cflags: [
         "-Wall",
         "-Werror",
     ],
     shared_libs: [
         "libbase",
+        "libcrypto",
+        "libcutils",
+        "libutils",
     ],
     static_libs: [
-        "libgmock",
+        "libfs_mgr",
+        "libext4_utils",
     ],
     test_suites: [
         "general-tests",
@@ -31,4 +41,8 @@ cc_test {
     ],
     require_root: true,
     auto_gen_config: true,
+}
+
+vts_config {
+    name: "VtsKernelEncryptionTest",
 }

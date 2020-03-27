@@ -17,7 +17,8 @@ cc_test {
     require_root: true,
     test_min_api_level: 30,
     srcs: [
-        "userdata_test.cpp"
+        "metadata_test.cpp",
+        "userdata_test.cpp",
     ],
     cflags: [
         "-Wall",

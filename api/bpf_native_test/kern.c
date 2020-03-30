@@ -56,4 +56,4 @@ int ingress_prog(struct __sk_buff* skb) {
   return skb->len;
 }
 
-char _license[] SEC("license") = "Apache 2.0";
+LICENSE("Apache 2.0");

@@ -19,7 +19,8 @@ cc_test {
     srcs: [
         "adiantum.cpp",
         "aes_256_xts.cpp",
-        "vts_kernel_encryption.cpp",
+        "file_based_encryption_tests.cpp",
+        "utils.cpp",
     ],
     cflags: [
         "-Wall",

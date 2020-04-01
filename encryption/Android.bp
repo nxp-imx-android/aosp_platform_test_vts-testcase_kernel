@@ -20,6 +20,7 @@ cc_test {
         "adiantum.cpp",
         "aes_256_xts.cpp",
         "file_based_encryption_tests.cpp",
+        "metadata_encryption_tests.cpp",
         "utils.cpp",
     ],
     cflags: [
@@ -33,6 +34,7 @@ cc_test {
         "libutils",
     ],
     static_libs: [
+        "libdm",
         "libfs_mgr",
         "libext4_utils",
     ],

@@ -278,9 +278,10 @@ static void AdiantumHash(const uint8_t key[kAdiantumHashKeySize],
   le128_add(result, hash1, hash2);
 }
 
-bool AdiantumEncrypt(const uint8_t key[kAdiantumKeySize],
-                     const uint8_t iv[kAdiantumIVSize], const uint8_t *src,
-                     uint8_t *dst, int nbytes) {
+bool AdiantumCipher::DoEncrypt(const uint8_t key[kAdiantumKeySize],
+                               const uint8_t iv[kAdiantumIVSize],
+                               const uint8_t *src, uint8_t *dst,
+                               int nbytes) const {
   uint8_t rbuf[kXChaChaNonceSize] = {1};
   uint8_t hash[kPoly1305HashSize];
 

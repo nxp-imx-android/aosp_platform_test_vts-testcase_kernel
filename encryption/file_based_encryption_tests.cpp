@@ -44,17 +44,13 @@
 // If it does fail, make sure to check things like the byte order of keys.
 //
 
-#include "vts_kernel_encryption.h"
-
 #include <android-base/file.h>
-#include <android-base/properties.h>
 #include <android-base/unique_fd.h>
 #include <errno.h>
 #include <ext4_utils/ext4.h>
 #include <ext4_utils/ext4_sb.h>
 #include <ext4_utils/ext4_utils.h>
 #include <fcntl.h>
-#include <fstab/fstab.h>
 #include <gtest/gtest.h>
 #include <limits.h>
 #include <linux/fiemap.h>
@@ -68,6 +64,8 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+
+#include "vts_kernel_encryption.h"
 
 #ifndef F2FS_IOCTL_MAGIC
 #define F2FS_IOCTL_MAGIC 0xf5
@@ -154,28 +152,6 @@ struct TestFileInfo {
   uint64_t inode_number;
   FscryptFileNonce nonce;
 };
-
-static std::string Errno() { return std::string(": ") + strerror(errno); }
-
-// Generates some "random" bytes.  Not secure; this is for testing only.
-static void RandomBytesForTesting(std::vector<uint8_t> &bytes) {
-  for (size_t i = 0; i < bytes.size(); i++) {
-    bytes[i] = rand();
-  }
-}
-
-static std::string BytesToHex(const std::vector<uint8_t> &bytes) {
-  std::ostringstream o;
-  for (uint8_t b : bytes) {
-    o << std::hex << std::setw(2) << std::setfill('0') << (int)b;
-  }
-  return o.str();
-}
-
-template <size_t N>
-static std::string BytesToHex(const uint8_t (&array)[N]) {
-  return BytesToHex(std::vector<uint8_t>(&array[0], &array[N]));
-}
 
 // Given a mountpoint, gets the corresponding block device and filesystem type
 // from /proc/mounts.  This block device is the one on which the filesystem is
@@ -372,9 +348,7 @@ class FileBasedEncryptionTest : public ::testing::Test {
   void SetUp() override;
   void TearDown() override;
   void RemoveTestDirectory();
-  bool ShouldSkipDueToNoV2Support();
   bool FindFilesystemTypeAndUuid();
-  bool FindRawPartition();
   bool SetEncryptionPolicy(int contents_mode, int filenames_mode, int flags,
                            bool required);
   bool GenerateTestFile(TestFileInfo *info);
@@ -385,12 +359,12 @@ class FileBasedEncryptionTest : public ::testing::Test {
   bool DerivePerFileEncryptionKey(const FscryptFileNonce &nonce,
                                   std::vector<uint8_t> &enc_key);
   void VerifyCiphertext(const std::vector<uint8_t> &enc_key,
-                        const FscryptIV &starting_iv, int encryption_mode,
+                        const FscryptIV &starting_iv, const Cipher &cipher,
                         const TestFileInfo &file_info);
   std::vector<uint8_t> master_key_;
   struct fscrypt_key_specifier master_key_specifier_;
-  bool setup_complete_;
-  int first_api_level_;
+  bool skip_test_ = false;
+  bool key_added_ = false;
   std::string raw_partition_;
   std::string fs_type_;
   FilesystemUuid fs_uuid_;
@@ -398,25 +372,29 @@ class FileBasedEncryptionTest : public ::testing::Test {
 
 // Test setup procedure.  Creates a test directory kTestDir, generates and adds
 // an encryption key to kTestMountpoint, and does other preparations.
-// setup_complete_ is set to true if the setup completed successfully.
+// skip_test_ is set to true if the test should be skipped.
 void FileBasedEncryptionTest::SetUp() {
-  setup_complete_ = false;
-
-  first_api_level_ =
-      android::base::GetIntProperty("ro.product.first_api_level", 0);
-  if (first_api_level_ == 0) {
-    FAIL() << "ro.product.first_api_level is unset";
+  if (!IsFscryptV2Supported()) {
+    int first_api_level;
+    ASSERT_TRUE(GetFirstApiLevel(&first_api_level));
+    // Devices launching with R or higher must support fscrypt v2.
+    ASSERT_LE(first_api_level, __ANDROID_API_Q__);
+    GTEST_LOG_(INFO) << "Skipping test because fscrypt v2 is unsupported";
+    skip_test_ = true;
+    return;
   }
 
-  if (!IsFscryptV2Supported()) return;
-
-  if (!FindFilesystemTypeAndUuid()) {
-    FAIL() << "Failed to find filesystem type and/or UUID";
+  // TODO(ebiggers): remove this check once kernel patches have landed in AOSP
+  if (!IsGetFscryptNonceIoctlSupported()) {
+    GTEST_LOG_(INFO)
+        << "Skipping test because FS_IOC_GET_ENCRYPTION_NONCE is unsupported";
+    skip_test_ = true;
+    return;
   }
 
-  if (!FindRawPartition()) {
-    FAIL() << "Failed to find raw partition";
-  }
+  ASSERT_TRUE(FindFilesystemTypeAndUuid());
+
+  ASSERT_TRUE(FindRawPartition(kTestMountpoint, &raw_partition_));
 
   RemoveTestDirectory();
   if (mkdir(kTestDir, 0700) != 0) {
@@ -426,8 +404,7 @@ void FileBasedEncryptionTest::SetUp() {
   // Generate an fscrypt master key and add it to kTestMountpoint.
   // This gives us back the key identifier to use in the encryption policy.
 
-  master_key_.resize(kFscryptMasterKeySize);
-  RandomBytesForTesting(master_key_);
+  master_key_ = GenerateTestKey(kFscryptMasterKeySize);
 
   size_t allocsize = sizeof(struct fscrypt_add_key_arg) + master_key_.size();
   std::unique_ptr<struct fscrypt_add_key_arg> arg(
@@ -451,14 +428,14 @@ void FileBasedEncryptionTest::SetUp() {
   master_key_specifier_ = arg->key_spec;
   GTEST_LOG_(INFO) << "Master key identifier is "
                    << BytesToHex(master_key_specifier_.u.identifier);
-  setup_complete_ = true;
+  key_added_ = true;
 }
 
 void FileBasedEncryptionTest::TearDown() {
   RemoveTestDirectory();
 
   // Remove the test key from kTestMountpoint.
-  if (setup_complete_) {
+  if (key_added_) {
     android::base::unique_fd mntfd(
         open(kTestMountpoint, O_RDONLY | O_DIRECTORY | O_CLOEXEC));
     if (mntfd < 0) {
@@ -482,43 +459,6 @@ void FileBasedEncryptionTest::RemoveTestDirectory() {
   if (rmdir(kTestDir) != 0 && errno != ENOENT) {
     FAIL() << "Failed to remove directory " << kTestDir << Errno();
   }
-}
-
-bool FileBasedEncryptionTest::ShouldSkipDueToNoV2Support() {
-  if (!setup_complete_) {
-    EXPECT_TRUE(!IsFscryptV2Supported());
-    EXPECT_LE(first_api_level_, __ANDROID_API_Q__);
-    return true;
-  }
-
-  // TODO(ebiggers): remove this check once kernel patches have landed in AOSP
-  if (!IsGetFscryptNonceIoctlSupported()) {
-    GTEST_LOG_(INFO)
-        << "Skipping test because FS_IOC_GET_ENCRYPTION_NONCE is unsupported";
-    return true;
-  }
-
-  return false;
-}
-
-// Finds the raw partition of the filesystem mounted on kTestMountpoint.  This
-// means the partition listed in the fstab, which in the case of metadata
-// encryption (dm-default-key) differs from the /proc/mounts block device.
-bool FileBasedEncryptionTest::FindRawPartition() {
-  android::fs_mgr::Fstab fstab;
-  if (!android::fs_mgr::ReadDefaultFstab(&fstab)) {
-    ADD_FAILURE() << "Failed to read default fstab";
-    return false;
-  }
-  const fs_mgr::FstabEntry *entry =
-      GetEntryForMountPoint(&fstab, kTestMountpoint);
-  if (entry == nullptr) {
-    ADD_FAILURE() << "No mountpoint entry for " << kTestMountpoint;
-    return false;
-  }
-  raw_partition_ = entry->blk_device;
-  GTEST_LOG_(INFO) << "Raw partition is " << raw_partition_;
-  return true;
 }
 
 // Finds the type and UUID of the filesystem mounted on kTestMountpoint.
@@ -730,10 +670,10 @@ bool FileBasedEncryptionTest::DerivePerFileEncryptionKey(
 
 void FileBasedEncryptionTest::VerifyCiphertext(
     const std::vector<uint8_t> &enc_key, const FscryptIV &starting_iv,
-    int encryption_mode, const TestFileInfo &file_info) {
+    const Cipher &cipher, const TestFileInfo &file_info) {
   const std::vector<uint8_t> &plaintext = file_info.plaintext;
 
-  GTEST_LOG_(INFO) << "Computing the expected ciphertext";
+  GTEST_LOG_(INFO) << "Verifying correctness of encrypted data";
   FscryptIV iv = starting_iv;
 
   std::vector<uint8_t> computed_ciphertext(plaintext.size());
@@ -743,37 +683,22 @@ void FileBasedEncryptionTest::VerifyCiphertext(
     int block_size =
         std::min<size_t>(kFilesystemBlockSize, plaintext.size() - i);
 
-    switch (encryption_mode) {
-      case FSCRYPT_MODE_AES_256_XTS:
-        ASSERT_EQ(enc_key.size(), kAes256XtsKeySize);
-        if (!Aes256XtsEncrypt(enc_key.data(), iv.bytes, &plaintext[i],
-                              &computed_ciphertext[i], block_size)) {
-          FAIL() << "AES-256-XTS encryption failed";
-        }
-        break;
-      case FSCRYPT_MODE_ADIANTUM:
-        ASSERT_EQ(enc_key.size(), kAdiantumKeySize);
-        if (!AdiantumEncrypt(enc_key.data(), iv.bytes, &plaintext[i],
-                             &computed_ciphertext[i], block_size)) {
-          FAIL() << "Adiantum encryption failed";
-        }
-        break;
-      default:
-        FAIL() << "Unimplemented encryption mode " << encryption_mode;
-        break;
-    }
+    ASSERT_GE(sizeof(iv.bytes), cipher.ivsize());
+    ASSERT_TRUE(cipher.Encrypt(enc_key, iv.bytes, &plaintext[i],
+                               &computed_ciphertext[i], block_size));
+
     // Update the IV by incrementing the file logical block number.
     iv.lblk_num = cpu_to_le32(le32_to_cpu(iv.lblk_num) + 1);
-    EXPECT_NE(le32_to_cpu(iv.lblk_num), 0);
+    ASSERT_NE(le32_to_cpu(iv.lblk_num), 0);
   }
 
-  EXPECT_EQ(file_info.actual_ciphertext, computed_ciphertext);
+  ASSERT_EQ(file_info.actual_ciphertext, computed_ciphertext);
 }
 
 // Tests a policy matching fileencryption=aes-256-xts:aes-256-cts:v2
 // (or simply fileencryption=aes-256-xts on devices launched with R or higher)
 TEST_F(FileBasedEncryptionTest, TestAesV2Policy) {
-  if (ShouldSkipDueToNoV2Support()) return;
+  if (skip_test_) return;
 
   if (!SetEncryptionPolicy(FSCRYPT_MODE_AES_256_XTS, FSCRYPT_MODE_AES_256_CTS,
                            0, true))
@@ -788,7 +713,7 @@ TEST_F(FileBasedEncryptionTest, TestAesV2Policy) {
   FscryptIV iv;
   memset(&iv, 0, sizeof(iv));
 
-  VerifyCiphertext(enc_key, iv, FSCRYPT_MODE_AES_256_XTS, file_info);
+  VerifyCiphertext(enc_key, iv, Aes256XtsCipher(), file_info);
 }
 
 // Tests a policy matching
@@ -796,7 +721,7 @@ TEST_F(FileBasedEncryptionTest, TestAesV2Policy) {
 // (or simply fileencryption=aes-256-xts:aes-256-cts:inlinecrypt_optimized on
 // devices launched with R or higher)
 TEST_F(FileBasedEncryptionTest, TestAesV2InlineCryptOptimizedPolicy) {
-  if (ShouldSkipDueToNoV2Support()) return;
+  if (skip_test_) return;
 
   // On ext4, FSCRYPT_POLICY_FLAG_IV_INO_LBLK_64 is only supported when the
   // filesystem has EXT4_FEATURE_COMPAT_STABLE_INODES, which only happens when
@@ -817,16 +742,16 @@ TEST_F(FileBasedEncryptionTest, TestAesV2InlineCryptOptimizedPolicy) {
 
   FscryptIV iv;
   memset(&iv, 0, sizeof(iv));
-  EXPECT_LE(file_info.inode_number, UINT32_MAX);
+  ASSERT_LE(file_info.inode_number, UINT32_MAX);
   iv.inode_number = cpu_to_le32(file_info.inode_number);
 
-  VerifyCiphertext(enc_key, iv, FSCRYPT_MODE_AES_256_XTS, file_info);
+  VerifyCiphertext(enc_key, iv, Aes256XtsCipher(), file_info);
 }
 
 // Tests a policy matching fileencryption=adiantum:adiantum:v2 (or simply
 // fileencryption=adiantum on devices launched with R or higher)
 TEST_F(FileBasedEncryptionTest, TestAdiantumV2Policy) {
-  if (ShouldSkipDueToNoV2Support()) return;
+  if (skip_test_) return;
 
   // Adiantum support isn't required (since CONFIG_CRYPTO_ADIANTUM can be unset
   // in the kernel config), so we may skip the test here.
@@ -846,7 +771,7 @@ TEST_F(FileBasedEncryptionTest, TestAdiantumV2Policy) {
   memset(&iv, 0, sizeof(iv));
   memcpy(iv.file_nonce, file_info.nonce.bytes, kFscryptFileNonceSize);
 
-  VerifyCiphertext(enc_key, iv, FSCRYPT_MODE_ADIANTUM, file_info);
+  VerifyCiphertext(enc_key, iv, AdiantumCipher(), file_info);
 }
 
 }  // namespace kernel

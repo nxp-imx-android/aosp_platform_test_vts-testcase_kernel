@@ -49,9 +49,10 @@ static void DoXtsMasking(uint8_t *data, int num_blocks,
   }
 }
 
-bool Aes256XtsEncrypt(const uint8_t key[kAes256XtsKeySize],
-                      const uint8_t iv[kAesBlockSize], const uint8_t *src,
-                      uint8_t *dst, int nbytes) {
+bool Aes256XtsCipher::DoEncrypt(const uint8_t key[kAes256XtsKeySize],
+                                const uint8_t iv[kAesBlockSize],
+                                const uint8_t *src, uint8_t *dst,
+                                int nbytes) const {
   std::unique_ptr<EVP_CIPHER_CTX, void (*)(EVP_CIPHER_CTX *)> ctx(
       EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
   int outl;

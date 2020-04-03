@@ -41,6 +41,7 @@ cc_test {
     name: "vts_core_test_binary_qtaguid_module",
     defaults: ["vts_test_binary_qtaguid_defaults"],
     auto_gen_config: true,
+    require_root: true,
     test_suites: ["vts-core"],
 }
 

@@ -27,7 +27,7 @@ cc_test {
     ],
     test_suites: [
         "device-tests",
-        "vts-core"
+        "vts"
     ],
     require_root: true,
     auto_gen_config: true,

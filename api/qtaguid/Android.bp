@@ -42,7 +42,7 @@ cc_test {
     defaults: ["vts_test_binary_qtaguid_defaults"],
     auto_gen_config: true,
     require_root: true,
-    test_suites: ["vts-core"],
+    test_suites: ["vts"],
 }
 
 vts_config {

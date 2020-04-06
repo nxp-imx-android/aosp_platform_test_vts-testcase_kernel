@@ -224,15 +224,6 @@ static bool IsFscryptV2Supported() {
   }
 }
 
-// TODO(ebiggers): remove this check once kernel patches have landed in AOSP
-static bool IsGetFscryptNonceIoctlSupported() {
-  android::base::unique_fd fd(
-      open(kTestMountpoint, O_RDONLY | O_DIRECTORY | O_CLOEXEC));
-  errno = 0;
-  ioctl(fd, FS_IOC_GET_ENCRYPTION_NONCE, nullptr);
-  return errno != ENOTTY;
-}
-
 // Helper class to pin / unpin a file on f2fs, to prevent f2fs from moving the
 // file's blocks while the test is accessing them via the underlying device.
 //
@@ -380,14 +371,6 @@ void FileBasedEncryptionTest::SetUp() {
     // Devices launching with R or higher must support fscrypt v2.
     ASSERT_LE(first_api_level, __ANDROID_API_Q__);
     GTEST_LOG_(INFO) << "Skipping test because fscrypt v2 is unsupported";
-    skip_test_ = true;
-    return;
-  }
-
-  // TODO(ebiggers): remove this check once kernel patches have landed in AOSP
-  if (!IsGetFscryptNonceIoctlSupported()) {
-    GTEST_LOG_(INFO)
-        << "Skipping test because FS_IOC_GET_ENCRYPTION_NONCE is unsupported";
     skip_test_ = true;
     return;
   }

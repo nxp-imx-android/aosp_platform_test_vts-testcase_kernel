@@ -60,7 +60,7 @@ cc_test {
     test_config: "bpf_module_test.xml",
     test_suites: [
         "device-tests",
-        "vts-core",
+        "vts",
     ],
 }
 

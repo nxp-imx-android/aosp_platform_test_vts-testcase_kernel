@@ -21,7 +21,6 @@
         <option name="push" value="kern.o->/data/local/tmp/32/kern.o" />
         <option name="push" value="kern.o->/data/local/tmp/64/kern.o" />
     </target_preparer>
-    <option name="test-suite-tag" value="vts-core" />
     <test class="com.android.tradefed.testtype.GTest" >
         <option name="native-test-device-path" value="/data/local/tmp" />
         <option name="module-name" value="bpf_module_test" />

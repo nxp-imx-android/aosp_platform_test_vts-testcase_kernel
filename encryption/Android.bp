@@ -19,7 +19,9 @@ cc_test {
     srcs: [
         "adiantum.cpp",
         "aes_256_xts.cpp",
-        "vts_kernel_encryption.cpp",
+        "file_based_encryption_tests.cpp",
+        "metadata_encryption_tests.cpp",
+        "utils.cpp",
     ],
     cflags: [
         "-Wall",
@@ -32,12 +34,13 @@ cc_test {
         "libutils",
     ],
     static_libs: [
+        "libdm",
         "libfs_mgr",
         "libext4_utils",
     ],
     test_suites: [
         "general-tests",
-        "vts-core",
+        "vts",
     ],
     require_root: true,
     auto_gen_config: true,

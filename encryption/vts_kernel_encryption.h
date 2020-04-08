@@ -76,5 +76,7 @@ bool GetFirstApiLevel(int *first_api_level);
 bool FindRawPartition(const std::string &mountpoint,
                       std::string *raw_partition);
 
+bool VerifyDataRandomness(const std::vector<uint8_t> &bytes);
+
 }  // namespace kernel
 }  // namespace android

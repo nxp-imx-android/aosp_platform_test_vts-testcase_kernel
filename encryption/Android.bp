@@ -24,6 +24,7 @@ cc_test {
         "utils.cpp",
     ],
     cflags: [
+        "-D_FILE_OFFSET_BITS=64",
         "-Wall",
         "-Werror",
     ],

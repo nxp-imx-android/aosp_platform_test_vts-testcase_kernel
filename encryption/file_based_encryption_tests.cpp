@@ -15,11 +15,14 @@
  */
 
 //
-// Test that file contents encryption is producing the correct ciphertext
-// on-disk.  This is useful for verifying that vendors' inline encryption
-// hardware is working correctly, for example.
+// Test that file contents encryption is working, via:
 //
-// This test checks fscrypt policies equivalent to the following fstab settings:
+// - Correctness tests.  These test the standard FBE settings supported by
+//   Android R and higher.
+//
+// - Randomness test.  This runs on all devices that use FBE, even old ones.
+//
+// The correctness tests cover the following settings:
 //
 //    fileencryption=aes-256-xts:aes-256-cts:v2
 //    fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized
@@ -31,20 +34,21 @@
 //    fileencryption=aes-256-xts:aes-256-cts:inlinecrypt_optimized
 //    fileencryption=adiantum
 //
-// This test doesn't currently check which one of those settings, if any, the
-// device is actually using; it just tries to test everything it can.
+// The tests don't check which one of those settings, if any, the device is
+// actually using; they just try to test everything they can.
 // "fileencryption=aes-256-xts" is guaranteed to be available if the kernel
 // supports any "fscrypt v2" features at all.  The others may not be available,
-// so this test takes that into account and skips testing them when unavailable.
+// so the tests take that into account and skip testing them when unavailable.
 //
-// This test doesn't currently test hardware-wrapped keys ("wrappedkey_v0").
+// Hardware-wrapped keys ("wrappedkey_v0") aren't tested yet.
 //
-// This test should never fail.  In particular, vendors must not break any
-// standard fscrypt functionality, regardless of what the device actually uses.
-// If it does fail, make sure to check things like the byte order of keys.
+// None of these tests should ever fail.  In particular, vendors must not break
+// any standard FBE settings, regardless of what the device actually uses.  If
+// any test fails, make sure to check things like the byte order of keys.
 //
 
 #include <android-base/file.h>
+#include <android-base/properties.h>
 #include <android-base/unique_fd.h>
 #include <errno.h>
 #include <ext4_utils/ext4.h>
@@ -80,13 +84,6 @@
 
 namespace android {
 namespace kernel {
-
-// Location of the test directory and file.  Since it's not possible to override
-// an existing encryption policy, in order for this test to set its own
-// encryption policy the parent directory must be unencrypted.
-constexpr const char *kTestMountpoint = "/data";
-constexpr const char *kTestDir = "/data/unencrypted/vts-test-dir";
-constexpr const char *kTestFile = "/data/unencrypted/vts-test-dir/file";
 
 // Assumed size of filesystem blocks, in bytes
 constexpr int kFilesystemBlockSize = 4096;
@@ -171,7 +168,7 @@ static bool GetFsBlockDeviceAndType(const std::string &mountpoint,
     if (mnt->mnt_dir == mountpoint) {
       *fs_blk_device = mnt->mnt_fsname;
       *fs_type = mnt->mnt_type;
-      GTEST_LOG_(INFO) << kTestMountpoint << " is " << *fs_blk_device
+      GTEST_LOG_(INFO) << mountpoint << " is " << *fs_blk_device
                        << " mounted with type " << *fs_type;
       return true;
     }
@@ -195,18 +192,18 @@ static bool GetFsBlockDeviceAndType(const std::string &mountpoint,
 // The easiest way to do this is to just execute the ioctl with a NULL argument.
 // If available it will fail with EFAULT; otherwise it will fail with ENOTTY.
 //
-static bool IsFscryptV2Supported() {
+static bool IsFscryptV2Supported(const std::string &mountpoint) {
   android::base::unique_fd fd(
-      open(kTestMountpoint, O_RDONLY | O_DIRECTORY | O_CLOEXEC));
+      open(mountpoint.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC));
   if (fd < 0) {
-    ADD_FAILURE() << "Failed to open " << kTestMountpoint << Errno();
+    ADD_FAILURE() << "Failed to open " << mountpoint << Errno();
     return false;
   }
 
   if (ioctl(fd, FS_IOC_ADD_ENCRYPTION_KEY, nullptr) == 0) {
     ADD_FAILURE()
         << "FS_IOC_ADD_ENCRYPTION_KEY(nullptr) unexpectedly succeeded on "
-        << kTestMountpoint;
+        << mountpoint;
     return false;
   }
   switch (errno) {
@@ -214,12 +211,12 @@ static bool IsFscryptV2Supported() {
       return true;
     case ENOTTY:
       GTEST_LOG_(INFO) << "No support for FS_IOC_ADD_ENCRYPTION_KEY on "
-                       << kTestMountpoint;
+                       << mountpoint;
       return false;
     default:
       ADD_FAILURE()
           << "Unexpected error from FS_IOC_ADD_ENCRYPTION_KEY(nullptr) on "
-          << kTestMountpoint << Errno();
+          << mountpoint << Errno();
       return false;
   }
 }
@@ -334,8 +331,43 @@ static bool ReadRawDataOfFile(int fd, const std::string &blk_device,
   return true;
 }
 
-class FileBasedEncryptionTest : public ::testing::Test {
+// Writes |plaintext| to a file |path| located on the block device |blk_device|.
+// Returns in |ciphertext| the file's raw ciphertext read from |blk_device|.
+static bool WriteTestFile(const std::vector<uint8_t> &plaintext,
+                          const std::string &path,
+                          const std::string &blk_device,
+                          std::vector<uint8_t> *ciphertext) {
+  GTEST_LOG_(INFO) << "Creating test file " << path << " containing "
+                   << plaintext.size() << " bytes of data";
+  android::base::unique_fd fd(
+      open(path.c_str(), O_WRONLY | O_CREAT | O_CLOEXEC, 0600));
+  if (fd < 0) {
+    ADD_FAILURE() << "Failed to create " << path << Errno();
+    return false;
+  }
+  if (!android::base::WriteFully(fd, plaintext.data(), plaintext.size())) {
+    ADD_FAILURE() << "Error writing to " << path << Errno();
+    return false;
+  }
+
+  GTEST_LOG_(INFO) << "Reading the raw ciphertext of " << path << " from disk";
+  if (!ReadRawDataOfFile(fd, blk_device, plaintext.size(), ciphertext)) {
+    ADD_FAILURE() << "Failed to read the raw ciphertext of " << path;
+    return false;
+  }
+  return true;
+}
+
+class FBEPolicyTest : public ::testing::Test {
  protected:
+  // Location of the test directory and file.  Since it's not possible to
+  // override an existing encryption policy, in order for these tests to set
+  // their own encryption policy the parent directory must be unencrypted.
+  static constexpr const char *kTestMountpoint = "/data";
+  static constexpr const char *kTestDir = "/data/unencrypted/vts-test-dir";
+  static constexpr const char *kTestFile =
+      "/data/unencrypted/vts-test-dir/file";
+
   void SetUp() override;
   void TearDown() override;
   void RemoveTestDirectory();
@@ -364,8 +396,8 @@ class FileBasedEncryptionTest : public ::testing::Test {
 // Test setup procedure.  Creates a test directory kTestDir, generates and adds
 // an encryption key to kTestMountpoint, and does other preparations.
 // skip_test_ is set to true if the test should be skipped.
-void FileBasedEncryptionTest::SetUp() {
-  if (!IsFscryptV2Supported()) {
+void FBEPolicyTest::SetUp() {
+  if (!IsFscryptV2Supported(kTestMountpoint)) {
     int first_api_level;
     ASSERT_TRUE(GetFirstApiLevel(&first_api_level));
     // Devices launching with R or higher must support fscrypt v2.
@@ -414,7 +446,7 @@ void FileBasedEncryptionTest::SetUp() {
   key_added_ = true;
 }
 
-void FileBasedEncryptionTest::TearDown() {
+void FBEPolicyTest::TearDown() {
   RemoveTestDirectory();
 
   // Remove the test key from kTestMountpoint.
@@ -435,7 +467,7 @@ void FileBasedEncryptionTest::TearDown() {
   }
 }
 
-void FileBasedEncryptionTest::RemoveTestDirectory() {
+void FBEPolicyTest::RemoveTestDirectory() {
   if (unlink(kTestFile) != 0 && errno != ENOENT && errno != ENOPKG) {
     FAIL() << "Failed to remove file " << kTestFile << Errno();
   }
@@ -448,7 +480,7 @@ void FileBasedEncryptionTest::RemoveTestDirectory() {
 //
 // Unfortunately there's no kernel API to get the UUID; instead we have to read
 // it from the filesystem superblock.
-bool FileBasedEncryptionTest::FindFilesystemTypeAndUuid() {
+bool FBEPolicyTest::FindFilesystemTypeAndUuid() {
   std::string fs_blk_device;
   if (!GetFsBlockDeviceAndType(kTestMountpoint, &fs_blk_device, &fs_type_)) {
     ADD_FAILURE() << "Failed to find filesystem block device and type";
@@ -508,9 +540,8 @@ bool FileBasedEncryptionTest::FindFilesystemTypeAndUuid() {
 // Sets a v2 encryption policy on the test directory.  The policy will use the
 // test key and the specified encryption modes and flags.  If required=false,
 // then a failure won't be added if the kernel doesn't support the policy.
-bool FileBasedEncryptionTest::SetEncryptionPolicy(int contents_mode,
-                                                  int filenames_mode, int flags,
-                                                  bool required) {
+bool FBEPolicyTest::SetEncryptionPolicy(int contents_mode, int filenames_mode,
+                                        int flags, bool required) {
   struct fscrypt_policy_v2 policy;
   memset(&policy, 0, sizeof(policy));
   policy.version = FSCRYPT_POLICY_V2;
@@ -562,24 +593,17 @@ bool FileBasedEncryptionTest::SetEncryptionPolicy(int contents_mode,
 // Generates some test data, writes it to a file in the test directory, and
 // returns in |info| the file's plaintext, the file's raw ciphertext read from
 // disk, and other information about the file.
-bool FileBasedEncryptionTest::GenerateTestFile(TestFileInfo *info) {
-  // Generate the test data.
+bool FBEPolicyTest::GenerateTestFile(TestFileInfo *info) {
   info->plaintext.resize(kTestFileBytes);
   RandomBytesForTesting(info->plaintext);
 
-  // Write the test data to the file.
-  GTEST_LOG_(INFO) << "Creating test file " << kTestFile << " containing "
-                   << kTestFileBytes << " bytes of data (" << kTestFileBlocks
-                   << " blocks)";
-  android::base::unique_fd fd(
-      open(kTestFile, O_WRONLY | O_CREAT | O_CLOEXEC, 0600));
-  if (fd < 0) {
-    ADD_FAILURE() << "Failed to create " << kTestFile << Errno();
+  if (!WriteTestFile(info->plaintext, kTestFile, raw_partition_,
+                     &info->actual_ciphertext))
     return false;
-  }
-  if (!android::base::WriteFully(fd, info->plaintext.data(),
-                                 info->plaintext.size())) {
-    ADD_FAILURE() << "Error writing to " << kTestFile << Errno();
+
+  android::base::unique_fd fd(open(kTestFile, O_RDONLY | O_CLOEXEC));
+  if (fd < 0) {
+    ADD_FAILURE() << "Failed to open " << kTestFile << Errno();
     return false;
   }
 
@@ -599,14 +623,6 @@ bool FileBasedEncryptionTest::GenerateTestFile(TestFileInfo *info) {
     return false;
   }
   GTEST_LOG_(INFO) << "File nonce: " << BytesToHex(info->nonce.bytes);
-
-  // Read the file's raw ciphertext.
-  GTEST_LOG_(INFO) << "Reading the raw ciphertext from disk";
-  if (!ReadRawDataOfFile(fd, raw_partition_, kTestFileBytes,
-                         &info->actual_ciphertext)) {
-    ADD_FAILURE() << "Failed to read the raw ciphertext";
-    return false;
-  }
   return true;
 }
 
@@ -615,8 +631,8 @@ static std::vector<uint8_t> InitHkdfInfo(FscryptHkdfContext context) {
       'f', 's', 'c', 'r', 'y', 'p', 't', '\0', static_cast<uint8_t>(context)};
 }
 
-bool FileBasedEncryptionTest::DeriveEncryptionKey(
-    const std::vector<uint8_t> &hkdf_info, std::vector<uint8_t> &out) {
+bool FBEPolicyTest::DeriveEncryptionKey(const std::vector<uint8_t> &hkdf_info,
+                                        std::vector<uint8_t> &out) {
   if (HKDF(out.data(), out.size(), EVP_sha512(), master_key_.data(),
            master_key_.size(), nullptr, 0, hkdf_info.data(),
            hkdf_info.size()) != 1) {
@@ -630,8 +646,9 @@ bool FileBasedEncryptionTest::DeriveEncryptionKey(
 
 // Derives a per-mode encryption key from the master key, |mode|, |context|, and
 // (if needed for the context) the filesystem UUID.
-bool FileBasedEncryptionTest::DerivePerModeEncryptionKey(
-    int mode, FscryptHkdfContext context, std::vector<uint8_t> &enc_key) {
+bool FBEPolicyTest::DerivePerModeEncryptionKey(int mode,
+                                               FscryptHkdfContext context,
+                                               std::vector<uint8_t> &enc_key) {
   std::vector<uint8_t> hkdf_info = InitHkdfInfo(context);
 
   hkdf_info.push_back(mode);
@@ -642,8 +659,8 @@ bool FileBasedEncryptionTest::DerivePerModeEncryptionKey(
 }
 
 // Derives a per-file encryption key from the master key and |nonce|.
-bool FileBasedEncryptionTest::DerivePerFileEncryptionKey(
-    const FscryptFileNonce &nonce, std::vector<uint8_t> &enc_key) {
+bool FBEPolicyTest::DerivePerFileEncryptionKey(const FscryptFileNonce &nonce,
+                                               std::vector<uint8_t> &enc_key) {
   std::vector<uint8_t> hkdf_info = InitHkdfInfo(HKDF_CONTEXT_PER_FILE_ENC_KEY);
 
   hkdf_info.insert(hkdf_info.end(), nonce.bytes, std::end(nonce.bytes));
@@ -651,9 +668,10 @@ bool FileBasedEncryptionTest::DerivePerFileEncryptionKey(
   return DeriveEncryptionKey(hkdf_info, enc_key);
 }
 
-void FileBasedEncryptionTest::VerifyCiphertext(
-    const std::vector<uint8_t> &enc_key, const FscryptIV &starting_iv,
-    const Cipher &cipher, const TestFileInfo &file_info) {
+void FBEPolicyTest::VerifyCiphertext(const std::vector<uint8_t> &enc_key,
+                                     const FscryptIV &starting_iv,
+                                     const Cipher &cipher,
+                                     const TestFileInfo &file_info) {
   const std::vector<uint8_t> &plaintext = file_info.plaintext;
 
   GTEST_LOG_(INFO) << "Verifying correctness of encrypted data";
@@ -680,7 +698,7 @@ void FileBasedEncryptionTest::VerifyCiphertext(
 
 // Tests a policy matching fileencryption=aes-256-xts:aes-256-cts:v2
 // (or simply fileencryption=aes-256-xts on devices launched with R or higher)
-TEST_F(FileBasedEncryptionTest, TestAesV2Policy) {
+TEST_F(FBEPolicyTest, TestAesV2Policy) {
   if (skip_test_) return;
 
   if (!SetEncryptionPolicy(FSCRYPT_MODE_AES_256_XTS, FSCRYPT_MODE_AES_256_CTS,
@@ -688,10 +706,10 @@ TEST_F(FileBasedEncryptionTest, TestAesV2Policy) {
     return;
 
   TestFileInfo file_info;
-  if (!GenerateTestFile(&file_info)) return;
+  ASSERT_TRUE(GenerateTestFile(&file_info));
 
   std::vector<uint8_t> enc_key(kAes256XtsKeySize);
-  if (!DerivePerFileEncryptionKey(file_info.nonce, enc_key)) return;
+  ASSERT_TRUE(DerivePerFileEncryptionKey(file_info.nonce, enc_key));
 
   FscryptIV iv;
   memset(&iv, 0, sizeof(iv));
@@ -703,7 +721,7 @@ TEST_F(FileBasedEncryptionTest, TestAesV2Policy) {
 // fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized
 // (or simply fileencryption=aes-256-xts:aes-256-cts:inlinecrypt_optimized on
 // devices launched with R or higher)
-TEST_F(FileBasedEncryptionTest, TestAesV2InlineCryptOptimizedPolicy) {
+TEST_F(FBEPolicyTest, TestAesV2InlineCryptOptimizedPolicy) {
   if (skip_test_) return;
 
   // On ext4, FSCRYPT_POLICY_FLAG_IV_INO_LBLK_64 is only supported when the
@@ -716,12 +734,11 @@ TEST_F(FileBasedEncryptionTest, TestAesV2InlineCryptOptimizedPolicy) {
     return;
 
   TestFileInfo file_info;
-  if (!GenerateTestFile(&file_info)) return;
+  ASSERT_TRUE(GenerateTestFile(&file_info));
 
   std::vector<uint8_t> enc_key(kAes256XtsKeySize);
-  if (!DerivePerModeEncryptionKey(FSCRYPT_MODE_AES_256_XTS,
-                                  HKDF_CONTEXT_IV_INO_LBLK_64_KEY, enc_key))
-    return;
+  ASSERT_TRUE(DerivePerModeEncryptionKey(
+      FSCRYPT_MODE_AES_256_XTS, HKDF_CONTEXT_IV_INO_LBLK_64_KEY, enc_key));
 
   FscryptIV iv;
   memset(&iv, 0, sizeof(iv));
@@ -733,7 +750,7 @@ TEST_F(FileBasedEncryptionTest, TestAesV2InlineCryptOptimizedPolicy) {
 
 // Tests a policy matching fileencryption=adiantum:adiantum:v2 (or simply
 // fileencryption=adiantum on devices launched with R or higher)
-TEST_F(FileBasedEncryptionTest, TestAdiantumV2Policy) {
+TEST_F(FBEPolicyTest, TestAdiantumV2Policy) {
   if (skip_test_) return;
 
   // Adiantum support isn't required (since CONFIG_CRYPTO_ADIANTUM can be unset
@@ -743,18 +760,50 @@ TEST_F(FileBasedEncryptionTest, TestAdiantumV2Policy) {
     return;
 
   TestFileInfo file_info;
-  if (!GenerateTestFile(&file_info)) return;
+  ASSERT_TRUE(GenerateTestFile(&file_info));
 
   std::vector<uint8_t> enc_key(kAdiantumKeySize);
-  if (!DerivePerModeEncryptionKey(FSCRYPT_MODE_ADIANTUM,
-                                  HKDF_CONTEXT_DIRECT_KEY, enc_key))
-    return;
+  ASSERT_TRUE(DerivePerModeEncryptionKey(FSCRYPT_MODE_ADIANTUM,
+                                         HKDF_CONTEXT_DIRECT_KEY, enc_key));
 
   FscryptIV iv;
   memset(&iv, 0, sizeof(iv));
   memcpy(iv.file_nonce, file_info.nonce.bytes, kFscryptFileNonceSize);
 
   VerifyCiphertext(enc_key, iv, AdiantumCipher(), file_info);
+}
+
+// Tests that if the device uses FBE, then the ciphertext for file contents in
+// encrypted directories seems to be random.
+//
+// This isn't as strong a test as the correctness tests, but it's useful because
+// it applies regardless of the encryption format and key.  Thus it runs even on
+// old devices, including ones that used a vendor-specific encryption format.
+TEST(FBETest, TestFileContentsRandomness) {
+  constexpr const char *path = "/data/local/tmp/vts-test-file";
+
+  if (android::base::GetProperty("ro.crypto.type", "") != "file") {
+    // FBE has been required since Android Q.
+    int first_api_level;
+    ASSERT_TRUE(GetFirstApiLevel(&first_api_level));
+    ASSERT_LE(first_api_level, __ANDROID_API_P__)
+        << "File-based encryption is required";
+    GTEST_LOG_(INFO)
+        << "Skipping test because device doesn't use file-based encryption";
+    return;
+  }
+  std::string raw_partition;
+  ASSERT_TRUE(FindRawPartition("/data", &raw_partition));
+
+  std::vector<uint8_t> zeroes(kTestFileBytes, 0);
+  std::vector<uint8_t> ciphertext;
+  ASSERT_TRUE(WriteTestFile(zeroes, path, raw_partition, &ciphertext));
+
+  GTEST_LOG_(INFO) << "Verifying randomness of ciphertext";
+
+  ASSERT_TRUE(VerifyDataRandomness(ciphertext));
+
+  ASSERT_EQ(unlink(path), 0);
 }
 
 }  // namespace kernel

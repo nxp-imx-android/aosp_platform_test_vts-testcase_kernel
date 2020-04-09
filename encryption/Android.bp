@@ -36,8 +36,9 @@ cc_test {
     ],
     static_libs: [
         "libdm",
-        "libfs_mgr",
         "libext4_utils",
+        "libfs_mgr",
+        "liblzma",
     ],
     test_suites: [
         "general-tests",

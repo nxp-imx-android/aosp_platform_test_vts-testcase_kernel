@@ -15,39 +15,44 @@
  */
 
 //
-// Test that metadata encryption with dm-default-key is working correctly.
+// Test that metadata encryption is working, via:
 //
-// To do this, we create a temporary default-key mapping over the raw userdata
-// partition, read from it, and verify that the data got decrypted correctly.
-// We only test decryption, since this avoids having to find a region on disk
-// that can safely be modified.  This should be good enough since the device
-// wouldn't work anyway if decryption didn't invert encryption.
+// - Correctness tests.  These test the standard metadata encryption formats
+//   supported by Android R and higher via dm-default-key v2.
+//
+// - Randomness test.  This runs on all devices that use metadata encryption.
+//
+// The correctness tests create a temporary default-key mapping over the raw
+// userdata partition, read from it, and verify that the data got decrypted
+// correctly.  This only tests decryption, since this avoids having to find a
+// region on disk that can safely be modified.  This should be good enough since
+// the device wouldn't work anyway if decryption didn't invert encryption.
 //
 // Note that this temporary default-key mapping will overlap the device's "real"
-// default-key mapping, if the device has one.  The kernel allows this.
+// default-key mapping, if the device has one.  The kernel allows this.  The
+// tests don't use a loopback device instead, since dm-default-key over a
+// loopback device can't use the real inline encryption hardware.
 //
-// We don't use a loopback device, since dm-default-key over a loopback device
-// can't use the real inline encryption hardware.
-//
-// Currently, we test parameters matching the following fstab settings:
+// The correctness tests cover the following settings:
 //
 //    metadata_encryption=aes-256-xts
 //    metadata_encryption=adiantum
 //
-// We don't currently test hardware-wrapped keys ("wrappedkey_v0").
+// The tests don't check which one of those settings, if any, the device is
+// actually using; they just try to test everything they can.
 //
-// We don't currently check which one of these settings, if any, the device is
-// actually using; we just try to test everything we can.
+// Hardware-wrapped keys ("wrappedkey_v0") aren't tested yet.
 //
-// Also, we don't specifically test that file contents aren't encrypted twice.
-// That's already implied by the file-based encryption test cases, provided that
-// the device actually has metadata encryption enabled.
+// These tests don't specifically test that file contents aren't encrypted
+// twice.  That's already implied by the file-based encryption test cases,
+// provided that the device actually has metadata encryption enabled.
 //
 
 #include <android-base/file.h>
 #include <android-base/unique_fd.h>
 #include <asm/byteorder.h>
 #include <fcntl.h>
+#include <fstab/fstab.h>
 #include <gtest/gtest.h>
 #include <libdm/dm.h>
 #include <linux/types.h>
@@ -66,24 +71,11 @@ namespace kernel {
 #define cpu_to_le64 __cpu_to_le64
 #define le64_to_cpu __le64_to_cpu
 
-// Name to assign to the dm-default-key test device
-constexpr const char *kTestDmDeviceName = "vts-test-default-key";
+// Alignment to use for direct I/O reads of block devices
+static constexpr int kDirectIOAlignment = 4096;
 
-// Filesystem whose underlying partition the test will use
-constexpr const char *kTestMountpoint = "/data";
-
-// Size of the dm-default-key crypto sector size (data unit size) in bytes
-constexpr int kCryptoSectorSize = 4096;
-
-// Size of the test data in crypto sectors
-constexpr int kTestDataSectors = 256;
-
-// Size of the test data in bytes
-constexpr int kTestDataBytes = kTestDataSectors * kCryptoSectorSize;
-
-// Device-mapper API sector size in bytes.
-// This is unrelated to the crypto sector size.
-constexpr int kDmApiSectorSize = 512;
+// Assumed size of filesystem blocks, in bytes
+static constexpr int kFilesystemBlockSize = 4096;
 
 // Checks whether the kernel supports version 2 or higher of dm-default-key.
 static bool IsDmDefaultKeyV2Supported(DeviceMapper &dm) {
@@ -102,7 +94,55 @@ static bool IsDmDefaultKeyV2Supported(DeviceMapper &dm) {
   return true;
 }
 
-class MetadataEncryptionTest : public ::testing::Test {
+// Reads |count| bytes from the beginning of |blk_device|, using direct I/O to
+// avoid getting any stale cached data.  Direct I/O requires using a hardware
+// sector size aligned buffer.
+static bool ReadBlockDevice(const std::string &blk_device, size_t count,
+                            std::vector<uint8_t> *data) {
+  GTEST_LOG_(INFO) << "Reading " << count << " bytes from " << blk_device;
+  std::unique_ptr<void, void (*)(void *)> buf_mem(
+      aligned_alloc(kDirectIOAlignment, count), free);
+  if (buf_mem == nullptr) {
+    ADD_FAILURE() << "out of memory";
+    return false;
+  }
+  uint8_t *buffer = static_cast<uint8_t *>(buf_mem.get());
+
+  android::base::unique_fd fd(
+      open(blk_device.c_str(), O_RDONLY | O_DIRECT | O_CLOEXEC));
+  if (fd < 0) {
+    ADD_FAILURE() << "Failed to open " << blk_device << Errno();
+    return false;
+  }
+  if (!android::base::ReadFully(fd, buffer, count)) {
+    ADD_FAILURE() << "Failed to read from " << blk_device << Errno();
+    return false;
+  }
+
+  *data = std::vector<uint8_t>(buffer, buffer + count);
+  return true;
+}
+
+class DmDefaultKeyTest : public ::testing::Test {
+  // Name to assign to the dm-default-key test device
+  static constexpr const char *kTestDmDeviceName = "vts-test-default-key";
+
+  // Filesystem whose underlying partition the test will use
+  static constexpr const char *kTestMountpoint = "/data";
+
+  // Size of the dm-default-key crypto sector size (data unit size) in bytes
+  static constexpr int kCryptoSectorSize = 4096;
+
+  // Size of the test data in crypto sectors
+  static constexpr int kTestDataSectors = 256;
+
+  // Size of the test data in bytes
+  static constexpr int kTestDataBytes = kTestDataSectors * kCryptoSectorSize;
+
+  // Device-mapper API sector size in bytes.
+  // This is unrelated to the crypto sector size.
+  static constexpr int kDmApiSectorSize = 512;
+
  protected:
   void SetUp() override;
   void TearDown() override;
@@ -119,7 +159,7 @@ class MetadataEncryptionTest : public ::testing::Test {
 // Test setup procedure.  Checks for the needed kernel support, finds the raw
 // partition to use, and does other preparations.  skip_test_ is set to true if
 // the test should be skipped.
-void MetadataEncryptionTest::SetUp() {
+void DmDefaultKeyTest::SetUp() {
   dm_ = &DeviceMapper::Instance();
 
   if (!IsDmDefaultKeyV2Supported(*dm_)) {
@@ -138,15 +178,13 @@ void MetadataEncryptionTest::SetUp() {
   dm_->DeleteDevice(kTestDmDeviceName);
 }
 
-void MetadataEncryptionTest::TearDown() {
-  dm_->DeleteDevice(kTestDmDeviceName);
-}
+void DmDefaultKeyTest::TearDown() { dm_->DeleteDevice(kTestDmDeviceName); }
 
 // Creates the test dm-default-key mapping using the given |cipher| and |key|.
 // If the dm device creation fails, then it is assumed the kernel doesn't
 // support the given cipher with dm-default-key, and a failure is not added.
-bool MetadataEncryptionTest::CreateTestDevice(const std::string &cipher,
-                                              const std::vector<uint8_t> &key) {
+bool DmDefaultKeyTest::CreateTestDevice(const std::string &cipher,
+                                        const std::vector<uint8_t> &key) {
   static_assert(kTestDataBytes % kDmApiSectorSize == 0);
   std::unique_ptr<DmTargetDefaultKey> target =
       std::make_unique<DmTargetDefaultKey>(0, kTestDataBytes / kDmApiSectorSize,
@@ -176,36 +214,14 @@ bool MetadataEncryptionTest::CreateTestDevice(const std::string &cipher,
   return true;
 }
 
-void MetadataEncryptionTest::VerifyDecryption(const std::vector<uint8_t> &key,
-                                              const Cipher &cipher) {
-  // Read some raw data, using direct I/O to avoid getting any stale cached
-  // data.  Direct I/O requires using a hardware sector size aligned buffer.
-  // Aligning to kCryptoSectorSize is good enough.
+void DmDefaultKeyTest::VerifyDecryption(const std::vector<uint8_t> &key,
+                                        const Cipher &cipher) {
+  std::vector<uint8_t> raw_data;
+  std::vector<uint8_t> decrypted_data;
 
-  GTEST_LOG_(INFO) << "Reading raw data from " << raw_partition_;
-  std::unique_ptr<void, void (*)(void *)> raw_data_mem(
-      aligned_alloc(kCryptoSectorSize, kTestDataBytes), free);
-  ASSERT_TRUE(raw_data_mem != nullptr);
-  uint8_t *raw_data = static_cast<uint8_t *>(raw_data_mem.get());
-
-  android::base::unique_fd raw_fd(
-      open(raw_partition_.c_str(), O_RDONLY | O_DIRECT | O_CLOEXEC));
-  ASSERT_GE(raw_fd, 0) << "Failed to open raw partition " << raw_partition_
-                       << Errno();
-  ASSERT_TRUE(android::base::ReadFully(raw_fd, raw_data, kTestDataBytes))
-      << "Failed to read from raw partition " << raw_partition_ << Errno();
-
-  // Read the corresponding decrypted data.
-  GTEST_LOG_(INFO) << "Reading decrypted data from " << dm_device_path_;
-  std::vector<uint8_t> decrypted_data(kTestDataBytes);
-  android::base::unique_fd dm_fd(
-      open(dm_device_path_.c_str(), O_RDONLY | O_CLOEXEC));
-  ASSERT_GE(dm_fd, 0) << "Failed to open test dm device " << dm_device_path_
-                      << Errno();
+  ASSERT_TRUE(ReadBlockDevice(raw_partition_, kTestDataBytes, &raw_data));
   ASSERT_TRUE(
-      android::base::ReadFully(dm_fd, decrypted_data.data(), kTestDataBytes))
-      << "Failed to read from default-key mapping " << dm_device_path_
-      << Errno();
+      ReadBlockDevice(dm_device_path_, kTestDataBytes, &decrypted_data));
 
   // Verify that the decrypted data encrypts to the raw data.
 
@@ -216,24 +232,23 @@ void MetadataEncryptionTest::VerifyDecryption(const std::vector<uint8_t> &key,
   std::unique_ptr<__le64> iv(new (::operator new(cipher.ivsize())) __le64);
   memset(iv.get(), 0, cipher.ivsize());
 
-  std::vector<uint8_t> encrypted_sector(kCryptoSectorSize);
+  // Encrypt each sector.
+  std::vector<uint8_t> encrypted_data(kTestDataBytes);
   static_assert(kTestDataBytes % kCryptoSectorSize == 0);
-
   for (size_t i = 0; i < kTestDataBytes; i += kCryptoSectorSize) {
     ASSERT_TRUE(cipher.Encrypt(key, reinterpret_cast<const uint8_t *>(iv.get()),
-                               &decrypted_data[i], encrypted_sector.data(),
+                               &decrypted_data[i], &encrypted_data[i],
                                kCryptoSectorSize));
-    std::vector<uint8_t> raw_sector(raw_data + i,
-                                    raw_data + i + kCryptoSectorSize);
-    ASSERT_EQ(encrypted_sector, raw_sector);
 
     // Update the IV by incrementing the crypto sector number.
     *iv = cpu_to_le64(le64_to_cpu(*iv) + 1);
   }
+
+  ASSERT_EQ(encrypted_data, raw_data);
 }
 
-void MetadataEncryptionTest::DoTest(const std::string &cipher_string,
-                                    const Cipher &cipher) {
+void DmDefaultKeyTest::DoTest(const std::string &cipher_string,
+                              const Cipher &cipher) {
   if (skip_test_) return;
 
   std::vector<uint8_t> key = GenerateTestKey(cipher.keysize());
@@ -244,13 +259,45 @@ void MetadataEncryptionTest::DoTest(const std::string &cipher_string,
 }
 
 // Tests dm-default-key parameters matching metadata_encryption=aes-256-xts.
-TEST_F(MetadataEncryptionTest, TestAes256Xts) {
+TEST_F(DmDefaultKeyTest, TestAes256Xts) {
   DoTest("aes-xts-plain64", Aes256XtsCipher());
 }
 
 // Tests dm-default-key parameters matching metadata_encryption=adiantum.
-TEST_F(MetadataEncryptionTest, TestAdiantum) {
+TEST_F(DmDefaultKeyTest, TestAdiantum) {
   DoTest("xchacha12,aes-adiantum-plain64", AdiantumCipher());
+}
+
+// Tests that if the device uses metadata encryption, then the first
+// kFilesystemBlockSize bytes of the userdata partition appear random.  For ext4
+// and f2fs, this block should contain the filesystem superblock; it therefore
+// should be initialized and metadata-encrypted.  Ideally we'd check additional
+// blocks too, but that would require awareness of the filesystem structure.
+//
+// This isn't as strong a test as the correctness tests, but it's useful because
+// it applies regardless of the encryption format and key.  Thus it runs even on
+// old devices, including ones that used a vendor-specific encryption format.
+TEST(MetadataEncryptionTest, TestRandomness) {
+  android::fs_mgr::Fstab fstab;
+  ASSERT_TRUE(android::fs_mgr::ReadDefaultFstab(&fstab));
+  const fs_mgr::FstabEntry *entry = GetEntryForMountPoint(&fstab, "/data");
+  ASSERT_TRUE(entry != nullptr);
+
+  if (entry->metadata_key_dir.empty()) {
+    int first_api_level;
+    ASSERT_TRUE(GetFirstApiLevel(&first_api_level));
+    ASSERT_LE(first_api_level, __ANDROID_API_Q__)
+        << "Metadata encryption is required";
+    GTEST_LOG_(INFO)
+        << "Skipping test because device doesn't use metadata encryption";
+    return;
+  }
+
+  GTEST_LOG_(INFO) << "Verifying randomness of ciphertext";
+  std::vector<uint8_t> raw_data;
+  ASSERT_TRUE(
+      ReadBlockDevice(entry->blk_device, kFilesystemBlockSize, &raw_data));
+  ASSERT_TRUE(VerifyDataRandomness(raw_data));
 }
 
 }  // namespace kernel

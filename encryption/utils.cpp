@@ -16,6 +16,7 @@
 
 // Utility functions for VtsKernelEncryptionTest.
 
+#include <LzmaLib.h>
 #include <android-base/properties.h>
 #include <errno.h>
 #include <fstab/fstab.h>
@@ -79,6 +80,43 @@ bool FindRawPartition(const std::string &mountpoint,
   *raw_partition = entry->blk_device;
   GTEST_LOG_(INFO) << "Raw partition is " << *raw_partition;
   return true;
+}
+
+// Returns true if the given data seems to be random.
+//
+// Check compressibility rather than byte frequencies.  Compressibility is a
+// stronger test since it also detects repetitions.
+//
+// To check compressibility, use LZMA rather than DEFLATE/zlib/gzip because LZMA
+// compression is stronger and supports a much larger dictionary.  DEFLATE is
+// limited to a 32 KiB dictionary.  So, data repeating after 32 KiB (or more)
+// would not be detected with DEFLATE.  But LZMA can detect it.
+bool VerifyDataRandomness(const std::vector<uint8_t> &bytes) {
+  // To avoid flakiness, allow the data to be compressed a tiny bit by chance.
+  // There is at most a 2^-32 chance that random data can be compressed to be 4
+  // bytes shorter.  In practice it's even lower due to compression overhead.
+  size_t destLen = bytes.size() - std::min<size_t>(4, bytes.size());
+  std::vector<uint8_t> dest(destLen);
+  uint8_t outProps[LZMA_PROPS_SIZE];
+  size_t outPropsSize = LZMA_PROPS_SIZE;
+  int ret;
+
+  ret = LzmaCompress(dest.data(), &destLen, bytes.data(), bytes.size(),
+                     outProps, &outPropsSize,
+                     6,               // compression level (0 <= level <= 9)
+                     bytes.size(),    // dictionary size
+                     -1, -1, -1, -1,  // lc, lp, bp, fb (-1 selects the default)
+                     1);              // number of threads
+
+  if (ret == SZ_ERROR_OUTPUT_EOF) return true;  // incompressible
+
+  if (ret == SZ_OK) {
+    ADD_FAILURE() << "Data is not random!  Compressed " << bytes.size()
+                  << " to " << destLen << " bytes";
+  } else {
+    ADD_FAILURE() << "LZMA compression error: ret=" << ret;
+  }
+  return false;
 }
 
 }  // namespace kernel

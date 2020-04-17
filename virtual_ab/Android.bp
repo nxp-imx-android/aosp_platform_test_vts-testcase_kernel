@@ -18,6 +18,7 @@ cc_test {
     test_min_api_level: 30,
     srcs: [
         "metadata_test.cpp",
+        "requirement.cpp",
         "userdata_test.cpp",
     ],
     cflags: [
@@ -26,7 +27,10 @@ cc_test {
     ],
     test_suites: [
         "general-tests",
-        "vts-core",
+        "vts",
+    ],
+    static_libs: [
+        "libbase",
     ],
 }
 

@@ -24,6 +24,7 @@ cc_test {
         "utils.cpp",
     ],
     cflags: [
+        "-D_FILE_OFFSET_BITS=64",
         "-Wall",
         "-Werror",
     ],
@@ -35,12 +36,13 @@ cc_test {
     ],
     static_libs: [
         "libdm",
-        "libfs_mgr",
         "libext4_utils",
+        "libfs_mgr",
+        "liblzma",
     ],
     test_suites: [
         "general-tests",
-        "vts-core",
+        "vts",
     ],
     require_root: true,
     auto_gen_config: true,

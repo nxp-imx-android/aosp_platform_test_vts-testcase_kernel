@@ -55,5 +55,25 @@ TEST_F(KernelVersionTest, IsClang) {
   ASSERT_THAT(version_, ::testing::HasSubstr(needle));
 }
 
+TEST_F(KernelVersionTest, IsntBFD) {
+  if (!should_run()) return;
+  const std::string needle = "GNU ld";
+  ASSERT_THAT(version_, ::testing::Not(::testing::HasSubstr(needle)));
+  ASSERT_THAT(version_, ::testing::Not(::testing::HasSubstr("GNU Binutils")));
+  ASSERT_THAT(version_, ::testing::Not(::testing::HasSubstr("binutils")));
+}
+
+TEST_F(KernelVersionTest, IsntGold) {
+  if (!should_run()) return;
+  const std::string needle = "GNU gold";
+  ASSERT_THAT(version_, ::testing::Not(::testing::HasSubstr(needle)));
+}
+
+TEST_F(KernelVersionTest, IsLLD) {
+  if (!should_run()) return;
+  const std::string needle = "LLD";
+  ASSERT_THAT(version_, ::testing::HasSubstr(needle));
+}
+
 }  // namespace kernel
 }  // namespace android

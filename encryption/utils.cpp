@@ -284,6 +284,33 @@ bool VerifyDataRandomness(const std::vector<uint8_t> &bytes) {
   return false;
 }
 
+static bool TryPrepareHwWrappedKey(Keymaster &keymaster,
+                                   const std::string &enc_key_string,
+                                   std::string *exported_key_string,
+                                   bool rollback_resistance) {
+  // This key is used to drive a CMAC-based KDF
+  auto paramBuilder =
+      km::AuthorizationSetBuilder().AesEncryptionKey(kHwWrappedKeySize * 8);
+  if (rollback_resistance) {
+    paramBuilder.Authorization(km::TAG_ROLLBACK_RESISTANCE);
+  }
+  paramBuilder.Authorization(km::TAG_STORAGE_KEY);
+
+  std::string wrapped_key_blob;
+  if (keymaster.importKey(paramBuilder, km::KeyFormat::RAW, enc_key_string,
+                          &wrapped_key_blob) &&
+      keymaster.exportKey(wrapped_key_blob, exported_key_string)) {
+    return true;
+  }
+  // It's fine for Keymaster not to support hardware-wrapped keys, but
+  // if generateKey works, importKey must too.
+  if (keymaster.generateKey(paramBuilder, &wrapped_key_blob) &&
+      keymaster.exportKey(wrapped_key_blob, exported_key_string)) {
+    ADD_FAILURE() << "generateKey succeeded but importKey failed";
+  }
+  return false;
+}
+
 bool CreateHwWrappedKey(std::vector<uint8_t> *enc_key,
                         std::vector<uint8_t> *exported_key) {
   *enc_key = GenerateTestKey(kHwWrappedKeySize);
@@ -293,33 +320,21 @@ bool CreateHwWrappedKey(std::vector<uint8_t> *enc_key,
     ADD_FAILURE() << "Unable to find keymaster";
     return false;
   }
-  // This key is used to drive a CMAC-based KDF
-  auto paramBuilder =
-      km::AuthorizationSetBuilder().AesEncryptionKey(kHwWrappedKeySize * 8);
-  paramBuilder.Authorization(km::TAG_ROLLBACK_RESISTANCE);
-  paramBuilder.Authorization(km::TAG_STORAGE_KEY);
-
   std::string enc_key_string(enc_key->begin(), enc_key->end());
-  std::string wrapped_key_blob;
-  if (!keymaster.importKey(paramBuilder, km::KeyFormat::RAW, enc_key_string,
-                           &wrapped_key_blob)) {
-    // It's fine for Keymaster not to support hardware-wrapped keys, but
-    // if generateKey works, importKey must too.
-    if (keymaster.generateKey(paramBuilder, &wrapped_key_blob)) {
-      ADD_FAILURE() << "generateKey succeeded but importKey failed";
-    } else {
-      GTEST_LOG_(INFO) << "Skipping test because device doesn't support "
-                          "hardware-wrapped keys";
-    }
-    return false;
-  }
   std::string exported_key_string;
-  if (!keymaster.exportKey(wrapped_key_blob, &exported_key_string)) {
-    ADD_FAILURE() << "exportKey failed";
-    return false;
+  // Make two attempts to create a key, first with and then without
+  // rollback resistance.
+  if (TryPrepareHwWrappedKey(keymaster, enc_key_string, &exported_key_string,
+                             true) ||
+      TryPrepareHwWrappedKey(keymaster, enc_key_string, &exported_key_string,
+                             false)) {
+    exported_key->assign(exported_key_string.begin(),
+                         exported_key_string.end());
+    return true;
   }
-  exported_key->assign(exported_key_string.begin(), exported_key_string.end());
-  return true;
+  GTEST_LOG_(INFO) << "Skipping test because device doesn't support "
+                      "hardware-wrapped keys";
+  return false;
 }
 
 }  // namespace kernel

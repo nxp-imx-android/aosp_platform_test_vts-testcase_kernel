@@ -20,6 +20,7 @@ cc_test {
         "adiantum.cpp",
         "aes_256_xts.cpp",
         "file_based_encryption_tests.cpp",
+        "Keymaster.cpp",
         "metadata_encryption_tests.cpp",
         "utils.cpp",
     ],
@@ -31,7 +32,10 @@ cc_test {
     shared_libs: [
         "libbase",
         "libcrypto",
-        "libcutils",
+        "libhidlbase",
+        "libkeymaster4_1support",
+        "libkeymaster4support",
+        "liblog",
         "libutils",
     ],
     static_libs: [

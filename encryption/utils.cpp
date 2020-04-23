@@ -22,10 +22,14 @@
 #include <fstab/fstab.h>
 #include <gtest/gtest.h>
 
+#include "Keymaster.h"
 #include "vts_kernel_encryption.h"
 
 namespace android {
 namespace kernel {
+
+// hw-wrapped key size in bytes
+constexpr int kHwWrappedKeySize = 32;
 
 std::string Errno() { return std::string(": ") + strerror(errno); }
 
@@ -117,6 +121,44 @@ bool VerifyDataRandomness(const std::vector<uint8_t> &bytes) {
     ADD_FAILURE() << "LZMA compression error: ret=" << ret;
   }
   return false;
+}
+
+bool CreateHwWrappedKey(std::vector<uint8_t> *enc_key,
+                        std::vector<uint8_t> *exported_key) {
+  *enc_key = GenerateTestKey(kHwWrappedKeySize);
+
+  Keymaster keymaster;
+  if (!keymaster) {
+    ADD_FAILURE() << "Unable to find keymaster";
+    return false;
+  }
+  // This key is used to drive a CMAC-based KDF
+  auto paramBuilder =
+      km::AuthorizationSetBuilder().AesEncryptionKey(kHwWrappedKeySize * 8);
+  paramBuilder.Authorization(km::TAG_ROLLBACK_RESISTANCE);
+  paramBuilder.Authorization(km::TAG_STORAGE_KEY);
+
+  std::string enc_key_string(enc_key->begin(), enc_key->end());
+  std::string wrapped_key_blob;
+  if (!keymaster.importKey(paramBuilder, km::KeyFormat::RAW, enc_key_string,
+                           &wrapped_key_blob)) {
+    // It's fine for Keymaster not to support hardware-wrapped keys, but
+    // if generateKey works, importKey must too.
+    if (keymaster.generateKey(paramBuilder, &wrapped_key_blob)) {
+      ADD_FAILURE() << "generateKey succeeded but importKey failed";
+    } else {
+      GTEST_LOG_(INFO) << "Skipping test because device doesn't support "
+                          "hardware-wrapped keys";
+    }
+    return false;
+  }
+  std::string exported_key_string;
+  if (!keymaster.exportKey(wrapped_key_blob, &exported_key_string)) {
+    ADD_FAILURE() << "exportKey failed";
+    return false;
+  }
+  exported_key->assign(exported_key_string.begin(), exported_key_string.end());
+  return true;
 }
 
 }  // namespace kernel

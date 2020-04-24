@@ -18,15 +18,32 @@
 
 #include <LzmaLib.h>
 #include <android-base/properties.h>
+#include <android-base/unique_fd.h>
 #include <errno.h>
+#include <ext4_utils/ext4.h>
+#include <ext4_utils/ext4_sb.h>
+#include <ext4_utils/ext4_utils.h>
 #include <fstab/fstab.h>
 #include <gtest/gtest.h>
+#include <linux/magic.h>
+#include <mntent.h>
+#include <unistd.h>
 
 #include "Keymaster.h"
 #include "vts_kernel_encryption.h"
 
 namespace android {
 namespace kernel {
+
+// Offset in bytes to the filesystem superblock, relative to the beginning of
+// the block device
+constexpr int kExt4SuperBlockOffset = 1024;
+constexpr int kF2fsSuperBlockOffset = 1024;
+
+// For F2FS: the offsets in bytes to the filesystem magic number and filesystem
+// UUID, relative to the beginning of the block device
+constexpr int kF2fsMagicOffset = kF2fsSuperBlockOffset;
+constexpr int kF2fsUuidOffset = kF2fsSuperBlockOffset + 108;
 
 // hw-wrapped key size in bytes
 constexpr int kHwWrappedKeySize = 32;
@@ -66,11 +83,93 @@ bool GetFirstApiLevel(int *first_api_level) {
   return true;
 }
 
-// Finds the raw partition of the filesystem mounted on |mountpoint|.  This
+// Gets the block device and type of the filesystem mounted on |mountpoint|.
+// This block device is the one on which the filesystem is directly located.  In
+// the case of device-mapper that means something like /dev/mapper/dm-5, not the
+// underlying device like /dev/block/by-name/userdata.
+static bool GetFsBlockDeviceAndType(const std::string &mountpoint,
+                                    std::string *fs_blk_device,
+                                    std::string *fs_type) {
+  std::unique_ptr<FILE, int (*)(FILE *)> mnts(setmntent("/proc/mounts", "re"),
+                                              endmntent);
+  if (!mnts) {
+    ADD_FAILURE() << "Failed to open /proc/mounts" << Errno();
+    return false;
+  }
+  struct mntent *mnt;
+  while ((mnt = getmntent(mnts.get())) != nullptr) {
+    if (mnt->mnt_dir == mountpoint) {
+      *fs_blk_device = mnt->mnt_fsname;
+      *fs_type = mnt->mnt_type;
+      return true;
+    }
+  }
+  ADD_FAILURE() << "No /proc/mounts entry found for " << mountpoint;
+  return false;
+}
+
+// Gets the UUID of the filesystem of type |fs_type| that's located on
+// |fs_blk_device|.
+//
+// Unfortunately there's no kernel API to get the UUID; instead we have to read
+// it from the filesystem superblock.
+static bool GetFilesystemUuid(const std::string &fs_blk_device,
+                              const std::string &fs_type,
+                              FilesystemUuid *fs_uuid) {
+  android::base::unique_fd fd(
+      open(fs_blk_device.c_str(), O_RDONLY | O_CLOEXEC));
+  if (fd < 0) {
+    ADD_FAILURE() << "Failed to open fs block device " << fs_blk_device
+                  << Errno();
+    return false;
+  }
+
+  if (fs_type == "ext4") {
+    struct ext4_super_block sb;
+
+    if (pread(fd, &sb, sizeof(sb), kExt4SuperBlockOffset) != sizeof(sb)) {
+      ADD_FAILURE() << "Error reading ext4 superblock from " << fs_blk_device
+                    << Errno();
+      return false;
+    }
+    if (sb.s_magic != cpu_to_le16(EXT4_SUPER_MAGIC)) {
+      ADD_FAILURE() << "Failed to find ext4 superblock on " << fs_blk_device;
+      return false;
+    }
+    static_assert(sizeof(sb.s_uuid) == kFilesystemUuidSize);
+    memcpy(fs_uuid->bytes, sb.s_uuid, kFilesystemUuidSize);
+  } else if (fs_type == "f2fs") {
+    // Android doesn't have an f2fs equivalent of libext4_utils, so we have to
+    // hard-code the offset to the magic number and UUID.
+
+    __le32 magic;
+    if (pread(fd, &magic, sizeof(magic), kF2fsMagicOffset) != sizeof(magic)) {
+      ADD_FAILURE() << "Error reading f2fs superblock from " << fs_blk_device
+                    << Errno();
+      return false;
+    }
+    if (magic != cpu_to_le32(F2FS_SUPER_MAGIC)) {
+      ADD_FAILURE() << "Failed to find f2fs superblock on " << fs_blk_device;
+      return false;
+    }
+    if (pread(fd, fs_uuid->bytes, kFilesystemUuidSize, kF2fsUuidOffset) !=
+        kFilesystemUuidSize) {
+      ADD_FAILURE() << "Failed to read f2fs filesystem UUID from "
+                    << fs_blk_device << Errno();
+      return false;
+    }
+  } else {
+    ADD_FAILURE() << "Unknown filesystem type " << fs_type;
+    return false;
+  }
+  return true;
+}
+
+// Gets the raw block device of the filesystem mounted on |mountpoint|.  This
 // means the partition listed in the fstab, which for userdata with metadata
 // encryption enabled will differ from the /proc/mounts block device.
-bool FindRawPartition(const std::string &mountpoint,
-                      std::string *raw_partition) {
+static bool GetRawBlockDevice(const std::string &mountpoint,
+                              std::string *raw_blk_device) {
   android::fs_mgr::Fstab fstab;
   if (!android::fs_mgr::ReadDefaultFstab(&fstab)) {
     ADD_FAILURE() << "Failed to read default fstab";
@@ -81,8 +180,24 @@ bool FindRawPartition(const std::string &mountpoint,
     ADD_FAILURE() << "No mountpoint entry for " << mountpoint;
     return false;
   }
-  *raw_partition = entry->blk_device;
-  GTEST_LOG_(INFO) << "Raw partition is " << *raw_partition;
+  *raw_blk_device = entry->blk_device;
+  return true;
+}
+
+// Gets information about the filesystem mounted on |mountpoint|.
+bool GetFilesystemInfo(const std::string &mountpoint, FilesystemInfo *info) {
+  if (!GetFsBlockDeviceAndType(mountpoint, &info->fs_blk_device, &info->type))
+    return false;
+
+  if (!GetFilesystemUuid(info->fs_blk_device, info->type, &info->uuid))
+    return false;
+
+  if (!GetRawBlockDevice(mountpoint, &info->raw_blk_device)) return false;
+
+  GTEST_LOG_(INFO) << info->fs_blk_device << " is mounted on " << mountpoint
+                   << " with type " << info->type << "; UUID is "
+                   << BytesToHex(info->uuid.bytes) << ", raw block device is "
+                   << info->raw_blk_device;
   return true;
 }
 

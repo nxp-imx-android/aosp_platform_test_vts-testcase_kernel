@@ -23,14 +23,16 @@
 #include <ext4_utils/ext4.h>
 #include <ext4_utils/ext4_sb.h>
 #include <ext4_utils/ext4_utils.h>
-#include <fstab/fstab.h>
 #include <gtest/gtest.h>
+#include <libdm/dm.h>
 #include <linux/magic.h>
 #include <mntent.h>
 #include <unistd.h>
 
 #include "Keymaster.h"
 #include "vts_kernel_encryption.h"
+
+using namespace android::dm;
 
 namespace android {
 namespace kernel {
@@ -165,22 +167,65 @@ static bool GetFilesystemUuid(const std::string &fs_blk_device,
   return true;
 }
 
-// Gets the raw block device of the filesystem mounted on |mountpoint|.  This
-// means the partition listed in the fstab, which for userdata with metadata
-// encryption enabled will differ from the /proc/mounts block device.
-static bool GetRawBlockDevice(const std::string &mountpoint,
+// Gets the raw block device of the filesystem that is mounted from
+// |fs_blk_device|.  By "raw block device" we mean a block device from which we
+// can read the encrypted file contents and filesystem metadata.  When metadata
+// encryption is disabled, this is simply |fs_blk_device|.  When metadata
+// encryption is enabled, then |fs_blk_device| is a dm-default-key device and
+// the "raw block device" is the parent of this dm-default-key device.
+//
+// We don't just use the block device listed in the fstab, because (a) it can be
+// a logical partition name which needs extra code to map to a block device, and
+// (b) due to block-level checkpointing, there can be a dm-bow device between
+// the fstab partition and dm-default-key.  dm-bow can remap sectors, but for
+// encryption testing we don't want any sector remapping.  So the correct block
+// device to read ciphertext from is the one directly underneath dm-default-key.
+static bool GetRawBlockDevice(const std::string &fs_blk_device,
                               std::string *raw_blk_device) {
-  android::fs_mgr::Fstab fstab;
-  if (!android::fs_mgr::ReadDefaultFstab(&fstab)) {
-    ADD_FAILURE() << "Failed to read default fstab";
+  DeviceMapper &dm = DeviceMapper::Instance();
+
+  if (!dm.IsDmBlockDevice(fs_blk_device)) {
+    GTEST_LOG_(INFO)
+        << fs_blk_device
+        << " is not a device-mapper device; metadata encryption is disabled";
+    *raw_blk_device = fs_blk_device;
+    return true;
+  }
+  const std::optional<std::string> name =
+      dm.GetDmDeviceNameByPath(fs_blk_device);
+  if (!name) {
+    ADD_FAILURE() << "Failed to get name of device-mapper device "
+                  << fs_blk_device;
     return false;
   }
-  const fs_mgr::FstabEntry *entry = GetEntryForMountPoint(&fstab, mountpoint);
-  if (entry == nullptr) {
-    ADD_FAILURE() << "No mountpoint entry for " << mountpoint;
+
+  std::vector<DeviceMapper::TargetInfo> table;
+  if (!dm.GetTableInfo(*name, &table)) {
+    ADD_FAILURE() << "Failed to get table of device-mapper device " << *name;
     return false;
   }
-  *raw_blk_device = entry->blk_device;
+  if (table.size() != 1) {
+    GTEST_LOG_(INFO) << fs_blk_device
+                     << " has multiple device-mapper targets; assuming "
+                        "metadata encryption is disabled";
+    *raw_blk_device = fs_blk_device;
+    return true;
+  }
+  const std::string target_type = dm.GetTargetType(table[0].spec);
+  if (target_type != "default-key") {
+    GTEST_LOG_(INFO) << fs_blk_device << " is a dm-" << target_type
+                     << " device, not dm-default-key; assuming metadata "
+                        "encryption is disabled";
+    *raw_blk_device = fs_blk_device;
+    return true;
+  }
+  std::optional<std::string> parent =
+      dm.GetParentBlockDeviceByPath(fs_blk_device);
+  if (!parent) {
+    ADD_FAILURE() << "Failed to get parent of dm-default-key device " << *name;
+    return false;
+  }
+  *raw_blk_device = *parent;
   return true;
 }
 
@@ -192,7 +237,8 @@ bool GetFilesystemInfo(const std::string &mountpoint, FilesystemInfo *info) {
   if (!GetFilesystemUuid(info->fs_blk_device, info->type, &info->uuid))
     return false;
 
-  if (!GetRawBlockDevice(mountpoint, &info->raw_blk_device)) return false;
+  if (!GetRawBlockDevice(info->fs_blk_device, &info->raw_blk_device))
+    return false;
 
   GTEST_LOG_(INFO) << info->fs_blk_device << " is mounted on " << mountpoint
                    << " with type " << info->type << "; UUID is "

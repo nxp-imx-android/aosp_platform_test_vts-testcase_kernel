@@ -152,7 +152,7 @@ class DmDefaultKeyTest : public ::testing::Test {
   void DoTest(const std::string &cipher_string, const Cipher &cipher);
   bool skip_test_ = false;
   DeviceMapper *dm_ = nullptr;
-  std::string raw_partition_;
+  std::string raw_blk_device_;
   std::string dm_device_path_;
 };
 
@@ -173,7 +173,9 @@ void DmDefaultKeyTest::SetUp() {
     return;
   }
 
-  ASSERT_TRUE(FindRawPartition(kTestMountpoint, &raw_partition_));
+  FilesystemInfo fs_info;
+  ASSERT_TRUE(GetFilesystemInfo(kTestMountpoint, &fs_info));
+  raw_blk_device_ = fs_info.raw_blk_device;
 
   dm_->DeleteDevice(kTestDmDeviceName);
 }
@@ -189,7 +191,7 @@ bool DmDefaultKeyTest::CreateTestDevice(const std::string &cipher,
   std::unique_ptr<DmTargetDefaultKey> target =
       std::make_unique<DmTargetDefaultKey>(0, kTestDataBytes / kDmApiSectorSize,
                                            cipher.c_str(), BytesToHex(key),
-                                           raw_partition_, 0);
+                                           raw_blk_device_, 0);
   target->SetSetDun();
 
   DmTable table;
@@ -219,7 +221,7 @@ void DmDefaultKeyTest::VerifyDecryption(const std::vector<uint8_t> &key,
   std::vector<uint8_t> raw_data;
   std::vector<uint8_t> decrypted_data;
 
-  ASSERT_TRUE(ReadBlockDevice(raw_partition_, kTestDataBytes, &raw_data));
+  ASSERT_TRUE(ReadBlockDevice(raw_blk_device_, kTestDataBytes, &raw_data));
   ASSERT_TRUE(
       ReadBlockDevice(dm_device_path_, kTestDataBytes, &decrypted_data));
 
@@ -278,9 +280,11 @@ TEST_F(DmDefaultKeyTest, TestAdiantum) {
 // it applies regardless of the encryption format and key.  Thus it runs even on
 // old devices, including ones that used a vendor-specific encryption format.
 TEST(MetadataEncryptionTest, TestRandomness) {
+  constexpr const char *mountpoint = "/data";
+
   android::fs_mgr::Fstab fstab;
   ASSERT_TRUE(android::fs_mgr::ReadDefaultFstab(&fstab));
-  const fs_mgr::FstabEntry *entry = GetEntryForMountPoint(&fstab, "/data");
+  const fs_mgr::FstabEntry *entry = GetEntryForMountPoint(&fstab, mountpoint);
   ASSERT_TRUE(entry != nullptr);
 
   if (entry->metadata_key_dir.empty()) {
@@ -295,8 +299,10 @@ TEST(MetadataEncryptionTest, TestRandomness) {
 
   GTEST_LOG_(INFO) << "Verifying randomness of ciphertext";
   std::vector<uint8_t> raw_data;
+  FilesystemInfo fs_info;
+  ASSERT_TRUE(GetFilesystemInfo(mountpoint, &fs_info));
   ASSERT_TRUE(
-      ReadBlockDevice(entry->blk_device, kFilesystemBlockSize, &raw_data));
+      ReadBlockDevice(fs_info.raw_blk_device, kFilesystemBlockSize, &raw_data));
   ASSERT_TRUE(VerifyDataRandomness(raw_data));
 }
 

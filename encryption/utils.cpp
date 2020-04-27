@@ -18,14 +18,37 @@
 
 #include <LzmaLib.h>
 #include <android-base/properties.h>
+#include <android-base/unique_fd.h>
 #include <errno.h>
-#include <fstab/fstab.h>
+#include <ext4_utils/ext4.h>
+#include <ext4_utils/ext4_sb.h>
+#include <ext4_utils/ext4_utils.h>
 #include <gtest/gtest.h>
+#include <libdm/dm.h>
+#include <linux/magic.h>
+#include <mntent.h>
+#include <unistd.h>
 
+#include "Keymaster.h"
 #include "vts_kernel_encryption.h"
+
+using namespace android::dm;
 
 namespace android {
 namespace kernel {
+
+// Offset in bytes to the filesystem superblock, relative to the beginning of
+// the block device
+constexpr int kExt4SuperBlockOffset = 1024;
+constexpr int kF2fsSuperBlockOffset = 1024;
+
+// For F2FS: the offsets in bytes to the filesystem magic number and filesystem
+// UUID, relative to the beginning of the block device
+constexpr int kF2fsMagicOffset = kF2fsSuperBlockOffset;
+constexpr int kF2fsUuidOffset = kF2fsSuperBlockOffset + 108;
+
+// hw-wrapped key size in bytes
+constexpr int kHwWrappedKeySize = 32;
 
 std::string Errno() { return std::string(": ") + strerror(errno); }
 
@@ -62,23 +85,165 @@ bool GetFirstApiLevel(int *first_api_level) {
   return true;
 }
 
-// Finds the raw partition of the filesystem mounted on |mountpoint|.  This
-// means the partition listed in the fstab, which for userdata with metadata
-// encryption enabled will differ from the /proc/mounts block device.
-bool FindRawPartition(const std::string &mountpoint,
-                      std::string *raw_partition) {
-  android::fs_mgr::Fstab fstab;
-  if (!android::fs_mgr::ReadDefaultFstab(&fstab)) {
-    ADD_FAILURE() << "Failed to read default fstab";
+// Gets the block device and type of the filesystem mounted on |mountpoint|.
+// This block device is the one on which the filesystem is directly located.  In
+// the case of device-mapper that means something like /dev/mapper/dm-5, not the
+// underlying device like /dev/block/by-name/userdata.
+static bool GetFsBlockDeviceAndType(const std::string &mountpoint,
+                                    std::string *fs_blk_device,
+                                    std::string *fs_type) {
+  std::unique_ptr<FILE, int (*)(FILE *)> mnts(setmntent("/proc/mounts", "re"),
+                                              endmntent);
+  if (!mnts) {
+    ADD_FAILURE() << "Failed to open /proc/mounts" << Errno();
     return false;
   }
-  const fs_mgr::FstabEntry *entry = GetEntryForMountPoint(&fstab, mountpoint);
-  if (entry == nullptr) {
-    ADD_FAILURE() << "No mountpoint entry for " << mountpoint;
+  struct mntent *mnt;
+  while ((mnt = getmntent(mnts.get())) != nullptr) {
+    if (mnt->mnt_dir == mountpoint) {
+      *fs_blk_device = mnt->mnt_fsname;
+      *fs_type = mnt->mnt_type;
+      return true;
+    }
+  }
+  ADD_FAILURE() << "No /proc/mounts entry found for " << mountpoint;
+  return false;
+}
+
+// Gets the UUID of the filesystem of type |fs_type| that's located on
+// |fs_blk_device|.
+//
+// Unfortunately there's no kernel API to get the UUID; instead we have to read
+// it from the filesystem superblock.
+static bool GetFilesystemUuid(const std::string &fs_blk_device,
+                              const std::string &fs_type,
+                              FilesystemUuid *fs_uuid) {
+  android::base::unique_fd fd(
+      open(fs_blk_device.c_str(), O_RDONLY | O_CLOEXEC));
+  if (fd < 0) {
+    ADD_FAILURE() << "Failed to open fs block device " << fs_blk_device
+                  << Errno();
     return false;
   }
-  *raw_partition = entry->blk_device;
-  GTEST_LOG_(INFO) << "Raw partition is " << *raw_partition;
+
+  if (fs_type == "ext4") {
+    struct ext4_super_block sb;
+
+    if (pread(fd, &sb, sizeof(sb), kExt4SuperBlockOffset) != sizeof(sb)) {
+      ADD_FAILURE() << "Error reading ext4 superblock from " << fs_blk_device
+                    << Errno();
+      return false;
+    }
+    if (sb.s_magic != cpu_to_le16(EXT4_SUPER_MAGIC)) {
+      ADD_FAILURE() << "Failed to find ext4 superblock on " << fs_blk_device;
+      return false;
+    }
+    static_assert(sizeof(sb.s_uuid) == kFilesystemUuidSize);
+    memcpy(fs_uuid->bytes, sb.s_uuid, kFilesystemUuidSize);
+  } else if (fs_type == "f2fs") {
+    // Android doesn't have an f2fs equivalent of libext4_utils, so we have to
+    // hard-code the offset to the magic number and UUID.
+
+    __le32 magic;
+    if (pread(fd, &magic, sizeof(magic), kF2fsMagicOffset) != sizeof(magic)) {
+      ADD_FAILURE() << "Error reading f2fs superblock from " << fs_blk_device
+                    << Errno();
+      return false;
+    }
+    if (magic != cpu_to_le32(F2FS_SUPER_MAGIC)) {
+      ADD_FAILURE() << "Failed to find f2fs superblock on " << fs_blk_device;
+      return false;
+    }
+    if (pread(fd, fs_uuid->bytes, kFilesystemUuidSize, kF2fsUuidOffset) !=
+        kFilesystemUuidSize) {
+      ADD_FAILURE() << "Failed to read f2fs filesystem UUID from "
+                    << fs_blk_device << Errno();
+      return false;
+    }
+  } else {
+    ADD_FAILURE() << "Unknown filesystem type " << fs_type;
+    return false;
+  }
+  return true;
+}
+
+// Gets the raw block device of the filesystem that is mounted from
+// |fs_blk_device|.  By "raw block device" we mean a block device from which we
+// can read the encrypted file contents and filesystem metadata.  When metadata
+// encryption is disabled, this is simply |fs_blk_device|.  When metadata
+// encryption is enabled, then |fs_blk_device| is a dm-default-key device and
+// the "raw block device" is the parent of this dm-default-key device.
+//
+// We don't just use the block device listed in the fstab, because (a) it can be
+// a logical partition name which needs extra code to map to a block device, and
+// (b) due to block-level checkpointing, there can be a dm-bow device between
+// the fstab partition and dm-default-key.  dm-bow can remap sectors, but for
+// encryption testing we don't want any sector remapping.  So the correct block
+// device to read ciphertext from is the one directly underneath dm-default-key.
+static bool GetRawBlockDevice(const std::string &fs_blk_device,
+                              std::string *raw_blk_device) {
+  DeviceMapper &dm = DeviceMapper::Instance();
+
+  if (!dm.IsDmBlockDevice(fs_blk_device)) {
+    GTEST_LOG_(INFO)
+        << fs_blk_device
+        << " is not a device-mapper device; metadata encryption is disabled";
+    *raw_blk_device = fs_blk_device;
+    return true;
+  }
+  const std::optional<std::string> name =
+      dm.GetDmDeviceNameByPath(fs_blk_device);
+  if (!name) {
+    ADD_FAILURE() << "Failed to get name of device-mapper device "
+                  << fs_blk_device;
+    return false;
+  }
+
+  std::vector<DeviceMapper::TargetInfo> table;
+  if (!dm.GetTableInfo(*name, &table)) {
+    ADD_FAILURE() << "Failed to get table of device-mapper device " << *name;
+    return false;
+  }
+  if (table.size() != 1) {
+    GTEST_LOG_(INFO) << fs_blk_device
+                     << " has multiple device-mapper targets; assuming "
+                        "metadata encryption is disabled";
+    *raw_blk_device = fs_blk_device;
+    return true;
+  }
+  const std::string target_type = dm.GetTargetType(table[0].spec);
+  if (target_type != "default-key") {
+    GTEST_LOG_(INFO) << fs_blk_device << " is a dm-" << target_type
+                     << " device, not dm-default-key; assuming metadata "
+                        "encryption is disabled";
+    *raw_blk_device = fs_blk_device;
+    return true;
+  }
+  std::optional<std::string> parent =
+      dm.GetParentBlockDeviceByPath(fs_blk_device);
+  if (!parent) {
+    ADD_FAILURE() << "Failed to get parent of dm-default-key device " << *name;
+    return false;
+  }
+  *raw_blk_device = *parent;
+  return true;
+}
+
+// Gets information about the filesystem mounted on |mountpoint|.
+bool GetFilesystemInfo(const std::string &mountpoint, FilesystemInfo *info) {
+  if (!GetFsBlockDeviceAndType(mountpoint, &info->fs_blk_device, &info->type))
+    return false;
+
+  if (!GetFilesystemUuid(info->fs_blk_device, info->type, &info->uuid))
+    return false;
+
+  if (!GetRawBlockDevice(info->fs_blk_device, &info->raw_blk_device))
+    return false;
+
+  GTEST_LOG_(INFO) << info->fs_blk_device << " is mounted on " << mountpoint
+                   << " with type " << info->type << "; UUID is "
+                   << BytesToHex(info->uuid.bytes) << ", raw block device is "
+                   << info->raw_blk_device;
   return true;
 }
 
@@ -116,6 +281,59 @@ bool VerifyDataRandomness(const std::vector<uint8_t> &bytes) {
   } else {
     ADD_FAILURE() << "LZMA compression error: ret=" << ret;
   }
+  return false;
+}
+
+static bool TryPrepareHwWrappedKey(Keymaster &keymaster,
+                                   const std::string &enc_key_string,
+                                   std::string *exported_key_string,
+                                   bool rollback_resistance) {
+  // This key is used to drive a CMAC-based KDF
+  auto paramBuilder =
+      km::AuthorizationSetBuilder().AesEncryptionKey(kHwWrappedKeySize * 8);
+  if (rollback_resistance) {
+    paramBuilder.Authorization(km::TAG_ROLLBACK_RESISTANCE);
+  }
+  paramBuilder.Authorization(km::TAG_STORAGE_KEY);
+
+  std::string wrapped_key_blob;
+  if (keymaster.importKey(paramBuilder, km::KeyFormat::RAW, enc_key_string,
+                          &wrapped_key_blob) &&
+      keymaster.exportKey(wrapped_key_blob, exported_key_string)) {
+    return true;
+  }
+  // It's fine for Keymaster not to support hardware-wrapped keys, but
+  // if generateKey works, importKey must too.
+  if (keymaster.generateKey(paramBuilder, &wrapped_key_blob) &&
+      keymaster.exportKey(wrapped_key_blob, exported_key_string)) {
+    ADD_FAILURE() << "generateKey succeeded but importKey failed";
+  }
+  return false;
+}
+
+bool CreateHwWrappedKey(std::vector<uint8_t> *enc_key,
+                        std::vector<uint8_t> *exported_key) {
+  *enc_key = GenerateTestKey(kHwWrappedKeySize);
+
+  Keymaster keymaster;
+  if (!keymaster) {
+    ADD_FAILURE() << "Unable to find keymaster";
+    return false;
+  }
+  std::string enc_key_string(enc_key->begin(), enc_key->end());
+  std::string exported_key_string;
+  // Make two attempts to create a key, first with and then without
+  // rollback resistance.
+  if (TryPrepareHwWrappedKey(keymaster, enc_key_string, &exported_key_string,
+                             true) ||
+      TryPrepareHwWrappedKey(keymaster, enc_key_string, &exported_key_string,
+                             false)) {
+    exported_key->assign(exported_key_string.begin(),
+                         exported_key_string.end());
+    return true;
+  }
+  GTEST_LOG_(INFO) << "Skipping test because device doesn't support "
+                      "hardware-wrapped keys";
   return false;
 }
 

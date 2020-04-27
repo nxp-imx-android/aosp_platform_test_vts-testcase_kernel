@@ -73,10 +73,25 @@ static inline std::string BytesToHex(const uint8_t (&array)[N]) {
 
 bool GetFirstApiLevel(int *first_api_level);
 
-bool FindRawPartition(const std::string &mountpoint,
-                      std::string *raw_partition);
+constexpr int kFilesystemUuidSize = 16;
+
+struct FilesystemUuid {
+  uint8_t bytes[kFilesystemUuidSize];
+};
+
+struct FilesystemInfo {
+  std::string fs_blk_device;
+  std::string type;
+  FilesystemUuid uuid;
+  std::string raw_blk_device;
+};
+
+bool GetFilesystemInfo(const std::string &mountpoint, FilesystemInfo *info);
 
 bool VerifyDataRandomness(const std::vector<uint8_t> &bytes);
+
+bool CreateHwWrappedKey(std::vector<uint8_t> *enc_key,
+                        std::vector<uint8_t> *exported_key);
 
 }  // namespace kernel
 }  // namespace android

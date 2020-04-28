@@ -14,8 +14,8 @@
 // limitations under the License.
 //
 
-cc_defaults {
-    name: "vts_test_binary_qtaguid_defaults",
+cc_test {
+    name: "vts_test_binary_qtaguid_module",
     srcs: ["SocketTagUserSpace.cpp"],
     shared_libs: [
         "libutils",
@@ -30,18 +30,6 @@ cc_defaults {
         "-Wno-unused-variable",
     ],
 
-}
-
-cc_test {
-    name: "vts_test_binary_qtaguid_module",
-    defaults: ["vts_test_binary_qtaguid_defaults"],
-}
-
-cc_test {
-    name: "vts_core_test_binary_qtaguid_module",
-    defaults: ["vts_test_binary_qtaguid_defaults"],
-    auto_gen_config: true,
-    test_suites: ["vts-core"],
 }
 
 vts_config {

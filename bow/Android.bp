@@ -37,5 +37,6 @@ cc_test {
     test_suites: [
         "vts",
     ],
+    require_root: true,
     auto_gen_config: true,
 }

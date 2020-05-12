@@ -17,8 +17,8 @@
     <!ENTITY env_setup_cmd "export TMP=&ltp_dir;/tmp LTPTMP=&ltp_dir;/tmp/ltptemp PATH=/system/bin:&ltp_dir;/testcases/bin LTP_DEV_FS_TYPE=ext4 TMPBASE=&ltp_dir;/tmp/tmpbase TMPDIR=&ltp_dir;/tmp/tmpdir LTPROOT=&ltp_dir; ">
 ]>
 <configuration description="Runs vts_linux_kselftest.">
-    <target_preparer class="com.android.tradefed.targetprep.RootTargetPreparer">
-    </target_preparer>
+    <target_preparer class="com.android.tradefed.targetprep.RootTargetPreparer"/>
+    <target_preparer class="com.android.tradefed.targetprep.StopServicesSetup"/>
 
     <object type="module_controller" class="com.android.tradefed.testtype.suite.module.KernelTestModuleController" >
         <option name="arch" value="arm"/>
@@ -32,7 +32,6 @@
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <option name="run-command" value="stop"/>
         <option name="run-command" value='find &ltp_dir; -type f | xargs grep -l -e "bin/sh" -e "bin/bash" | xargs sed -i -e "s?/bin/echo?echo?" -i -e "s?#!/bin/sh?#!/system/bin/sh?" -i -e "s?#!/bin/bash?#!/system/bin/sh?" -i -e "s?bs=1M?#bs=1m?"' />
         <option name="run-command" value='mkdir -p &ltp_dir;/tmp; chmod 777 &ltp_dir;/tmp' />
         <option name="run-command" value='mkdir -p &ltp_dir;/tmp/tmpbase; chmod 777 &ltp_dir;/tmp/tmpbase' />
@@ -41,7 +40,6 @@
          <!-- Apply the right security context for kernel tests to work. -->
         <option name="run-command" value='restorecon -F -R &ltp_root;' />
         <option name="teardown-command" value="rm -rf &ltp_dir;/tmp" />
-        <option name="teardown-command" value="start"/>
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.binary.KernelTargetTest" >

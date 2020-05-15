@@ -132,12 +132,6 @@
         <option name="test-command-line" key="fs_perms_simple.fs_perms18_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; fs_perms 400 99 99 200 99 r 1" />
         <option name="test-command-line" key="io.aio01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; aio01" />
         <option name="test-command-line" key="io.aio02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; aio02" />
-        <option name="test-command-line" key="ipc.pipeio_1_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; aio02" />
-        <option name="test-command-line" key="ipc.pipeio_3_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; aio02" />
-        <option name="test-command-line" key="ipc.pipeio_4_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; aio02" />
-        <option name="test-command-line" key="ipc.pipeio_5_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; aio02" />
-        <option name="test-command-line" key="ipc.pipeio_6_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; aio02" />
-        <option name="test-command-line" key="ipc.pipeio_8_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; aio02" />
         <option name="test-command-line" key="math.abs01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; abs01" />
         <option name="test-command-line" key="math.atof01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; atof01" />
         <option name="test-command-line" key="math.fptest01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; fptest01" />
@@ -162,7 +156,7 @@
         <option name="test-command-line" key="mm.mmapstress04_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mmapstress04" />
         <option name="test-command-line" key="mm.mmapstress05_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mmapstress05" />
         <option name="test-command-line" key="mm.mmapstress06_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mmapstress06 20" />
-        <option name="test-command-line" key="mm.mmapstress07_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; TMPFILE=`mktemp &ltp_dir;/tmp/tmpdir/example.XXXXXXXXXXXX`; mmapstress07 $TMPFILE" />
+        <option name="test-command-line" key="mm.mmapstress07_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; TMPFILE=`mktemp &ltp_dir;/tmp/tmpdir/example.XXXXXXXXXXXX`&amp;&amp; mmapstress07 $TMPFILE" />
         <option name="test-command-line" key="mm.mmapstress09_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mmapstress09 -p 20 -t 0.2" />
         <option name="test-command-line" key="mm.mmap10_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mmap10" />
         <option name="test-command-line" key="mm.mmap10_1_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mmap10 -a" />
@@ -826,21 +820,9 @@
         <option name="test-command-line" key="syscalls.sched_getattr01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sched_getattr01" />
         <option name="test-command-line" key="syscalls.sched_getattr02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sched_getattr02" />
         <option name="test-command-line" key="syscalls.select01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; select01" />
-        <option name="test-command-line" key="syscalls.select01_SYS__newselect_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; select01" />
-        <option name="test-command-line" key="syscalls.select01_SYS_select_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; select01" />
-        <option name="test-command-line" key="syscalls.select01_SYS_pselect6_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; select01" />
         <option name="test-command-line" key="syscalls.select02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; select02" />
-        <option name="test-command-line" key="syscalls.select02_SYS__newselect_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; select02" />
-        <option name="test-command-line" key="syscalls.select02_SYS_select_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; select02" />
-        <option name="test-command-line" key="syscalls.select02_SYS_pselect6_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; select02" />
         <option name="test-command-line" key="syscalls.select03_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; select03" />
-        <option name="test-command-line" key="syscalls.select03_SYS__newselect_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; select03" />
-        <option name="test-command-line" key="syscalls.select03_SYS_select_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; select03" />
-        <option name="test-command-line" key="syscalls.select03_SYS_pselect6_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; select03" />
         <option name="test-command-line" key="syscalls.select04_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; select04" />
-        <option name="test-command-line" key="syscalls.select04_SYS__newselect_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; select04" />
-        <option name="test-command-line" key="syscalls.select04_SYS_select_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; select04" />
-        <option name="test-command-line" key="syscalls.select04_SYS_pselect6_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; select04" />
         <option name="test-command-line" key="syscalls.send01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; send01" />
         <option name="test-command-line" key="syscalls.sendfile02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sendfile02" />
         <option name="test-command-line" key="syscalls.sendfile02_64_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sendfile02_64" />
@@ -990,7 +972,6 @@
         <option name="test-command-line" key="syscalls.symlinkat01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; symlinkat01" />
         <option name="test-command-line" key="syscalls.sync01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sync01" />
         <option name="test-command-line" key="syscalls.sync02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sync02" />
-        <option name="test-command-line" key="syscalls.syncfs01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; syncfs01" />
         <option name="test-command-line" key="syscalls.syncfs01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; syncfs01" />
         <option name="test-command-line" key="syscalls.syncfs01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; syncfs01" />
         <option name="test-command-line" key="syscalls.sync_file_range01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sync_file_range01" />

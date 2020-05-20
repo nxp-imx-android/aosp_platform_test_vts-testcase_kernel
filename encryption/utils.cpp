@@ -27,6 +27,7 @@
 #include <libdm/dm.h>
 #include <linux/magic.h>
 #include <mntent.h>
+#include <openssl/cmac.h>
 #include <unistd.h>
 
 #include "Keymaster.h"
@@ -285,7 +286,7 @@ bool VerifyDataRandomness(const std::vector<uint8_t> &bytes) {
 }
 
 static bool TryPrepareHwWrappedKey(Keymaster &keymaster,
-                                   const std::string &enc_key_string,
+                                   const std::string &master_key_string,
                                    std::string *exported_key_string,
                                    bool rollback_resistance) {
   // This key is used to drive a CMAC-based KDF
@@ -297,7 +298,7 @@ static bool TryPrepareHwWrappedKey(Keymaster &keymaster,
   paramBuilder.Authorization(km::TAG_STORAGE_KEY);
 
   std::string wrapped_key_blob;
-  if (keymaster.importKey(paramBuilder, km::KeyFormat::RAW, enc_key_string,
+  if (keymaster.importKey(paramBuilder, km::KeyFormat::RAW, master_key_string,
                           &wrapped_key_blob) &&
       keymaster.exportKey(wrapped_key_blob, exported_key_string)) {
     return true;
@@ -311,22 +312,22 @@ static bool TryPrepareHwWrappedKey(Keymaster &keymaster,
   return false;
 }
 
-bool CreateHwWrappedKey(std::vector<uint8_t> *enc_key,
+bool CreateHwWrappedKey(std::vector<uint8_t> *master_key,
                         std::vector<uint8_t> *exported_key) {
-  *enc_key = GenerateTestKey(kHwWrappedKeySize);
+  *master_key = GenerateTestKey(kHwWrappedKeySize);
 
   Keymaster keymaster;
   if (!keymaster) {
     ADD_FAILURE() << "Unable to find keymaster";
     return false;
   }
-  std::string enc_key_string(enc_key->begin(), enc_key->end());
+  std::string master_key_string(master_key->begin(), master_key->end());
   std::string exported_key_string;
   // Make two attempts to create a key, first with and then without
   // rollback resistance.
-  if (TryPrepareHwWrappedKey(keymaster, enc_key_string, &exported_key_string,
+  if (TryPrepareHwWrappedKey(keymaster, master_key_string, &exported_key_string,
                              true) ||
-      TryPrepareHwWrappedKey(keymaster, enc_key_string, &exported_key_string,
+      TryPrepareHwWrappedKey(keymaster, master_key_string, &exported_key_string,
                              false)) {
     exported_key->assign(exported_key_string.begin(),
                          exported_key_string.end());
@@ -335,6 +336,52 @@ bool CreateHwWrappedKey(std::vector<uint8_t> *enc_key,
   GTEST_LOG_(INFO) << "Skipping test because device doesn't support "
                       "hardware-wrapped keys";
   return false;
+}
+
+static void PushBigEndian32(uint32_t val, std::vector<uint8_t> *vec) {
+  for (int i = 24; i >= 0; i -= 8) {
+    vec->push_back((val >> i) & 0xFF);
+  }
+}
+
+static void GetFixedInputString(uint32_t counter,
+                                const std::vector<uint8_t> &label,
+                                const std::vector<uint8_t> &context,
+                                uint32_t derived_key_len,
+                                std::vector<uint8_t> *fixed_input_string) {
+  PushBigEndian32(counter, fixed_input_string);
+  fixed_input_string->insert(fixed_input_string->end(), label.begin(),
+                             label.end());
+  fixed_input_string->push_back(0);
+  fixed_input_string->insert(fixed_input_string->end(), context.begin(),
+                             context.end());
+  PushBigEndian32(derived_key_len, fixed_input_string);
+}
+
+bool DeriveHwWrappedEncryptionKey(const std::vector<uint8_t> &master_key,
+                                  std::vector<uint8_t> *enc_key) {
+  std::vector<uint8_t> label{0x00, 0x00, 0x40, 0x00, 0x00, 0x00,
+                             0x00, 0x00, 0x00, 0x00, 0x20};
+  // Context in fixed input string comprises of software provided context,
+  // padding to eight bytes (if required) and the key policy.
+  std::vector<uint8_t> context = {
+      'i', 'n', 'l', 'i', 'n', 'e', ' ', 'e',
+      'n', 'c', 'r', 'y', 'p', 't', 'i', 'o',
+      'n', ' ', 'k', 'e', 'y', 0x0, 0x0, 0x0,
+      0x00, 0x00, 0x00, 0x02, 0x43, 0x00, 0x82, 0x50,
+      0x0,  0x0,  0x0,  0x0};
+
+  enc_key->resize(kAes256XtsKeySize);
+  for (size_t count = 0; count < (kAes256XtsKeySize / kAesBlockSize); count++) {
+    std::vector<uint8_t> fixed_input_string;
+    GetFixedInputString(count + 1, label, context, (kAes256XtsKeySize * 8),
+                        &fixed_input_string);
+    if (!AES_CMAC(enc_key->data() + (kAesBlockSize * count), master_key.data(),
+                  master_key.size(), fixed_input_string.data(),
+                  fixed_input_string.size()))
+      return false;
+  }
+  return true;
 }
 
 }  // namespace kernel

@@ -698,8 +698,8 @@ TEST_F(FBEPolicyTest, TestAdiantumV2Policy) {
 TEST_F(FBEPolicyTest, TestHwWrappedKeyPolicy) {
   if (skip_test_) return;
 
-  std::vector<uint8_t> enc_key, exported_key;
-  if (!CreateHwWrappedKey(&enc_key, &exported_key)) return;
+  std::vector<uint8_t> master_key, exported_key;
+  if (!CreateHwWrappedKey(&master_key, &exported_key)) return;
 
   // If this fails, it just means fscrypt doesn't have support for hardware
   // wrapped keys, which is OK.
@@ -723,6 +723,8 @@ TEST_F(FBEPolicyTest, TestHwWrappedKeyPolicy) {
   ASSERT_LE(file_info.inode_number, UINT32_MAX);
   iv.inode_number = __cpu_to_le32(file_info.inode_number);
 
+  std::vector<uint8_t> enc_key;
+  ASSERT_TRUE(DeriveHwWrappedEncryptionKey(master_key, &enc_key));
   VerifyCiphertext(enc_key, iv, Aes256XtsCipher(), file_info);
 }
 

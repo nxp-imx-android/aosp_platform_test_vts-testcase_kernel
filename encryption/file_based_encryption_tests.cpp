@@ -325,12 +325,12 @@ class FBEPolicyTest : public ::testing::Test {
   void RemoveTestDirectory();
   bool SetMasterKey(const std::vector<uint8_t> &master_key, uint32_t flags = 0,
                     bool required = true);
+  bool CreateAndSetHwWrappedKey(std::vector<uint8_t> *enc_key,
+                                std::vector<uint8_t> *sw_secret);
+  bool IsInoBasedEncryptionGuaranteed();
   bool SetEncryptionPolicy(int contents_mode, int filenames_mode, int flags,
                            bool required);
   bool GenerateTestFile(TestFileInfo *info);
-  bool DeriveEncryptionKey(const std::vector<uint8_t> &master_key,
-                           const std::vector<uint8_t> &hdkf_info,
-                           std::vector<uint8_t> &enc_key);
   bool DerivePerModeEncryptionKey(const std::vector<uint8_t> &master_key,
                                   int mode, FscryptHkdfContext context,
                                   std::vector<uint8_t> &enc_key);
@@ -436,6 +436,40 @@ bool FBEPolicyTest::SetMasterKey(const std::vector<uint8_t> &master_key,
   return true;
 }
 
+// Creates a hardware-wrapped key, adds it to the filesystem, and derives the
+// corresponding inline encryption key |enc_key| and software secret
+// |sw_secret|.  Returns false if unsuccessful (either the test failed, or the
+// device doesn't support hardware-wrapped keys so the test should be skipped).
+bool FBEPolicyTest::CreateAndSetHwWrappedKey(std::vector<uint8_t> *enc_key,
+                                             std::vector<uint8_t> *sw_secret) {
+  std::vector<uint8_t> master_key, exported_key;
+  if (!CreateHwWrappedKey(&master_key, &exported_key)) return false;
+
+  // If this fails, it just means fscrypt doesn't have support for hardware
+  // wrapped keys, which is OK.
+  if (!SetMasterKey(exported_key, __FSCRYPT_ADD_KEY_FLAG_HW_WRAPPED, false))
+    return false;
+
+  if (!DeriveHwWrappedEncryptionKey(master_key, enc_key)) return false;
+
+  // FIXME: placeholder value.  Derive this correctly.
+  *sw_secret = std::vector<uint8_t>(32, 0);
+  return true;
+}
+
+// Returns true if encryption policies that include the inode number in the IVs
+// (e.g. IV_INO_LBLK_64) are guaranteed to be settable on the test filesystem.
+//
+// On f2fs, they're always settable.  On ext4, they're only settable if the
+// filesystem has the 'stable_inodes' feature flag.  Android only sets
+// 'stable_inodes' if the device uses one of these encryption policies "for
+// real", e.g. "fileencryption=::inlinecrypt_optimized" in fstab.  Since the
+// fstab could contain something else, we have to allow the tests for these
+// encryption policies to be skipped on ext4.
+bool FBEPolicyTest::IsInoBasedEncryptionGuaranteed() {
+  return fs_info_.type != "ext4";
+}
+
 // Sets a v2 encryption policy on the test directory.  The policy will use the
 // test key and the specified encryption modes and flags.  If required=false,
 // then a failure won't be added if the kernel doesn't support the policy.
@@ -535,16 +569,16 @@ static std::vector<uint8_t> InitHkdfInfo(FscryptHkdfContext context) {
       'f', 's', 'c', 'r', 'y', 'p', 't', '\0', static_cast<uint8_t>(context)};
 }
 
-bool FBEPolicyTest::DeriveEncryptionKey(const std::vector<uint8_t> &master_key,
-                                        const std::vector<uint8_t> &hkdf_info,
-                                        std::vector<uint8_t> &out) {
+static bool DeriveKey(const std::vector<uint8_t> &master_key,
+                      const std::vector<uint8_t> &hkdf_info,
+                      std::vector<uint8_t> &out) {
   if (HKDF(out.data(), out.size(), EVP_sha512(), master_key.data(),
            master_key.size(), nullptr, 0, hkdf_info.data(),
            hkdf_info.size()) != 1) {
     ADD_FAILURE() << "BoringSSL HKDF-SHA512 call failed";
     return false;
   }
-  GTEST_LOG_(INFO) << "Derived encryption key " << BytesToHex(out)
+  GTEST_LOG_(INFO) << "Derived subkey " << BytesToHex(out)
                    << " using HKDF info " << BytesToHex(hkdf_info);
   return true;
 }
@@ -561,7 +595,7 @@ bool FBEPolicyTest::DerivePerModeEncryptionKey(
     hkdf_info.insert(hkdf_info.end(), fs_info_.uuid.bytes,
                      std::end(fs_info_.uuid.bytes));
 
-  return DeriveEncryptionKey(master_key, hkdf_info, enc_key);
+  return DeriveKey(master_key, hkdf_info, enc_key);
 }
 
 // Derives a per-file encryption key from |master_key| and |nonce|.
@@ -572,7 +606,7 @@ bool FBEPolicyTest::DerivePerFileEncryptionKey(
 
   hkdf_info.insert(hkdf_info.end(), nonce.bytes, std::end(nonce.bytes));
 
-  return DeriveEncryptionKey(master_key, hkdf_info, enc_key);
+  return DeriveKey(master_key, hkdf_info, enc_key);
 }
 
 void FBEPolicyTest::VerifyCiphertext(const std::vector<uint8_t> &enc_key,
@@ -603,9 +637,30 @@ void FBEPolicyTest::VerifyCiphertext(const std::vector<uint8_t> &enc_key,
   ASSERT_EQ(file_info.actual_ciphertext, computed_ciphertext);
 }
 
-// Tests a policy matching fileencryption=aes-256-xts:aes-256-cts:v2
-// (or simply fileencryption= on devices launched with R or higher)
-TEST_F(FBEPolicyTest, TestAesV2Policy) {
+static bool InitIVForPerFileKey(FscryptIV *iv) {
+  memset(iv, 0, kFscryptMaxIVSize);
+  return true;
+}
+
+static bool InitIVForDirectKey(const FscryptFileNonce &nonce, FscryptIV *iv) {
+  memset(iv, 0, kFscryptMaxIVSize);
+  memcpy(iv->file_nonce, nonce.bytes, kFscryptFileNonceSize);
+  return true;
+}
+
+static bool InitIVForInoLblk64(uint64_t inode_number, FscryptIV *iv) {
+  if (inode_number > UINT32_MAX) {
+    ADD_FAILURE() << "inode number doesn't fit in 32 bits";
+    return false;
+  }
+  memset(iv, 0, kFscryptMaxIVSize);
+  iv->inode_number = __cpu_to_le32(inode_number);
+  return true;
+}
+
+// Tests a policy matching "fileencryption=aes-256-xts:aes-256-cts:v2"
+// (or simply "fileencryption=" on devices launched with R or higher)
+TEST_F(FBEPolicyTest, TestAesPerFileKeysPolicy) {
   if (skip_test_) return;
 
   auto master_key = GenerateTestKey(kFscryptMasterKeySize);
@@ -622,28 +677,23 @@ TEST_F(FBEPolicyTest, TestAesV2Policy) {
   ASSERT_TRUE(DerivePerFileEncryptionKey(master_key, file_info.nonce, enc_key));
 
   FscryptIV iv;
-  memset(&iv, 0, sizeof(iv));
-
+  ASSERT_TRUE(InitIVForPerFileKey(&iv));
   VerifyCiphertext(enc_key, iv, Aes256XtsCipher(), file_info);
 }
 
 // Tests a policy matching
-// fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized
-// (or simply fileencryption=::inlinecrypt_optimized on
-// devices launched with R or higher)
-TEST_F(FBEPolicyTest, TestAesV2InlineCryptOptimizedPolicy) {
+// "fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized"
+// (or simply "fileencryption=::inlinecrypt_optimized" on devices launched with
+// R or higher)
+TEST_F(FBEPolicyTest, TestAesInlineCryptOptimizedPolicy) {
   if (skip_test_) return;
 
   auto master_key = GenerateTestKey(kFscryptMasterKeySize);
   ASSERT_TRUE(SetMasterKey(master_key));
 
-  // On ext4, FSCRYPT_POLICY_FLAG_IV_INO_LBLK_64 is only supported when the
-  // filesystem has EXT4_FEATURE_COMPAT_STABLE_INODES, which only happens when
-  // inlinecrypt_optimized is selected in the fstab.  So we don't require
-  // setting this type of policy to work on ext4.
   if (!SetEncryptionPolicy(FSCRYPT_MODE_AES_256_XTS, FSCRYPT_MODE_AES_256_CTS,
                            FSCRYPT_POLICY_FLAG_IV_INO_LBLK_64,
-                           fs_info_.type != "ext4"))
+                           IsInoBasedEncryptionGuaranteed()))
     return;
 
   TestFileInfo file_info;
@@ -655,16 +705,36 @@ TEST_F(FBEPolicyTest, TestAesV2InlineCryptOptimizedPolicy) {
                                          enc_key));
 
   FscryptIV iv;
-  memset(&iv, 0, sizeof(iv));
-  ASSERT_LE(file_info.inode_number, UINT32_MAX);
-  iv.inode_number = __cpu_to_le32(file_info.inode_number);
-
+  ASSERT_TRUE(InitIVForInoLblk64(file_info.inode_number, &iv));
   VerifyCiphertext(enc_key, iv, Aes256XtsCipher(), file_info);
 }
 
-// Tests a policy matching fileencryption=adiantum:adiantum:v2 (or simply
-// fileencryption=adiantum on devices launched with R or higher)
-TEST_F(FBEPolicyTest, TestAdiantumV2Policy) {
+// Tests a policy matching
+// "fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized+wrappedkey_v0"
+// (or simply "fileencryption=::inlinecrypt_optimized+wrappedkey_v0" on devices
+// launched with R or higher)
+TEST_F(FBEPolicyTest, TestAesInlineCryptOptimizedHwWrappedKeyPolicy) {
+  if (skip_test_) return;
+
+  std::vector<uint8_t> enc_key, sw_secret;
+  if (!CreateAndSetHwWrappedKey(&enc_key, &sw_secret)) return;
+
+  if (!SetEncryptionPolicy(FSCRYPT_MODE_AES_256_XTS, FSCRYPT_MODE_AES_256_CTS,
+                           FSCRYPT_POLICY_FLAG_IV_INO_LBLK_64,
+                           IsInoBasedEncryptionGuaranteed()))
+    return;
+
+  TestFileInfo file_info;
+  ASSERT_TRUE(GenerateTestFile(&file_info));
+
+  FscryptIV iv;
+  ASSERT_TRUE(InitIVForInoLblk64(file_info.inode_number, &iv));
+  VerifyCiphertext(enc_key, iv, Aes256XtsCipher(), file_info);
+}
+
+// Tests a policy matching "fileencryption=adiantum:adiantum:v2" (or simply
+// "fileencryption=adiantum" on devices launched with R or higher)
+TEST_F(FBEPolicyTest, TestAdiantumPolicy) {
   if (skip_test_) return;
 
   auto master_key = GenerateTestKey(kFscryptMasterKeySize);
@@ -684,48 +754,8 @@ TEST_F(FBEPolicyTest, TestAdiantumV2Policy) {
                                          HKDF_CONTEXT_DIRECT_KEY, enc_key));
 
   FscryptIV iv;
-  memset(&iv, 0, sizeof(iv));
-  memcpy(iv.file_nonce, file_info.nonce.bytes, kFscryptFileNonceSize);
-
+  ASSERT_TRUE(InitIVForDirectKey(file_info.nonce, &iv));
   VerifyCiphertext(enc_key, iv, AdiantumCipher(), file_info);
-}
-
-// Tests a policy matching
-// fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized+wrappedkey_v0
-// (or simply
-// fileencryption=::inlinecrypt_optimized+wrappedkey_v0 on devices launched
-// with R or higher)
-TEST_F(FBEPolicyTest, TestHwWrappedKeyPolicy) {
-  if (skip_test_) return;
-
-  std::vector<uint8_t> master_key, exported_key;
-  if (!CreateHwWrappedKey(&master_key, &exported_key)) return;
-
-  // If this fails, it just means fscrypt doesn't have support for hardware
-  // wrapped keys, which is OK.
-  if (!SetMasterKey(exported_key, __FSCRYPT_ADD_KEY_FLAG_HW_WRAPPED, false))
-    return;
-
-  // On ext4, FSCRYPT_POLICY_FLAG_IV_INO_LBLK_64 is only supported when the
-  // filesystem has EXT4_FEATURE_COMPAT_STABLE_INODES, which only happens when
-  // inlinecrypt_optimized is selected in the fstab.  So we don't require
-  // setting this type of policy to work on ext4.
-  if (!SetEncryptionPolicy(FSCRYPT_MODE_AES_256_XTS, FSCRYPT_MODE_AES_256_CTS,
-                           FSCRYPT_POLICY_FLAG_IV_INO_LBLK_64,
-                           fs_info_.type != "ext4"))
-    return;
-
-  TestFileInfo file_info;
-  ASSERT_TRUE(GenerateTestFile(&file_info));
-
-  FscryptIV iv;
-  memset(&iv, 0, sizeof(iv));
-  ASSERT_LE(file_info.inode_number, UINT32_MAX);
-  iv.inode_number = __cpu_to_le32(file_info.inode_number);
-
-  std::vector<uint8_t> enc_key;
-  ASSERT_TRUE(DeriveHwWrappedEncryptionKey(master_key, &enc_key));
-  VerifyCiphertext(enc_key, iv, Aes256XtsCipher(), file_info);
 }
 
 // Tests that if the device uses FBE, then the ciphertext for file contents in

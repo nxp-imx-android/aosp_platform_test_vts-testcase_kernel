@@ -278,10 +278,13 @@ TEST_F(DmDefaultKeyTest, TestAdiantum) {
 TEST_F(DmDefaultKeyTest, TestHwWrappedKey) {
   if (skip_test_) return;
 
-  std::vector<uint8_t> enc_key, exported_key;
-  if (!CreateHwWrappedKey(&enc_key, &exported_key)) return;
+  std::vector<uint8_t> master_key, exported_key;
+  if (!CreateHwWrappedKey(&master_key, &exported_key)) return;
 
   if (!CreateTestDevice("aes-xts-plain64", exported_key, true)) return;
+
+  std::vector<uint8_t> enc_key;
+  ASSERT_TRUE(DeriveHwWrappedEncryptionKey(master_key, &enc_key));
 
   VerifyDecryption(enc_key, Aes256XtsCipher());
 }

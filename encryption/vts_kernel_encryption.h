@@ -90,8 +90,10 @@ bool GetFilesystemInfo(const std::string &mountpoint, FilesystemInfo *info);
 
 bool VerifyDataRandomness(const std::vector<uint8_t> &bytes);
 
-bool CreateHwWrappedKey(std::vector<uint8_t> *enc_key,
+bool CreateHwWrappedKey(std::vector<uint8_t> *master_key,
                         std::vector<uint8_t> *exported_key);
 
+bool DeriveHwWrappedEncryptionKey(const std::vector<uint8_t> &master_key,
+                                  std::vector<uint8_t> *enc_key);
 }  // namespace kernel
 }  // namespace android

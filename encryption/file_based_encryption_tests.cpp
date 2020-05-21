@@ -331,6 +331,7 @@ class FBEPolicyTest : public ::testing::Test {
   bool SetEncryptionPolicy(int contents_mode, int filenames_mode, int flags,
                            bool required);
   bool GenerateTestFile(TestFileInfo *info);
+  bool VerifyKeyIdentifier(const std::vector<uint8_t> &master_key);
   bool DerivePerModeEncryptionKey(const std::vector<uint8_t> &master_key,
                                   int mode, FscryptHkdfContext context,
                                   std::vector<uint8_t> &enc_key);
@@ -433,6 +434,9 @@ bool FBEPolicyTest::SetMasterKey(const std::vector<uint8_t> &master_key,
   GTEST_LOG_(INFO) << "Master key identifier is "
                    << BytesToHex(master_key_specifier_.u.identifier);
   key_added_ = true;
+  if (!(flags & __FSCRYPT_ADD_KEY_FLAG_HW_WRAPPED) &&
+      !VerifyKeyIdentifier(master_key))
+    return false;
   return true;
 }
 
@@ -454,6 +458,9 @@ bool FBEPolicyTest::CreateAndSetHwWrappedKey(std::vector<uint8_t> *enc_key,
 
   // FIXME: placeholder value.  Derive this correctly.
   *sw_secret = std::vector<uint8_t>(32, 0);
+
+  if (!VerifyKeyIdentifier(*sw_secret)) return false;
+
   return true;
 }
 
@@ -581,6 +588,21 @@ static bool DeriveKey(const std::vector<uint8_t> &master_key,
   GTEST_LOG_(INFO) << "Derived subkey " << BytesToHex(out)
                    << " using HKDF info " << BytesToHex(hkdf_info);
   return true;
+}
+
+// Derives the key identifier from |master_key| and verifies that it matches the
+// value the kernel returned in |master_key_specifier_|.
+bool FBEPolicyTest::VerifyKeyIdentifier(
+    const std::vector<uint8_t> &master_key) {
+  std::vector<uint8_t> hkdf_info = InitHkdfInfo(HKDF_CONTEXT_KEY_IDENTIFIER);
+  std::vector<uint8_t> computed_key_identifier(FSCRYPT_KEY_IDENTIFIER_SIZE);
+  if (!DeriveKey(master_key, hkdf_info, computed_key_identifier)) return false;
+
+  std::vector<uint8_t> actual_key_identifier(
+      std::begin(master_key_specifier_.u.identifier),
+      std::end(master_key_specifier_.u.identifier));
+  EXPECT_EQ(actual_key_identifier, computed_key_identifier);
+  return actual_key_identifier == computed_key_identifier;
 }
 
 // Derives a per-mode encryption key from |master_key|, |mode|, |context|, and

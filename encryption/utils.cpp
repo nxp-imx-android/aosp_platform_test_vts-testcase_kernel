@@ -378,8 +378,10 @@ bool DeriveHwWrappedEncryptionKey(const std::vector<uint8_t> &master_key,
                         &fixed_input_string);
     if (!AES_CMAC(enc_key->data() + (kAesBlockSize * count), master_key.data(),
                   master_key.size(), fixed_input_string.data(),
-                  fixed_input_string.size()))
+                  fixed_input_string.size())) {
+      ADD_FAILURE() << "AES_CMAC failed while deriving inline encryption key";
       return false;
+    }
   }
   return true;
 }

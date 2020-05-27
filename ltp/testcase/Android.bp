@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2016 The Android Open Source Project
+// Copyright (C) 2020 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,17 @@
 // limitations under the License.
 //
 
-vts_config {
-    name: "VtsKernelLtp",
+sh_test {
+    name: "vts_ltp_test_arm_64",
+    src: "phony_ltp_test_arm64.sh",
+    test_suites: ["vts"],
+    test_config: "vts_ltp_test_arm_64.xml",
+}
+
+
+sh_test {
+    name: "vts_ltp_test_arm",
+    src: "phony_ltp_test_arm.sh",
+    test_suites: ["vts"],
+    test_config: "vts_ltp_test_arm.xml",
 }

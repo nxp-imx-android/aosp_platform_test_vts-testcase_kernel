@@ -27,6 +27,8 @@
 //    fileencryption=aes-256-xts:aes-256-cts:v2
 //    fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized
 //    fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized+wrappedkey_v0
+//    fileencryption=aes-256-xts:aes-256-cts:v2+emmc_optimized
+//    fileencryption=aes-256-xts:aes-256-cts:v2+emmc_optimized+wrappedkey_v0
 //    fileencryption=adiantum:adiantum:v2
 //
 // On devices launching with R or higher those are equivalent to simply:
@@ -34,6 +36,8 @@
 //    fileencryption=
 //    fileencryption=::inlinecrypt_optimized
 //    fileencryption=::inlinecrypt_optimized+wrappedkey_v0
+//    fileencryption=::emmc_optimized
+//    fileencryption=::emmc_optimized+wrappedkey_v0
 //    fileencryption=adiantum
 //
 // The tests don't check which one of those settings, if any, the device is
@@ -60,6 +64,7 @@
 #include <linux/fscrypt.h>
 #include <openssl/evp.h>
 #include <openssl/hkdf.h>
+#include <openssl/siphash.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -76,6 +81,10 @@
 
 #ifndef FS_IOC_GET_ENCRYPTION_NONCE
 #define FS_IOC_GET_ENCRYPTION_NONCE _IOR('f', 27, __u8[16])
+#endif
+
+#ifndef FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32
+#define FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32 0x10
 #endif
 
 namespace android {
@@ -106,6 +115,8 @@ enum FscryptHkdfContext {
   HKDF_CONTEXT_DIRECT_KEY = 3,
   HKDF_CONTEXT_IV_INO_LBLK_64_KEY = 4,
   HKDF_CONTEXT_DIRHASH_KEY = 5,
+  HKDF_CONTEXT_IV_INO_LBLK_32_KEY = 6,
+  HKDF_CONTEXT_INODE_HASH_KEY = 7,
 };
 
 struct FscryptFileNonce {
@@ -137,6 +148,7 @@ struct TestFileInfo {
 // - v2 encryption policies
 // - The IV_INO_LBLK_64 encryption policy flag
 // - The FS_IOC_GET_ENCRYPTION_NONCE ioctl
+// - The IV_INO_LBLK_32 encryption policy flag
 //
 // To do this it's sufficient to just check whether FS_IOC_ADD_ENCRYPTION_KEY is
 // available, as the other features were added in the same AOSP release.
@@ -613,7 +625,8 @@ bool FBEPolicyTest::DerivePerModeEncryptionKey(
   std::vector<uint8_t> hkdf_info = InitHkdfInfo(context);
 
   hkdf_info.push_back(mode);
-  if (context == HKDF_CONTEXT_IV_INO_LBLK_64_KEY)
+  if (context == HKDF_CONTEXT_IV_INO_LBLK_64_KEY ||
+      context == HKDF_CONTEXT_IV_INO_LBLK_32_KEY)
     hkdf_info.insert(hkdf_info.end(), fs_info_.uuid.bytes,
                      std::end(fs_info_.uuid.bytes));
 
@@ -629,6 +642,39 @@ bool FBEPolicyTest::DerivePerFileEncryptionKey(
   hkdf_info.insert(hkdf_info.end(), nonce.bytes, std::end(nonce.bytes));
 
   return DeriveKey(master_key, hkdf_info, enc_key);
+}
+
+// For IV_INO_LBLK_32: Hashes the |inode_number| using the SipHash key derived
+// from |master_key|.  Returns the resulting hash in |hash|.
+static bool HashInodeNumber(const std::vector<uint8_t> &master_key,
+                            uint64_t inode_number, uint32_t *hash) {
+  union {
+    uint64_t words[2];
+    __le64 le_words[2];
+  } siphash_key;
+  union {
+    __le64 inode_number;
+    uint8_t bytes[8];
+  } input;
+
+  std::vector<uint8_t> hkdf_info = InitHkdfInfo(HKDF_CONTEXT_INODE_HASH_KEY);
+  std::vector<uint8_t> ino_hash_key(sizeof(siphash_key));
+  if (!DeriveKey(master_key, hkdf_info, ino_hash_key)) return false;
+
+  memcpy(&siphash_key, &ino_hash_key[0], sizeof(siphash_key));
+  siphash_key.words[0] = __le64_to_cpu(siphash_key.le_words[0]);
+  siphash_key.words[1] = __le64_to_cpu(siphash_key.le_words[1]);
+
+  GTEST_LOG_(INFO) << "Inode hash key is {" << std::hex << "0x"
+                   << siphash_key.words[0] << ", 0x" << siphash_key.words[1]
+                   << "}" << std::dec;
+
+  input.inode_number = __cpu_to_le64(inode_number);
+
+  *hash = SIPHASH_24(siphash_key.words, input.bytes, sizeof(input));
+  GTEST_LOG_(INFO) << "Hashed inode number " << inode_number << " to 0x"
+                   << std::hex << *hash << std::dec;
+  return true;
 }
 
 void FBEPolicyTest::VerifyCiphertext(const std::vector<uint8_t> &enc_key,
@@ -653,7 +699,6 @@ void FBEPolicyTest::VerifyCiphertext(const std::vector<uint8_t> &enc_key,
 
     // Update the IV by incrementing the file logical block number.
     iv.lblk_num = __cpu_to_le32(__le32_to_cpu(iv.lblk_num) + 1);
-    ASSERT_NE(__le32_to_cpu(iv.lblk_num), 0);
   }
 
   ASSERT_EQ(file_info.actual_ciphertext, computed_ciphertext);
@@ -677,6 +722,15 @@ static bool InitIVForInoLblk64(uint64_t inode_number, FscryptIV *iv) {
   }
   memset(iv, 0, kFscryptMaxIVSize);
   iv->inode_number = __cpu_to_le32(inode_number);
+  return true;
+}
+
+static bool InitIVForInoLblk32(const std::vector<uint8_t> &master_key,
+                               uint64_t inode_number, FscryptIV *iv) {
+  uint32_t hash;
+  if (!HashInodeNumber(master_key, inode_number, &hash)) return false;
+  memset(iv, 0, kFscryptMaxIVSize);
+  iv->lblk_num = __cpu_to_le32(hash);
   return true;
 }
 
@@ -751,6 +805,56 @@ TEST_F(FBEPolicyTest, TestAesInlineCryptOptimizedHwWrappedKeyPolicy) {
 
   FscryptIV iv;
   ASSERT_TRUE(InitIVForInoLblk64(file_info.inode_number, &iv));
+  VerifyCiphertext(enc_key, iv, Aes256XtsCipher(), file_info);
+}
+
+// Tests a policy matching
+// "fileencryption=aes-256-xts:aes-256-cts:v2+emmc_optimized" (or simply
+// "fileencryption=::emmc_optimized" on devices launched with R or higher)
+TEST_F(FBEPolicyTest, TestAesEmmcOptimizedPolicy) {
+  if (skip_test_) return;
+
+  auto master_key = GenerateTestKey(kFscryptMasterKeySize);
+  ASSERT_TRUE(SetMasterKey(master_key));
+
+  if (!SetEncryptionPolicy(FSCRYPT_MODE_AES_256_XTS, FSCRYPT_MODE_AES_256_CTS,
+                           FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32,
+                           IsInoBasedEncryptionGuaranteed()))
+    return;
+
+  TestFileInfo file_info;
+  ASSERT_TRUE(GenerateTestFile(&file_info));
+
+  std::vector<uint8_t> enc_key(kAes256XtsKeySize);
+  ASSERT_TRUE(DerivePerModeEncryptionKey(master_key, FSCRYPT_MODE_AES_256_XTS,
+                                         HKDF_CONTEXT_IV_INO_LBLK_32_KEY,
+                                         enc_key));
+
+  FscryptIV iv;
+  ASSERT_TRUE(InitIVForInoLblk32(master_key, file_info.inode_number, &iv));
+  VerifyCiphertext(enc_key, iv, Aes256XtsCipher(), file_info);
+}
+
+// Tests a policy matching
+// "fileencryption=aes-256-xts:aes-256-cts:v2+emmc_optimized+wrappedkey_v0"
+// (or simply "fileencryption=::emmc_optimized+wrappedkey_v0" on devices
+// launched with R or higher)
+TEST_F(FBEPolicyTest, TestAesEmmcOptimizedHwWrappedKeyPolicy) {
+  if (skip_test_) return;
+
+  std::vector<uint8_t> enc_key, sw_secret;
+  if (!CreateAndSetHwWrappedKey(&enc_key, &sw_secret)) return;
+
+  if (!SetEncryptionPolicy(FSCRYPT_MODE_AES_256_XTS, FSCRYPT_MODE_AES_256_CTS,
+                           FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32,
+                           IsInoBasedEncryptionGuaranteed()))
+    return;
+
+  TestFileInfo file_info;
+  ASSERT_TRUE(GenerateTestFile(&file_info));
+
+  FscryptIV iv;
+  ASSERT_TRUE(InitIVForInoLblk32(sw_secret, file_info.inode_number, &iv));
   VerifyCiphertext(enc_key, iv, Aes256XtsCipher(), file_info);
 }
 

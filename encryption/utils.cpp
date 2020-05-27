@@ -53,6 +53,27 @@ constexpr int kHwWrappedKeySize = 32;
 
 std::string Errno() { return std::string(": ") + strerror(errno); }
 
+// Recursively deletes the file or directory at |path|, if it exists.
+void DeleteRecursively(const std::string &path) {
+  if (unlink(path.c_str()) == 0 || errno == ENOENT) return;
+  ASSERT_EQ(EISDIR, errno) << "Failed to unlink " << path << Errno();
+
+  std::unique_ptr<DIR, int (*)(DIR *)> dirp(opendir(path.c_str()), closedir);
+  // If the directory was assigned an encryption policy that the kernel lacks
+  // crypto API support for, then opening it will fail, and it will be empty.
+  // So, we have to allow opening the directory to fail.
+  if (dirp != nullptr) {
+    struct dirent *entry;
+    while ((entry = readdir(dirp.get())) != nullptr) {
+      std::string filename(entry->d_name);
+      if (filename != "." && filename != "..")
+        DeleteRecursively(path + "/" + filename);
+    }
+  }
+  ASSERT_EQ(0, rmdir(path.c_str()))
+      << "Failed to remove directory " << path << Errno();
+}
+
 // Generates some "random" bytes.  Not secure; this is for testing only.
 void RandomBytesForTesting(std::vector<uint8_t> &bytes) {
   for (size_t i = 0; i < bytes.size(); i++) {

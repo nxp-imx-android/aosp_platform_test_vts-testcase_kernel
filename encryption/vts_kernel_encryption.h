@@ -60,6 +60,8 @@ class AdiantumCipher : public Cipher {
 
 std::string Errno();
 
+void DeleteRecursively(const std::string &path);
+
 void RandomBytesForTesting(std::vector<uint8_t> &bytes);
 
 std::vector<uint8_t> GenerateTestKey(size_t size);

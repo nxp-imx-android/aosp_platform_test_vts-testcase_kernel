@@ -22,6 +22,7 @@
 
     <object type="module_controller" class="com.android.tradefed.testtype.suite.module.KernelTestModuleController" >
         <option name="arch" value="arm64"/>
+        <option name="is-low-mem" value="true"/>
     </object>
 
     <target_preparer class="com.android.tradefed.targetprep.PushFilePreparer">
@@ -46,7 +47,6 @@
         <option name="ignore-binary-check" value="true" />
         <!-- Set binary timeout to be 6 min which is greater than the default 5 min timeout. Otherwise TF will retry to the command and attempt to do device recovery. -->
         <option name="per-binary-timeout" value="360000" />
-        <option name="test-command-line" key="controllers.memcg_regression_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; memcg_regression_test.sh" />
         <option name="test-command-line" key="cve.cve-2011-0999_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; thp01 -I 120" />
         <option name="test-command-line" key="cve.cve-2011-2496_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; vma03" />
         <option name="test-command-line" key="cve.cve-2015-7550_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; keyctl02" />
@@ -169,8 +169,11 @@
         <option name="test-command-line" key="sched.pth_str02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; pth_str02 -n1000" />
         <option name="test-command-line" key="sched.pth_str03_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; pth_str03" />
         <option name="test-command-line" key="sched.time-schedule01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; time-schedule" />
-        <option name="test-command-line" key="sched.hackbench01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; hackbench 50 process 1000" />
+        <option name="test-command-line" key="sched.hackbench01_low_mem_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; hackbench 15 process 1000" />
         <option name="test-command-line" key="sched.hackbench02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; hackbench 20 thread 1000" />
+        <option name="test-command-line" key="sched.sched_setattr01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sched_setattr01" />
+        <option name="test-command-line" key="sched.sched_getattr01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sched_getattr01" />
+        <option name="test-command-line" key="sched.sched_getattr02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sched_getattr02" />
         <option name="test-command-line" key="sched.sched_cli_serv_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; run_sched_cliserv.sh" />
         <option name="test-command-line" key="sched.sched_stress_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sched_stress.sh" />
         <option name="test-command-line" key="securebits.check_keepcaps01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; check_keepcaps 1" />

@@ -22,6 +22,7 @@
 
     <object type="module_controller" class="com.android.tradefed.testtype.suite.module.KernelTestModuleController" >
         <option name="arch" value="arm64"/>
+        <option name="is-hwasan" value="true"/>
     </object>
 
     <target_preparer class="com.android.tradefed.targetprep.PushFilePreparer">
@@ -143,7 +144,6 @@
         <option name="test-command-line" key="mm.mtest06_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mmap1" />
         <option name="test-command-line" key="mm.mtest06_2_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mmap2 -x 0.002 -a -p" />
         <option name="test-command-line" key="mm.mtest06_3_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mmap3 -x 0.002 -p" />
-        <option name="test-command-line" key="mm.mem01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mem01" />
         <option name="test-command-line" key="mm.mem02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mem02" />
         <option name="test-command-line" key="mm.mem03_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mem03" />
         <option name="test-command-line" key="mm.page01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; page01" />
@@ -168,7 +168,6 @@
         <option name="test-command-line" key="sched.pth_str01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; pth_str01" />
         <option name="test-command-line" key="sched.pth_str02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; pth_str02 -n1000" />
         <option name="test-command-line" key="sched.pth_str03_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; pth_str03" />
-        <option name="test-command-line" key="sched.time-schedule01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; time-schedule" />
         <option name="test-command-line" key="sched.hackbench01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; hackbench 50 process 1000" />
         <option name="test-command-line" key="sched.hackbench02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; hackbench 20 thread 1000" />
         <option name="test-command-line" key="sched.sched_cli_serv_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; run_sched_cliserv.sh" />
@@ -224,14 +223,8 @@
         <option name="test-command-line" key="syscalls.clock_nanosleep02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; clock_nanosleep02" />
         <option name="test-command-line" key="syscalls.clock_nanosleep2_01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; clock_nanosleep2_01" />
         <option name="test-command-line" key="syscalls.clone01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; clone01" />
-        <option name="test-command-line" key="syscalls.clone02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; clone02" />
-        <option name="test-command-line" key="syscalls.clone03_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; clone03" />
         <option name="test-command-line" key="syscalls.clone04_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; clone04" />
-        <option name="test-command-line" key="syscalls.clone05_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; clone05" />
-        <option name="test-command-line" key="syscalls.clone06_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; clone06" />
         <option name="test-command-line" key="syscalls.clone07_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; clone07" />
-        <option name="test-command-line" key="syscalls.clone08_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; clone08" />
-        <option name="test-command-line" key="syscalls.clone09_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; clone09" />
         <option name="test-command-line" key="syscalls.close01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; close01" />
         <option name="test-command-line" key="syscalls.close02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; close02" />
         <option name="test-command-line" key="syscalls.close08_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; close08" />
@@ -423,7 +416,6 @@
         <option name="test-command-line" key="syscalls.ftruncate04_64_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; ftruncate04_64" />
         <option name="test-command-line" key="syscalls.futimesat01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; futimesat01" />
         <option name="test-command-line" key="syscalls.getcpu01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; getcpu01" />
-        <option name="test-command-line" key="syscalls.getcwd01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; getcwd01" />
         <option name="test-command-line" key="syscalls.getcwd02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; getcwd02" />
         <option name="test-command-line" key="syscalls.getcwd03_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; getcwd03" />
         <option name="test-command-line" key="syscalls.getcwd04_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; getcwd04" />
@@ -560,9 +552,6 @@
         <option name="test-command-line" key="syscalls.memset01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; memset01" />
         <option name="test-command-line" key="syscalls.memcmp01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; memcmp01" />
         <option name="test-command-line" key="syscalls.memcpy01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; memcpy01" />
-        <option name="test-command-line" key="syscalls.mlockall01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mlockall01" />
-        <option name="test-command-line" key="syscalls.mlockall02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mlockall02" />
-        <option name="test-command-line" key="syscalls.mlockall03_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mlockall03" />
         <option name="test-command-line" key="syscalls.mkdir02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mkdir02" />
         <option name="test-command-line" key="syscalls.mkdir03_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mkdir03" />
         <option name="test-command-line" key="syscalls.mkdir04_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mkdir04" />
@@ -582,9 +571,7 @@
         <option name="test-command-line" key="syscalls.mknod09_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mknod09" />
         <option name="test-command-line" key="syscalls.mknodat01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mknodat01" />
         <option name="test-command-line" key="syscalls.mknodat02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mknodat02" />
-        <option name="test-command-line" key="syscalls.mlock01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mlock01" />
         <option name="test-command-line" key="syscalls.mlock02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mlock02" />
-        <option name="test-command-line" key="syscalls.mlock03_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mlock03 -i 20" />
         <option name="test-command-line" key="syscalls.mlock04_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mlock04" />
         <option name="test-command-line" key="syscalls.mlock201_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mlock201" />
         <option name="test-command-line" key="syscalls.mlock202_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; mlock202" />
@@ -622,7 +609,6 @@
         <option name="test-command-line" key="syscalls.msync02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; msync02" />
         <option name="test-command-line" key="syscalls.msync03_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; msync03" />
         <option name="test-command-line" key="syscalls.msync04_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; msync04" />
-        <option name="test-command-line" key="syscalls.munlock01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; munlock01" />
         <option name="test-command-line" key="syscalls.munlock02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; munlock02" />
         <option name="test-command-line" key="syscalls.munlockall01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; munlockall01" />
         <option name="test-command-line" key="syscalls.munmap01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; munmap01" />
@@ -839,7 +825,6 @@
         <option name="test-command-line" key="syscalls.sendfile08_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sendfile08" />
         <option name="test-command-line" key="syscalls.sendfile08_64_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sendfile08_64" />
         <option name="test-command-line" key="syscalls.sendmsg01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sendmsg01" />
-        <option name="test-command-line" key="syscalls.sendmmsg01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sendmmsg01" />
         <option name="test-command-line" key="syscalls.sendto01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sendto01" />
         <option name="test-command-line" key="syscalls.set_robust_list01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; set_robust_list01" />
         <option name="test-command-line" key="syscalls.set_tid_address01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; set_tid_address01" />
@@ -913,7 +898,6 @@
         <option name="test-command-line" key="syscalls.setxattr03_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; setxattr03" />
         <option name="test-command-line" key="syscalls.sigaction01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sigaction01" />
         <option name="test-command-line" key="syscalls.sigaction02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sigaction02" />
-        <option name="test-command-line" key="syscalls.sigaltstack01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sigaltstack01" />
         <option name="test-command-line" key="syscalls.sigaltstack02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sigaltstack02" />
         <option name="test-command-line" key="syscalls.sighold02_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; sighold02" />
         <option name="test-command-line" key="syscalls.signal01_64bit" value="&env_setup_cmd; ; cd &ltp_bin_dir; ; signal01" />

@@ -60,6 +60,8 @@ class AdiantumCipher : public Cipher {
 
 std::string Errno();
 
+void DeleteRecursively(const std::string &path);
+
 void RandomBytesForTesting(std::vector<uint8_t> &bytes);
 
 std::vector<uint8_t> GenerateTestKey(size_t size);
@@ -73,10 +75,27 @@ static inline std::string BytesToHex(const uint8_t (&array)[N]) {
 
 bool GetFirstApiLevel(int *first_api_level);
 
-bool FindRawPartition(const std::string &mountpoint,
-                      std::string *raw_partition);
+constexpr int kFilesystemUuidSize = 16;
+
+struct FilesystemUuid {
+  uint8_t bytes[kFilesystemUuidSize];
+};
+
+struct FilesystemInfo {
+  std::string fs_blk_device;
+  std::string type;
+  FilesystemUuid uuid;
+  std::string raw_blk_device;
+};
+
+bool GetFilesystemInfo(const std::string &mountpoint, FilesystemInfo *info);
 
 bool VerifyDataRandomness(const std::vector<uint8_t> &bytes);
 
+bool CreateHwWrappedKey(std::vector<uint8_t> *master_key,
+                        std::vector<uint8_t> *exported_key);
+
+bool DeriveHwWrappedEncryptionKey(const std::vector<uint8_t> &master_key,
+                                  std::vector<uint8_t> *enc_key);
 }  // namespace kernel
 }  // namespace android

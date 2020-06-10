@@ -37,11 +37,10 @@
 //
 //    metadata_encryption=aes-256-xts
 //    metadata_encryption=adiantum
+//    metadata_encryption=aes-256-xts:wrappedkey_v0
 //
 // The tests don't check which one of those settings, if any, the device is
 // actually using; they just try to test everything they can.
-//
-// Hardware-wrapped keys ("wrappedkey_v0") aren't tested yet.
 //
 // These tests don't specifically test that file contents aren't encrypted
 // twice.  That's already implied by the file-based encryption test cases,
@@ -147,12 +146,12 @@ class DmDefaultKeyTest : public ::testing::Test {
   void SetUp() override;
   void TearDown() override;
   bool CreateTestDevice(const std::string &cipher,
-                        const std::vector<uint8_t> &key);
+                        const std::vector<uint8_t> &key, bool is_wrapped_key);
   void VerifyDecryption(const std::vector<uint8_t> &key, const Cipher &cipher);
   void DoTest(const std::string &cipher_string, const Cipher &cipher);
   bool skip_test_ = false;
   DeviceMapper *dm_ = nullptr;
-  std::string raw_partition_;
+  std::string raw_blk_device_;
   std::string dm_device_path_;
 };
 
@@ -173,24 +172,28 @@ void DmDefaultKeyTest::SetUp() {
     return;
   }
 
-  ASSERT_TRUE(FindRawPartition(kTestMountpoint, &raw_partition_));
+  FilesystemInfo fs_info;
+  ASSERT_TRUE(GetFilesystemInfo(kTestMountpoint, &fs_info));
+  raw_blk_device_ = fs_info.raw_blk_device;
 
   dm_->DeleteDevice(kTestDmDeviceName);
 }
 
 void DmDefaultKeyTest::TearDown() { dm_->DeleteDevice(kTestDmDeviceName); }
 
-// Creates the test dm-default-key mapping using the given |cipher| and |key|.
+// Creates the test dm-default-key mapping using the given key and settings.
 // If the dm device creation fails, then it is assumed the kernel doesn't
-// support the given cipher with dm-default-key, and a failure is not added.
+// support the given encryption settings, and a failure is not added.
 bool DmDefaultKeyTest::CreateTestDevice(const std::string &cipher,
-                                        const std::vector<uint8_t> &key) {
+                                        const std::vector<uint8_t> &key,
+                                        bool is_wrapped_key) {
   static_assert(kTestDataBytes % kDmApiSectorSize == 0);
   std::unique_ptr<DmTargetDefaultKey> target =
       std::make_unique<DmTargetDefaultKey>(0, kTestDataBytes / kDmApiSectorSize,
                                            cipher.c_str(), BytesToHex(key),
-                                           raw_partition_, 0);
+                                           raw_blk_device_, 0);
   target->SetSetDun();
+  if (is_wrapped_key) target->SetWrappedKeyV0();
 
   DmTable table;
   if (!table.AddTarget(std::move(target))) {
@@ -204,13 +207,15 @@ bool DmDefaultKeyTest::CreateTestDevice(const std::string &cipher,
   if (!dm_->CreateDevice(kTestDmDeviceName, table, &dm_device_path_,
                          std::chrono::seconds(5))) {
     GTEST_LOG_(INFO) << "Unable to create default-key mapping" << Errno()
-                     << ".  Assuming that the cipher \"" << cipher
-                     << "\" is unsupported and skipping the test.";
+                     << ".  Assuming that the encryption settings cipher=\""
+                     << cipher << "\", is_wrapped_key=" << is_wrapped_key
+                     << " are unsupported and skipping the test.";
     return false;
   }
   GTEST_LOG_(INFO) << "Created default-key mapping at " << dm_device_path_
-                   << " using cipher \"" << cipher << "\" and key "
-                   << BytesToHex(key);
+                   << " using cipher=\"" << cipher
+                   << "\", key=" << BytesToHex(key)
+                   << ", is_wrapped_key=" << is_wrapped_key;
   return true;
 }
 
@@ -219,7 +224,7 @@ void DmDefaultKeyTest::VerifyDecryption(const std::vector<uint8_t> &key,
   std::vector<uint8_t> raw_data;
   std::vector<uint8_t> decrypted_data;
 
-  ASSERT_TRUE(ReadBlockDevice(raw_partition_, kTestDataBytes, &raw_data));
+  ASSERT_TRUE(ReadBlockDevice(raw_blk_device_, kTestDataBytes, &raw_data));
   ASSERT_TRUE(
       ReadBlockDevice(dm_device_path_, kTestDataBytes, &decrypted_data));
 
@@ -253,7 +258,7 @@ void DmDefaultKeyTest::DoTest(const std::string &cipher_string,
 
   std::vector<uint8_t> key = GenerateTestKey(cipher.keysize());
 
-  if (!CreateTestDevice(cipher_string, key)) return;
+  if (!CreateTestDevice(cipher_string, key, false)) return;
 
   VerifyDecryption(key, cipher);
 }
@@ -268,6 +273,22 @@ TEST_F(DmDefaultKeyTest, TestAdiantum) {
   DoTest("xchacha12,aes-adiantum-plain64", AdiantumCipher());
 }
 
+// Tests dm-default-key parameters matching
+// metadata_encryption=aes-256-xts:wrappedkey_v0.
+TEST_F(DmDefaultKeyTest, TestHwWrappedKey) {
+  if (skip_test_) return;
+
+  std::vector<uint8_t> master_key, exported_key;
+  if (!CreateHwWrappedKey(&master_key, &exported_key)) return;
+
+  if (!CreateTestDevice("aes-xts-plain64", exported_key, true)) return;
+
+  std::vector<uint8_t> enc_key;
+  ASSERT_TRUE(DeriveHwWrappedEncryptionKey(master_key, &enc_key));
+
+  VerifyDecryption(enc_key, Aes256XtsCipher());
+}
+
 // Tests that if the device uses metadata encryption, then the first
 // kFilesystemBlockSize bytes of the userdata partition appear random.  For ext4
 // and f2fs, this block should contain the filesystem superblock; it therefore
@@ -278,9 +299,11 @@ TEST_F(DmDefaultKeyTest, TestAdiantum) {
 // it applies regardless of the encryption format and key.  Thus it runs even on
 // old devices, including ones that used a vendor-specific encryption format.
 TEST(MetadataEncryptionTest, TestRandomness) {
+  constexpr const char *mountpoint = "/data";
+
   android::fs_mgr::Fstab fstab;
   ASSERT_TRUE(android::fs_mgr::ReadDefaultFstab(&fstab));
-  const fs_mgr::FstabEntry *entry = GetEntryForMountPoint(&fstab, "/data");
+  const fs_mgr::FstabEntry *entry = GetEntryForMountPoint(&fstab, mountpoint);
   ASSERT_TRUE(entry != nullptr);
 
   if (entry->metadata_key_dir.empty()) {
@@ -295,8 +318,10 @@ TEST(MetadataEncryptionTest, TestRandomness) {
 
   GTEST_LOG_(INFO) << "Verifying randomness of ciphertext";
   std::vector<uint8_t> raw_data;
+  FilesystemInfo fs_info;
+  ASSERT_TRUE(GetFilesystemInfo(mountpoint, &fs_info));
   ASSERT_TRUE(
-      ReadBlockDevice(entry->blk_device, kFilesystemBlockSize, &raw_data));
+      ReadBlockDevice(fs_info.raw_blk_device, kFilesystemBlockSize, &raw_data));
   ASSERT_TRUE(VerifyDataRandomness(raw_data));
 }
 

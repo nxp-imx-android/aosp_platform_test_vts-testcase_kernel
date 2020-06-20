@@ -148,7 +148,7 @@ class BpfRaceTest : public ::testing::Test {
     // Start several threads to send and receive packets with an eBPF program
     // attached to the socket.
     stop = false;
-    int prog_fd = bpfFdGet(TEST_PROG_PATH, 0);
+    int prog_fd = retrieveProgram(TEST_PROG_PATH);
     EXPECT_RESULT_OK(configurationMap.writeValue(ACTIVE_MAP_KEY, 0, BPF_ANY));
 
     for (int i = 0; i < NUM_SOCKETS; i++) {

@@ -20,6 +20,9 @@ import static org.junit.Assert.fail;
 import com.android.tradefed.log.LogUtil.CLog;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
+import com.android.tradefed.util.CommandResult;
+import com.android.tradefed.util.CommandStatus;
+import java.util.Scanner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -27,8 +30,26 @@ import org.junit.runner.RunWith;
 public final class SdcardfsTest extends BaseHostJUnit4Test {
     public static final String TAG = SdcardfsTest.class.getSimpleName();
 
+    private static final int MIN_KERNEL_MAJOR = 5;
+    private static final int MIN_KERNEL_MINOR = 4;
+
+    private boolean should_run(String str) {
+        Scanner versionScanner = new Scanner(str).useDelimiter("\\.");
+        int major = versionScanner.nextInt();
+        int minor = versionScanner.nextInt();
+        if (major > MIN_KERNEL_MAJOR)
+            return true;
+        if (major < MIN_KERNEL_MAJOR)
+            return false;
+        return minor >= MIN_KERNEL_MINOR;
+    }
+
     @Test
     public void testSdcardfsNotPresent() throws Exception {
+        CommandResult result = getDevice().executeShellV2Command("uname -r");
+        assertEquals(result.getStatus(), CommandStatus.SUCCESS);
+        if (!should_run(result.getStdout()))
+            return;
         String cmd = "mount | grep \"type sdcardfs\"";
         CLog.i("Invoke shell command [" + cmd + "]");
         try {

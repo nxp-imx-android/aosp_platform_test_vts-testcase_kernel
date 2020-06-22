@@ -97,5 +97,8 @@ bool CreateHwWrappedKey(std::vector<uint8_t> *master_key,
 
 bool DeriveHwWrappedEncryptionKey(const std::vector<uint8_t> &master_key,
                                   std::vector<uint8_t> *enc_key);
+
+bool DeriveHwWrappedRawSecret(const std::vector<uint8_t> &master_key,
+                              std::vector<uint8_t> *secret);
 }  // namespace kernel
 }  // namespace android

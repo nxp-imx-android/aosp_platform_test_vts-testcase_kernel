@@ -438,10 +438,7 @@ bool FBEPolicyTest::SetMasterKey(const std::vector<uint8_t> &master_key,
     return false;
   }
   if (ioctl(mntfd, FS_IOC_ADD_ENCRYPTION_KEY, arg.get()) != 0) {
-    if ((errno == EINVAL || errno == EOPNOTSUPP) && !required) {
-      GTEST_LOG_(INFO) << "Skipping test because FS_IOC_ADD_ENCRYPTION_KEY "
-                       << "with this key is unsupported" << Errno();
-    } else {
+    if (required || (errno != EINVAL && errno != EOPNOTSUPP)) {
       ADD_FAILURE() << "FS_IOC_ADD_ENCRYPTION_KEY failed on " << kTestMountpoint
                     << Errno();
     }
@@ -466,15 +463,16 @@ bool FBEPolicyTest::CreateAndSetHwWrappedKey(std::vector<uint8_t> *enc_key,
   std::vector<uint8_t> master_key, exported_key;
   if (!CreateHwWrappedKey(&master_key, &exported_key)) return false;
 
-  // If this fails, it just means fscrypt doesn't have support for hardware
-  // wrapped keys, which is OK.
-  if (!SetMasterKey(exported_key, __FSCRYPT_ADD_KEY_FLAG_HW_WRAPPED, false))
+  if (!SetMasterKey(exported_key, __FSCRYPT_ADD_KEY_FLAG_HW_WRAPPED, false)) {
+    if (!HasFailure()) {
+      GTEST_LOG_(INFO) << "Skipping test because kernel doesn't support "
+                          "hardware-wrapped keys";
+    }
     return false;
+  }
 
   if (!DeriveHwWrappedEncryptionKey(master_key, enc_key)) return false;
-
-  // FIXME: placeholder value.  Derive this correctly.
-  *sw_secret = std::vector<uint8_t>(32, 0);
+  if (!DeriveHwWrappedRawSecret(master_key, sw_secret)) return false;
 
   if (!VerifyKeyIdentifier(*sw_secret)) return false;
 
@@ -1000,6 +998,22 @@ TEST_F(FBEPolicyTest, TestAdiantumPolicy) {
   FscryptIV iv;
   ASSERT_TRUE(InitIVForDirectKey(file_info.nonce, &iv));
   VerifyCiphertext(enc_key, iv, AdiantumCipher(), file_info);
+}
+
+// Tests adding a corrupted wrapped key to fscrypt keyring.
+// If wrapped key is corrupted, fscrypt should return a failure.
+TEST_F(FBEPolicyTest, TestHwWrappedKeyCorruption) {
+  if (skip_test_) return;
+
+  std::vector<uint8_t> master_key, exported_key;
+  if (!CreateHwWrappedKey(&master_key, &exported_key)) return;
+
+  for (int i = 0; i < exported_key.size(); i++) {
+    std::vector<uint8_t> corrupt_key(exported_key.begin(), exported_key.end());
+    corrupt_key[i] = ~corrupt_key[i];
+    ASSERT_FALSE(
+        SetMasterKey(corrupt_key, __FSCRYPT_ADD_KEY_FLAG_HW_WRAPPED, false));
+  }
 }
 
 // Tests that if the device uses FBE, then the ciphertext for file contents in

@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
 #include <sys/statfs.h>
+
+#include <android-base/stringprintf.h>
+#include <fstab/fstab.h>
+#include <gtest/gtest.h>
 
 static constexpr const char kMetadata[] = "/metadata";
 
@@ -24,4 +27,25 @@ TEST(Metadata, IsExt4) {
   ASSERT_EQ(0, statfs(kMetadata, &buf))
       << "Cannot statfs " << kMetadata << ": " << strerror(errno);
   ASSERT_EQ(EXT4_SUPER_MAGIC, buf.f_type);
+}
+
+TEST(Metadata, FstabEntryFlagsAreSet) {
+  android::fs_mgr::Fstab fstab;
+  ASSERT_TRUE(android::fs_mgr::ReadDefaultFstab(&fstab));
+
+  auto metadata_entry =
+      android::fs_mgr::GetEntryForMountPoint(&fstab, kMetadata);
+  ASSERT_NE(metadata_entry, nullptr)
+      << "Cannot find fstab entry for " << kMetadata;
+
+  const char* message_fmt = "Fstab entry for /metadata must have %s flag set.";
+
+  EXPECT_TRUE(metadata_entry->fs_mgr_flags.check)
+      << android::base::StringPrintf(message_fmt, "check");
+  EXPECT_TRUE(metadata_entry->fs_mgr_flags.formattable)
+      << android::base::StringPrintf(message_fmt, "formattable");
+  EXPECT_TRUE(metadata_entry->fs_mgr_flags.first_stage_mount)
+      << android::base::StringPrintf(message_fmt, "first_stage_mount");
+  EXPECT_TRUE(metadata_entry->fs_mgr_flags.wait)
+      << android::base::StringPrintf(message_fmt, "wait");
 }

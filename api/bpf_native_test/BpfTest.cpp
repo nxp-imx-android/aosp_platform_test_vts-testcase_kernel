@@ -48,6 +48,7 @@ namespace android {
 TEST(BpfTest, bpfMapPinTest) {
   SKIP_IF_BPF_NOT_SUPPORTED;
 
+  EXPECT_EQ(0, setrlimitForTest());
   const char* bpfMapPath = "/sys/fs/bpf/testMap";
   int ret = access(bpfMapPath, F_OK);
   if (!ret) {
@@ -126,6 +127,8 @@ class BpfRaceTest : public ::testing::Test {
 
   void SetUp() {
     SKIP_IF_BPF_NOT_SUPPORTED;
+
+    EXPECT_EQ(0, setrlimitForTest());
     int ret = access(TEST_PROG_PATH, R_OK);
     // Always create a new program and remove the pinned program after program
     // loading is done.

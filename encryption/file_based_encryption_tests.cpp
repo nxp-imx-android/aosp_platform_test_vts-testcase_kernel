@@ -351,9 +351,9 @@ class FBEPolicyTest : public ::testing::Test {
                     bool required = true);
   bool CreateAndSetHwWrappedKey(std::vector<uint8_t> *enc_key,
                                 std::vector<uint8_t> *sw_secret);
-  bool IsInoBasedEncryptionGuaranteed();
+  int GetSkipFlagsForInoBasedEncryption();
   bool SetEncryptionPolicy(int contents_mode, int filenames_mode, int flags,
-                           bool required);
+                           int skip_flags);
   bool GenerateTestFile(TestFileInfo *info);
   bool VerifyKeyIdentifier(const std::vector<uint8_t> &master_key);
   bool DerivePerModeEncryptionKey(const std::vector<uint8_t> &master_key,
@@ -438,10 +438,7 @@ bool FBEPolicyTest::SetMasterKey(const std::vector<uint8_t> &master_key,
     return false;
   }
   if (ioctl(mntfd, FS_IOC_ADD_ENCRYPTION_KEY, arg.get()) != 0) {
-    if ((errno == EINVAL || errno == EOPNOTSUPP) && !required) {
-      GTEST_LOG_(INFO) << "Skipping test because FS_IOC_ADD_ENCRYPTION_KEY "
-                       << "with this key is unsupported" << Errno();
-    } else {
+    if (required || (errno != EINVAL && errno != EOPNOTSUPP)) {
       ADD_FAILURE() << "FS_IOC_ADD_ENCRYPTION_KEY failed on " << kTestMountpoint
                     << Errno();
     }
@@ -466,23 +463,31 @@ bool FBEPolicyTest::CreateAndSetHwWrappedKey(std::vector<uint8_t> *enc_key,
   std::vector<uint8_t> master_key, exported_key;
   if (!CreateHwWrappedKey(&master_key, &exported_key)) return false;
 
-  // If this fails, it just means fscrypt doesn't have support for hardware
-  // wrapped keys, which is OK.
-  if (!SetMasterKey(exported_key, __FSCRYPT_ADD_KEY_FLAG_HW_WRAPPED, false))
+  if (!SetMasterKey(exported_key, __FSCRYPT_ADD_KEY_FLAG_HW_WRAPPED, false)) {
+    if (!HasFailure()) {
+      GTEST_LOG_(INFO) << "Skipping test because kernel doesn't support "
+                          "hardware-wrapped keys";
+    }
     return false;
+  }
 
   if (!DeriveHwWrappedEncryptionKey(master_key, enc_key)) return false;
-
-  // FIXME: placeholder value.  Derive this correctly.
-  *sw_secret = std::vector<uint8_t>(32, 0);
+  if (!DeriveHwWrappedRawSecret(master_key, sw_secret)) return false;
 
   if (!VerifyKeyIdentifier(*sw_secret)) return false;
 
   return true;
 }
 
-// Returns true if encryption policies that include the inode number in the IVs
+enum {
+  kSkipIfNoPolicySupport = 1 << 0,
+  kSkipIfNoCryptoAPISupport = 1 << 1,
+  kSkipIfNoHardwareSupport = 1 << 2,
+};
+
+// Returns 0 if encryption policies that include the inode number in the IVs
 // (e.g. IV_INO_LBLK_64) are guaranteed to be settable on the test filesystem.
+// Else returns kSkipIfNoPolicySupport.
 //
 // On f2fs, they're always settable.  On ext4, they're only settable if the
 // filesystem has the 'stable_inodes' feature flag.  Android only sets
@@ -490,15 +495,17 @@ bool FBEPolicyTest::CreateAndSetHwWrappedKey(std::vector<uint8_t> *enc_key,
 // real", e.g. "fileencryption=::inlinecrypt_optimized" in fstab.  Since the
 // fstab could contain something else, we have to allow the tests for these
 // encryption policies to be skipped on ext4.
-bool FBEPolicyTest::IsInoBasedEncryptionGuaranteed() {
-  return fs_info_.type != "ext4";
+int FBEPolicyTest::GetSkipFlagsForInoBasedEncryption() {
+  if (fs_info_.type == "ext4") return kSkipIfNoPolicySupport;
+  return 0;
 }
 
 // Sets a v2 encryption policy on the test directory.  The policy will use the
-// test key and the specified encryption modes and flags.  If required=false,
-// then a failure won't be added if the kernel doesn't support the policy.
+// test key and the specified encryption modes and flags.  If the kernel doesn't
+// support setting or using the encryption policy, then a failure will be added,
+// unless the reason is covered by a bit set in |skip_flags|.
 bool FBEPolicyTest::SetEncryptionPolicy(int contents_mode, int filenames_mode,
-                                        int flags, bool required) {
+                                        int flags, int skip_flags) {
   if (!key_added_) {
     ADD_FAILURE() << "SetEncryptionPolicy called but no key added";
     return false;
@@ -523,7 +530,7 @@ bool FBEPolicyTest::SetEncryptionPolicy(int contents_mode, int filenames_mode,
   }
   GTEST_LOG_(INFO) << "Setting encryption policy on " << kTestDir;
   if (ioctl(dirfd, FS_IOC_SET_ENCRYPTION_POLICY, &policy) != 0) {
-    if (errno == EINVAL && !required) {
+    if (errno == EINVAL && (skip_flags & kSkipIfNoPolicySupport)) {
       GTEST_LOG_(INFO) << "Skipping test because encryption policy is "
                           "unsupported on this filesystem / kernel";
       return false;
@@ -534,18 +541,29 @@ bool FBEPolicyTest::SetEncryptionPolicy(int contents_mode, int filenames_mode,
                   << std::hex << flags << std::dec << Errno();
     return false;
   }
-  if (!required) {
-    // Setting an encryption policy that uses modes that aren't enabled in the
-    // kernel's crypto API (e.g. FSCRYPT_MODE_ADIANTUM when the kernel lacks
-    // CONFIG_CRYPTO_ADIANTUM) will still succeed, but actually creating a file
-    // will fail with ENOPKG.  Make sure to check for this case.
+  if (skip_flags & (kSkipIfNoCryptoAPISupport | kSkipIfNoHardwareSupport)) {
     android::base::unique_fd fd(
         open(kTestFile, O_WRONLY | O_CREAT | O_CLOEXEC, 0600));
-    if (fd < 0 && errno == ENOPKG) {
-      GTEST_LOG_(INFO)
-          << "Skipping test because encryption policy is "
-             "unsupported on this kernel, due to missing crypto API support";
-      return false;
+    if (fd < 0) {
+      // Setting an encryption policy that uses modes that aren't enabled in the
+      // kernel's crypto API (e.g. FSCRYPT_MODE_ADIANTUM when the kernel lacks
+      // CONFIG_CRYPTO_ADIANTUM) will still succeed, but actually creating a
+      // file will fail with ENOPKG.  Make sure to check for this case.
+      if (errno == ENOPKG && (skip_flags & kSkipIfNoCryptoAPISupport)) {
+        GTEST_LOG_(INFO)
+            << "Skipping test because encryption policy is "
+               "unsupported on this kernel, due to missing crypto API support";
+        return false;
+      }
+      // We get EINVAL here when using a hardware-wrapped key and the inline
+      // encryption hardware supports wrapped keys but doesn't support the
+      // number of DUN bytes that the file contents encryption requires.
+      if (errno == EINVAL && (skip_flags & kSkipIfNoHardwareSupport)) {
+        GTEST_LOG_(INFO)
+            << "Skipping test because encryption policy is not compatible with "
+               "this device's inline encryption hardware";
+        return false;
+      }
     }
     unlink(kTestFile);
   }
@@ -743,7 +761,7 @@ TEST_F(FBEPolicyTest, TestAesPerFileKeysPolicy) {
   ASSERT_TRUE(SetMasterKey(master_key));
 
   if (!SetEncryptionPolicy(FSCRYPT_MODE_AES_256_XTS, FSCRYPT_MODE_AES_256_CTS,
-                           0, true))
+                           0, 0))
     return;
 
   TestFileInfo file_info;
@@ -769,7 +787,7 @@ TEST_F(FBEPolicyTest, TestAesInlineCryptOptimizedPolicy) {
 
   if (!SetEncryptionPolicy(FSCRYPT_MODE_AES_256_XTS, FSCRYPT_MODE_AES_256_CTS,
                            FSCRYPT_POLICY_FLAG_IV_INO_LBLK_64,
-                           IsInoBasedEncryptionGuaranteed()))
+                           GetSkipFlagsForInoBasedEncryption()))
     return;
 
   TestFileInfo file_info;
@@ -795,9 +813,11 @@ TEST_F(FBEPolicyTest, TestAesInlineCryptOptimizedHwWrappedKeyPolicy) {
   std::vector<uint8_t> enc_key, sw_secret;
   if (!CreateAndSetHwWrappedKey(&enc_key, &sw_secret)) return;
 
-  if (!SetEncryptionPolicy(FSCRYPT_MODE_AES_256_XTS, FSCRYPT_MODE_AES_256_CTS,
-                           FSCRYPT_POLICY_FLAG_IV_INO_LBLK_64,
-                           IsInoBasedEncryptionGuaranteed()))
+  if (!SetEncryptionPolicy(
+          FSCRYPT_MODE_AES_256_XTS, FSCRYPT_MODE_AES_256_CTS,
+          FSCRYPT_POLICY_FLAG_IV_INO_LBLK_64,
+          // 64-bit DUN support is not guaranteed.
+          kSkipIfNoHardwareSupport | GetSkipFlagsForInoBasedEncryption()))
     return;
 
   TestFileInfo file_info;
@@ -907,7 +927,7 @@ TEST_F(FBEPolicyTest, TestAesEmmcOptimizedPolicy) {
 
   if (!SetEncryptionPolicy(FSCRYPT_MODE_AES_256_XTS, FSCRYPT_MODE_AES_256_CTS,
                            FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32,
-                           IsInoBasedEncryptionGuaranteed()))
+                           GetSkipFlagsForInoBasedEncryption()))
     return;
 
   TestFileInfo file_info;
@@ -937,7 +957,7 @@ TEST_F(FBEPolicyTest, TestAesEmmcOptimizedHwWrappedKeyPolicy) {
 
   if (!SetEncryptionPolicy(FSCRYPT_MODE_AES_256_XTS, FSCRYPT_MODE_AES_256_CTS,
                            FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32,
-                           IsInoBasedEncryptionGuaranteed()))
+                           GetSkipFlagsForInoBasedEncryption()))
     return;
 
   TestFileInfo file_info;
@@ -960,8 +980,12 @@ TEST_F(FBEPolicyTest, TestAdiantumPolicy) {
 
   // Adiantum support isn't required (since CONFIG_CRYPTO_ADIANTUM can be unset
   // in the kernel config), so we may skip the test here.
+  //
+  // We don't need to use GetSkipFlagsForInoBasedEncryption() here, since the
+  // "DIRECT_KEY" IV generation method doesn't include inode numbers in the IVs.
   if (!SetEncryptionPolicy(FSCRYPT_MODE_ADIANTUM, FSCRYPT_MODE_ADIANTUM,
-                           FSCRYPT_POLICY_FLAG_DIRECT_KEY, false))
+                           FSCRYPT_POLICY_FLAG_DIRECT_KEY,
+                           kSkipIfNoCryptoAPISupport))
     return;
 
   TestFileInfo file_info;
@@ -974,6 +998,22 @@ TEST_F(FBEPolicyTest, TestAdiantumPolicy) {
   FscryptIV iv;
   ASSERT_TRUE(InitIVForDirectKey(file_info.nonce, &iv));
   VerifyCiphertext(enc_key, iv, AdiantumCipher(), file_info);
+}
+
+// Tests adding a corrupted wrapped key to fscrypt keyring.
+// If wrapped key is corrupted, fscrypt should return a failure.
+TEST_F(FBEPolicyTest, TestHwWrappedKeyCorruption) {
+  if (skip_test_) return;
+
+  std::vector<uint8_t> master_key, exported_key;
+  if (!CreateHwWrappedKey(&master_key, &exported_key)) return;
+
+  for (int i = 0; i < exported_key.size(); i++) {
+    std::vector<uint8_t> corrupt_key(exported_key.begin(), exported_key.end());
+    corrupt_key[i] = ~corrupt_key[i];
+    ASSERT_FALSE(
+        SetMasterKey(corrupt_key, __FSCRYPT_ADD_KEY_FLAG_HW_WRAPPED, false));
+  }
 }
 
 // Tests that if the device uses FBE, then the ciphertext for file contents in

@@ -379,6 +379,27 @@ static void GetFixedInputString(uint32_t counter,
   PushBigEndian32(derived_key_len, fixed_input_string);
 }
 
+static bool AesCmacKdfHelper(const std::vector<uint8_t> &key,
+                             const std::vector<uint8_t> &label,
+                             const std::vector<uint8_t> &context,
+                             uint32_t output_key_size,
+                             std::vector<uint8_t> *output_data) {
+  output_data->resize(output_key_size);
+  for (size_t count = 0; count < (output_key_size / kAesBlockSize); count++) {
+    std::vector<uint8_t> fixed_input_string;
+    GetFixedInputString(count + 1, label, context, (output_key_size * 8),
+                        &fixed_input_string);
+    if (!AES_CMAC(output_data->data() + (kAesBlockSize * count), key.data(),
+                  key.size(), fixed_input_string.data(),
+                  fixed_input_string.size())) {
+      ADD_FAILURE()
+          << "AES_CMAC failed while deriving subkey from HW wrapped key";
+      return false;
+    }
+  }
+  return true;
+}
+
 bool DeriveHwWrappedEncryptionKey(const std::vector<uint8_t> &master_key,
                                   std::vector<uint8_t> *enc_key) {
   std::vector<uint8_t> label{0x00, 0x00, 0x40, 0x00, 0x00, 0x00,
@@ -392,19 +413,22 @@ bool DeriveHwWrappedEncryptionKey(const std::vector<uint8_t> &master_key,
       0x00, 0x00, 0x00, 0x02, 0x43, 0x00, 0x82, 0x50,
       0x0,  0x0,  0x0,  0x0};
 
-  enc_key->resize(kAes256XtsKeySize);
-  for (size_t count = 0; count < (kAes256XtsKeySize / kAesBlockSize); count++) {
-    std::vector<uint8_t> fixed_input_string;
-    GetFixedInputString(count + 1, label, context, (kAes256XtsKeySize * 8),
-                        &fixed_input_string);
-    if (!AES_CMAC(enc_key->data() + (kAesBlockSize * count), master_key.data(),
-                  master_key.size(), fixed_input_string.data(),
-                  fixed_input_string.size())) {
-      ADD_FAILURE() << "AES_CMAC failed while deriving inline encryption key";
-      return false;
-    }
-  }
-  return true;
+  return AesCmacKdfHelper(master_key, label, context, kAes256XtsKeySize,
+                          enc_key);
+}
+
+bool DeriveHwWrappedRawSecret(const std::vector<uint8_t> &master_key,
+                              std::vector<uint8_t> *secret) {
+  std::vector<uint8_t> label{0x00, 0x00, 0x40, 0x00, 0x00, 0x00,
+                             0x00, 0x00, 0x00, 0x00, 0x20};
+  // Context in fixed input string comprises of software provided context,
+  // padding to eight bytes (if required) and the key policy.
+  std::vector<uint8_t> context = {'r',  'a',  'w',  ' ',  's',  'e',  'c',
+                                  'r',  'e',  't',  0x0,  0x0,  0x0,  0x0,
+                                  0x0,  0x0,  0x00, 0x00, 0x00, 0x02, 0x17,
+                                  0x00, 0x80, 0x50, 0x0,  0x0,  0x0,  0x0};
+
+  return AesCmacKdfHelper(master_key, label, context, kAes256KeySize, secret);
 }
 
 }  // namespace kernel

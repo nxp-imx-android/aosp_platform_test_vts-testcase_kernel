@@ -62,15 +62,15 @@ TEST_F(KernelHeadersTest, UnameWorks) {
   ASSERT_EQ(0, uname(&buf));
 }
 
-TEST_F(KernelHeadersTest, ModuleExist) {
+TEST_F(KernelHeadersTest, KheadersExist) {
   struct stat st;
   struct utsname buf;
-  std::string path = "/vendor/lib/modules/kheaders.ko";
+  std::string path = "/sys/kernel/kheaders.tar.xz";
 
   uname(&buf);
   if (!should_run(buf)) return;
 
-  // Make sure the module exists
+  // Make sure the kheaders are available
   errno = 0;
   stat(path.c_str(), &st);
   ASSERT_EQ(0, (errno == ENOENT));

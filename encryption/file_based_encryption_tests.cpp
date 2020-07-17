@@ -80,14 +80,6 @@
 #define F2FS_IOC_SET_PIN_FILE _IOW(F2FS_IOCTL_MAGIC, 13, __u32)
 #endif
 
-#ifndef FS_IOC_GET_ENCRYPTION_NONCE
-#define FS_IOC_GET_ENCRYPTION_NONCE _IOR('f', 27, __u8[16])
-#endif
-
-#ifndef FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32
-#define FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32 0x10
-#endif
-
 namespace android {
 namespace kernel {
 

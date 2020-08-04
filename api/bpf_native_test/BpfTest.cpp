@@ -222,15 +222,17 @@ class BpfRaceTest : public ::testing::Test {
 TEST_F(BpfRaceTest, testRaceWithBarrier) {
   SKIP_IF_BPF_NOT_SUPPORTED;
 
-  swapAndCleanStatsMap(true, 60);
+  swapAndCleanStatsMap(true, 30);
 }
 
 // Confirm the race problem exists when the kernel doesn't call synchronize_rcu
 // after changing the active map.
+// This test is flaky. Race not triggering isn't really a bug per say...
+// Maybe we should just outright delete this test...
 TEST_F(BpfRaceTest, testRaceWithoutBarrier) {
   SKIP_IF_BPF_NOT_SUPPORTED;
 
-  swapAndCleanStatsMap(false, 60);
+  swapAndCleanStatsMap(false, 240);
 }
 
 }  // namespace android

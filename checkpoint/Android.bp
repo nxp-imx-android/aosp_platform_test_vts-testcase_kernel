@@ -32,7 +32,7 @@ python_test_host {
     test_suites: [
         "vts",
     ],
-    auto_gen_config: true,
+    test_config: "vts_kernel_checkpoint_test.xml",
     version: {
         py2: {
             enabled: false,

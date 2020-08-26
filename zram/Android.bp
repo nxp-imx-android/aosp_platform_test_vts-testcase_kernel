@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2018 The Android Open Source Project
+// Copyright (C) 2020 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,33 +14,34 @@
 // limitations under the License.
 //
 
-vts_config {
-    name: "VtsKernelCheckpointTest",
+cc_defaults {
+    name: "binary_zram_defaults",
+    srcs: ["ZramTest.cpp"],
+    shared_libs: [
+        "libbase",
+    ],
+    cflags: [
+        "-fno-strict-aliasing",
+        "-Wall",
+        "-Werror",
+        "-Wno-unused-variable",
+    ],
 }
 
-python_test_host {
-    name: "vts_kernel_checkpoint_test",
-    main: "vts_kernel_checkpoint_test.py",
-    srcs: [
-        "checkpoint_utils.py",
-        "vts_kernel_checkpoint_test.py",
-    ],
-    libs: [
-        "vndk_utils",
-        "vts_vndk_utils",
-    ],
+cc_test {
+    name: "zram_module_test",
+    defaults: ["binary_zram_defaults"],
+    test_config: "zram_module_test.xml",
     test_suites: [
         "vts",
     ],
-    test_config: "vts_kernel_checkpoint_test.xml",
-    version: {
-        py2: {
-            enabled: false,
-            embedded_launcher: false,
-        },
-        py3: {
-            enabled: true,
-            embedded_launcher: true,
-        }
-    }
+}
+
+cc_test {
+    name: "vts_test_binary_zram_module",
+    defaults: ["binary_zram_defaults"],
+}
+
+vts_config {
+    name: "VtsKernelZramTest",
 }

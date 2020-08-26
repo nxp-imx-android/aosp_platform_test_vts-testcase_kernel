@@ -48,6 +48,7 @@ namespace android {
 TEST(BpfTest, bpfMapPinTest) {
   SKIP_IF_BPF_NOT_SUPPORTED;
 
+  EXPECT_EQ(0, setrlimitForTest());
   const char* bpfMapPath = "/sys/fs/bpf/testMap";
   int ret = access(bpfMapPath, F_OK);
   if (!ret) {
@@ -126,6 +127,8 @@ class BpfRaceTest : public ::testing::Test {
 
   void SetUp() {
     SKIP_IF_BPF_NOT_SUPPORTED;
+
+    EXPECT_EQ(0, setrlimitForTest());
     int ret = access(TEST_PROG_PATH, R_OK);
     // Always create a new program and remove the pinned program after program
     // loading is done.
@@ -135,7 +138,9 @@ class BpfRaceTest : public ::testing::Test {
     std::string progSrcPath = BPF_SRC_PATH BPF_SRC_NAME;
     // 0 != 2 means ENOENT - ie. missing bpf program.
     ASSERT_EQ(0, access(progSrcPath.c_str(), R_OK) ? errno : 0);
-    ASSERT_EQ(0, android::bpf::loadProg(progSrcPath.c_str()));
+    bool critical = true;
+    ASSERT_EQ(0, android::bpf::loadProg(progSrcPath.c_str(), &critical));
+    ASSERT_EQ(false, critical);
 
     EXPECT_RESULT_OK(cookieStatsMap[0].init(TEST_STATS_MAP_A_PATH));
     EXPECT_RESULT_OK(cookieStatsMap[1].init(TEST_STATS_MAP_B_PATH));
@@ -146,7 +151,7 @@ class BpfRaceTest : public ::testing::Test {
     // Start several threads to send and receive packets with an eBPF program
     // attached to the socket.
     stop = false;
-    int prog_fd = bpfFdGet(TEST_PROG_PATH, 0);
+    int prog_fd = retrieveProgram(TEST_PROG_PATH);
     EXPECT_RESULT_OK(configurationMap.writeValue(ACTIVE_MAP_KEY, 0, BPF_ANY));
 
     for (int i = 0; i < NUM_SOCKETS; i++) {
@@ -217,15 +222,17 @@ class BpfRaceTest : public ::testing::Test {
 TEST_F(BpfRaceTest, testRaceWithBarrier) {
   SKIP_IF_BPF_NOT_SUPPORTED;
 
-  swapAndCleanStatsMap(true, 60);
+  swapAndCleanStatsMap(true, 30);
 }
 
 // Confirm the race problem exists when the kernel doesn't call synchronize_rcu
 // after changing the active map.
+// This test is flaky. Race not triggering isn't really a bug per say...
+// Maybe we should just outright delete this test...
 TEST_F(BpfRaceTest, testRaceWithoutBarrier) {
   SKIP_IF_BPF_NOT_SUPPORTED;
 
-  swapAndCleanStatsMap(false, 60);
+  swapAndCleanStatsMap(false, 240);
 }
 
 }  // namespace android

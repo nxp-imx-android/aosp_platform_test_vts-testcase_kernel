@@ -36,6 +36,7 @@ cc_test {
         "libkeymaster4_1support",
         "libkeymaster4support",
         "liblog",
+        "libutils",
     ],
     static_libs: [
         "libdm",

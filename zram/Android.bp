@@ -14,44 +14,34 @@
 // limitations under the License.
 //
 
-cc_test {
-    name: "vts_kernel_encryption_test",
-    srcs: [
-        "adiantum.cpp",
-        "aes_256_xts.cpp",
-        "file_based_encryption_tests.cpp",
-        "Keymaster.cpp",
-        "metadata_encryption_tests.cpp",
-        "utils.cpp",
-    ],
-    cflags: [
-        "-D_FILE_OFFSET_BITS=64",
-        "-Wall",
-        "-Werror",
-    ],
+cc_defaults {
+    name: "binary_zram_defaults",
+    srcs: ["ZramTest.cpp"],
     shared_libs: [
         "libbase",
-        "libcrypto",
-        "libhidlbase",
-        "libkeymaster4_1support",
-        "libkeymaster4support",
-        "liblog",
-        "libutils",
     ],
-    static_libs: [
-        "libdm",
-        "libext4_utils",
-        "libfs_mgr",
-        "liblzma",
+    cflags: [
+        "-fno-strict-aliasing",
+        "-Wall",
+        "-Werror",
+        "-Wno-unused-variable",
     ],
+}
+
+cc_test {
+    name: "zram_module_test",
+    defaults: ["binary_zram_defaults"],
+    test_config: "zram_module_test.xml",
     test_suites: [
-        "general-tests",
         "vts",
     ],
-    require_root: true,
-    auto_gen_config: true,
+}
+
+cc_test {
+    name: "vts_test_binary_zram_module",
+    defaults: ["binary_zram_defaults"],
 }
 
 vts_config {
-    name: "VtsKernelEncryptionTest",
+    name: "VtsKernelZramTest",
 }

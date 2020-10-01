@@ -68,7 +68,7 @@ class Keymaster {
                   const km::AuthorizationSet& inParams, std::string* newKey);
 
  private:
-  std::unique_ptr<KmDevice> mDevice;
+  android::sp<KmDevice> mDevice;
   DISALLOW_COPY_AND_ASSIGN(Keymaster);
 };
 

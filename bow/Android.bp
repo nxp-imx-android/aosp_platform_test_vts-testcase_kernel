@@ -34,4 +34,9 @@ cc_test {
         "-Werror",
         "-Wno-unused-variable",
     ],
+    test_suites: [
+        "vts",
+    ],
+    require_root: true,
+    auto_gen_config: true,
 }

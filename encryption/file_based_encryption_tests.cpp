@@ -80,14 +80,6 @@
 #define F2FS_IOC_SET_PIN_FILE _IOW(F2FS_IOCTL_MAGIC, 13, __u32)
 #endif
 
-#ifndef FS_IOC_GET_ENCRYPTION_NONCE
-#define FS_IOC_GET_ENCRYPTION_NONCE _IOR('f', 27, __u8[16])
-#endif
-
-#ifndef FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32
-#define FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32 0x10
-#endif
-
 namespace android {
 namespace kernel {
 
@@ -1023,7 +1015,8 @@ TEST_F(FBEPolicyTest, TestHwWrappedKeyCorruption) {
 // it applies regardless of the encryption format and key.  Thus it runs even on
 // old devices, including ones that used a vendor-specific encryption format.
 TEST(FBETest, TestFileContentsRandomness) {
-  constexpr const char *path = "/data/local/tmp/vts-test-file";
+  constexpr const char *path_1 = "/data/local/tmp/vts-test-file-1";
+  constexpr const char *path_2 = "/data/local/tmp/vts-test-file-2";
 
   if (android::base::GetProperty("ro.crypto.type", "") != "file") {
     // FBE has been required since Android Q.
@@ -1039,14 +1032,30 @@ TEST(FBETest, TestFileContentsRandomness) {
   ASSERT_TRUE(GetFilesystemInfo("/data", &fs_info));
 
   std::vector<uint8_t> zeroes(kTestFileBytes, 0);
-  std::vector<uint8_t> ciphertext;
-  ASSERT_TRUE(WriteTestFile(zeroes, path, fs_info.raw_blk_device, &ciphertext));
+  std::vector<uint8_t> ciphertext_1;
+  std::vector<uint8_t> ciphertext_2;
+  ASSERT_TRUE(
+      WriteTestFile(zeroes, path_1, fs_info.raw_blk_device, &ciphertext_1));
+  ASSERT_TRUE(
+      WriteTestFile(zeroes, path_2, fs_info.raw_blk_device, &ciphertext_2));
 
   GTEST_LOG_(INFO) << "Verifying randomness of ciphertext";
 
-  ASSERT_TRUE(VerifyDataRandomness(ciphertext));
+  // Each individual file's ciphertext should be random.
+  ASSERT_TRUE(VerifyDataRandomness(ciphertext_1));
+  ASSERT_TRUE(VerifyDataRandomness(ciphertext_2));
 
-  ASSERT_EQ(unlink(path), 0);
+  // The files' ciphertext concatenated should also be random.
+  // I.e., each file should be encrypted differently.
+  std::vector<uint8_t> concatenated_ciphertext;
+  concatenated_ciphertext.insert(concatenated_ciphertext.end(),
+                                 ciphertext_1.begin(), ciphertext_1.end());
+  concatenated_ciphertext.insert(concatenated_ciphertext.end(),
+                                 ciphertext_2.begin(), ciphertext_2.end());
+  ASSERT_TRUE(VerifyDataRandomness(concatenated_ciphertext));
+
+  ASSERT_EQ(unlink(path_1), 0);
+  ASSERT_EQ(unlink(path_2), 0);
 }
 
 }  // namespace kernel

@@ -44,7 +44,3 @@ cc_test {
     require_root: true,
     test_suites: ["vts"],
 }
-
-vts_config {
-    name: "VtsKernelQtaguidTest",
-}

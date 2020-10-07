@@ -38,7 +38,3 @@ cc_test {
         "libstorage_literals_headers",
     ],
 }
-
-vts_config {
-    name: "VtsVirtualAb",
-}

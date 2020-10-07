@@ -68,7 +68,3 @@ cc_test {
     name: "vts_test_binary_bpf_module",
     defaults: ["binary_bpf_defaults"],
 }
-
-vts_config {
-    name: "VtsKernelNetBpfTest",
-}

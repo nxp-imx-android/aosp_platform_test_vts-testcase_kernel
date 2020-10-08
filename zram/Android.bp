@@ -41,7 +41,3 @@ cc_test {
     name: "vts_test_binary_zram_module",
     defaults: ["binary_zram_defaults"],
 }
-
-vts_config {
-    name: "VtsKernelZramTest",
-}

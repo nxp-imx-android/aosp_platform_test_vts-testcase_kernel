@@ -23,7 +23,3 @@ cc_test {
     auto_gen_config: true,
     require_root: true,
 }
-
-vts_config {
-    name: "VtsKernelTunTest",
-}

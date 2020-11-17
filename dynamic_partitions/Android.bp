@@ -17,7 +17,6 @@ java_test_host {
     name: "KernelDynamicPartitionsTest",
     libs: [
         "tradefed",
-        "tradefed-common-util",
     ],
     srcs: ["src/**/*.java"],
     test_suites: [

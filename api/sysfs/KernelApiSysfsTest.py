@@ -221,7 +221,12 @@ class KernelApiSysfsTest(base_test.BaseTestClass):
             self.ConvertToInteger(content)
 
     def testRtcHctosys(self):
-        '''Check that at least one rtc exists with hctosys = 1.'''
+        '''If RTC is present, check that at least one rtc exists with hctosys = 1.'''
+        rtcs = target_file_utils.FindFiles(self.shell, '/dev',
+                'rtc*', '-maxdepth 1')
+        if not rtcs:
+            return
+
         rtclist = target_file_utils.FindFiles(self.shell, '/sys/class/rtc',
                 'rtc*', '-maxdepth 1 -type l')
         for entry in rtclist:

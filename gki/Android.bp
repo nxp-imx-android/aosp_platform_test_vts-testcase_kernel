@@ -1,5 +1,4 @@
-//
-// Copyright (C) 2017 The Android Open Source Project
+// Copyright (C) 2021 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +11,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
 
-vts_config {
-    name: "VtsKernelNetdTest",
+cc_test {
+    name: "vts_gki_release_test",
+    require_root: true,
+    test_min_api_level: 31,
+    srcs: [
+        "gki_release_test.cpp",
+    ],
+    cflags: [
+        "-Wall",
+        "-Werror",
+    ],
+    test_suites: [
+        "general-tests",
+        "vts",
+    ],
+    static_libs: [
+        "libkver",
+    ],
 }

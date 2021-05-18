@@ -22,7 +22,6 @@ java_test_host {
     name: "KernelApiSysfsTest",
     libs: [
         "tradefed",
-        "tradefed-common-util",
         "vts-core-tradefed-harness",
     ],
     srcs: ["src/**/*.java"],

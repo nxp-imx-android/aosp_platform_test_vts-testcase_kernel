@@ -14,31 +14,44 @@
  * limitations under the License.
  */
 
-#include <sys/utsname.h>
+#include <filesystem>
 
+#include <android-base/properties.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <kver/kernel_release.h>
 #include <vintf/VintfObject.h>
 #include <vintf/parse_string.h>
 
+#include "ramdisk_utils.h"
+
+using android::base::GetBoolProperty;
+using android::base::GetProperty;
 using android::kver::KernelRelease;
 using android::vintf::RuntimeInfo;
 using android::vintf::Version;
 using android::vintf::VintfObject;
+using testing::IsSupersetOf;
 
-TEST(Gki, KernelReleaseFormat) {
-  auto vintf = VintfObject::GetInstance();
-  ASSERT_NE(nullptr, vintf);
-  auto ri = vintf->getRuntimeInfo(RuntimeInfo::FetchFlag::CPU_VERSION);
-  ASSERT_NE(nullptr, ri);
+class GkiTest : public testing::Test {
+ public:
+  void SetUp() override {
+    auto vintf = VintfObject::GetInstance();
+    ASSERT_NE(nullptr, vintf);
+    runtime_info = vintf->getRuntimeInfo(RuntimeInfo::FetchFlag::CPU_VERSION);
+    ASSERT_NE(nullptr, runtime_info);
 
-  // GKI release format is only enabled on 5.4+ branches
-  if (ri->kernelVersion().dropMinor() < Version{5, 4}) {
-    GTEST_SKIP() << "Exempt GKI release format check on kernel "
-                 << ri->kernelVersion() << " (before 5.4.y)";
+    // GKI tests only enforced on 5.4+ branches
+    if (runtime_info->kernelVersion().dropMinor() < Version{5, 4}) {
+      GTEST_SKIP() << "Exempt GKI tests on kernel "
+                   << runtime_info->kernelVersion() << " (before 5.4.y)";
+    }
   }
+  std::shared_ptr<const RuntimeInfo> runtime_info;
+};
 
-  const std::string& release = ri->osRelease();
+TEST_F(GkiTest, KernelReleaseFormat) {
+  const std::string& release = runtime_info->osRelease();
   ASSERT_TRUE(
       KernelRelease::Parse(release, true /* allow_suffix */).has_value())
       << "Kernel release '" << release
@@ -46,4 +59,48 @@ TEST(Gki, KernelReleaseFormat) {
          "match this regex:\n"
       << R"(^(?P<w>\d+)[.](?P<x>\d+)[.](?P<y>\d+)-(?P<z>android\d+)-(?P<k>\d+).*$)"
       << "\nExample: 5.4.42-android12-0-something";
+}
+
+TEST_F(GkiTest, GenericRamdisk) {
+  using std::filesystem::recursive_directory_iterator;
+
+  std::string slot_suffix = GetProperty("ro.boot.slot_suffix", "");
+  std::string boot_path = "/dev/block/by-name/boot" + slot_suffix;
+  if (0 != access(boot_path.c_str(), F_OK)) {
+    int saved_errno = errno;
+    FAIL() << "Can't access " << boot_path << ": " << strerror(saved_errno);
+  }
+
+  auto extracted_ramdisk = android::ExtractRamdiskToDirectory(boot_path);
+  ASSERT_RESULT_OK(extracted_ramdisk);
+
+  std::set<std::string> actual_files;
+  std::filesystem::path extracted_ramdisk_path((*extracted_ramdisk)->path);
+  for (auto& p : recursive_directory_iterator(extracted_ramdisk_path)) {
+    if (p.is_directory()) continue;
+    EXPECT_TRUE(p.is_regular_file())
+        << "Unexpected non-regular file " << p.path();
+    auto rel_path = p.path().lexically_relative(extracted_ramdisk_path);
+    actual_files.insert(rel_path.string());
+  }
+
+  std::set<std::string> generic_ramdisk_allowlist{
+      "init",
+      "system/etc/ramdisk/build.prop",
+  };
+  if (GetBoolProperty("ro.debuggable", false)) {
+    EXPECT_THAT(actual_files, IsSupersetOf(generic_ramdisk_allowlist))
+        << "Missing files required by non-debuggable generic ramdisk.";
+    std::set<std::string> debuggable_allowlist{
+        "adb_debug.prop",
+        "force_debuggable",
+        "userdebug_plat_sepolicy.cil",
+    };
+    generic_ramdisk_allowlist.insert(debuggable_allowlist.begin(),
+                                     debuggable_allowlist.end());
+    EXPECT_THAT(generic_ramdisk_allowlist, IsSupersetOf(actual_files))
+        << "Contains files disallowed by debuggable generic ramdisk";
+  } else {
+    EXPECT_EQ(actual_files, generic_ramdisk_allowlist);
+  }
 }

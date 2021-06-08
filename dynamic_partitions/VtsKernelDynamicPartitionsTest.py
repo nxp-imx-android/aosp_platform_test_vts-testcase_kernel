@@ -20,6 +20,7 @@
 from vts.runners.host import asserts
 from vts.runners.host import base_test
 from vts.runners.host import test_runner
+from vts.utils.python.android import api
 
 # The property to indicate dynamic partitions are enabled.
 _DYNAMIC_PARTITIONS_PROP = "ro.boot.dynamic_partitions"
@@ -33,6 +34,10 @@ class VtsKernelDynamicPartitionsTest(base_test.BaseTestClass):
         self._dut = self.android_devices[0]
 
     def testDynamicPartitionsSysProp(self):
+        # Dynamic partition is not mandatory for Automotive in Android Q
+        if self._dut.getLaunchApiLevel() <= api.PLATFORM_API_LEVEL_Q and \
+           self._dut.getProp("ro.hardware.type") == "automotive":
+          return
         """Checks ro.build.dynamic_partitions is 'true'."""
         asserts.assertEqual("true",
                             self._dut.getProp(_DYNAMIC_PARTITIONS_PROP),

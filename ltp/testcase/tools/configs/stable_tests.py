@@ -1605,7 +1605,6 @@ STABLE_TESTS = [
     ('syscalls.rt_sigqueueinfo01_64bit', True),
     ('syscalls.rt_sigsuspend01_32bit', True),
     ('syscalls.rt_sigsuspend01_64bit', True),
-    ('syscalls.rt_sigtimedwait01_32bit', True),
     ('syscalls.rt_sigtimedwait01_64bit', True),
     ('syscalls.rt_tgsigqueueinfo01_32bit', True),
     ('syscalls.rt_tgsigqueueinfo01_64bit', True),

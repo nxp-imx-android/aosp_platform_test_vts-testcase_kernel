@@ -35,17 +35,18 @@ cc_test {
     ],
     shared_libs: [
         "libbase",
+        "libbinder_ndk",
         "libcrypto",
-        "libhidlbase",
-        "libkeymaster4_1support",
-        "libkeymaster4support",
         "liblog",
         "libutils",
     ],
     static_libs: [
+        "android.hardware.security.keymint-V1-ndk_platform",
+        "android.system.keystore2-V1-ndk_platform",
         "libdm",
         "libext4_utils",
         "libfs_mgr",
+        "libkeymint_support",
         "liblzma",
     ],
     test_suites: [

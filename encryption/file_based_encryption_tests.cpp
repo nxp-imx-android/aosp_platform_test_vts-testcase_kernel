@@ -60,6 +60,7 @@
 #include <fcntl.h>
 #include <gtest/gtest.h>
 #include <limits.h>
+#include <linux/f2fs.h>
 #include <linux/fiemap.h>
 #include <linux/fs.h>
 #include <linux/fscrypt.h>
@@ -72,13 +73,6 @@
 #include <unistd.h>
 
 #include "vts_kernel_encryption.h"
-
-#ifndef F2FS_IOCTL_MAGIC
-#define F2FS_IOCTL_MAGIC 0xf5
-#endif
-#ifndef F2FS_IOC_SET_PIN_FILE
-#define F2FS_IOC_SET_PIN_FILE _IOW(F2FS_IOCTL_MAGIC, 13, __u32)
-#endif
 
 namespace android {
 namespace kernel {

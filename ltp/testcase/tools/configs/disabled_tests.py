@@ -20,12 +20,6 @@ DISABLED_TESTS = [
     'controllers.cgroup_fj_function_memory_64bit',  # b/191867109
     'controllers.cgroup_fj_function_net_prio_32bit', # b/193172511
     'controllers.cgroup_fj_function_net_prio_64bit', # b/193172511
-    'controllers.memcg_control_32bit', #b/197942864
-    'controllers.memcg_control_64bit', #b/197942864
-    'controllers.memcg_regression_32bit', #b/199506772
-    'controllers.memcg_regression_64bit', #b/199506772
-    'controllers.memcg_test_3_32bit', #b/199506772
-    'controllers.memcg_test_3_64bit', #b/199506772
     'cve.cve-2017-15649_32bit',  # b/191224884
     'cve.cve-2017-15649_64bit',  # b/191224884
     'cve.cve-2017-2636_32bit',  # b/191224903
@@ -87,6 +81,8 @@ DISABLED_TESTS = [
     'syscalls.madvise06_64bit',  # b/191227034
     'syscalls.rt_sigprocmask01_32bit',  # b/191248975
     'syscalls.rt_sigtimedwait01_32bit',  # b/191247810
+    'syscalls.sched_getattr01_32bit', # b/200686092
+    'syscalls.sched_setattr01_32bit', # b/200686092
     'syscalls.semctl09_32bit',  # b/191227035
     'syscalls.semctl09_64bit',  # b/191227035
     'syscalls.shmctl08_32bit',  # b/191227526
